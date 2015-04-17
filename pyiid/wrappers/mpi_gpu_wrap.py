@@ -15,7 +15,7 @@ import pyiid.wrappers.mpi.mpi_fq_worker as mpi_fq_worker
 import pyiid.wrappers.mpi.mpi_grad_worker as mpi_grad_worker
 
 
-def wrap_fq(atoms, qmax=25., qbin=.1):
+def wrap_fq(atoms, qmax, qbin):
 
     # get information for FQ transformation
     q = atoms.get_positions()

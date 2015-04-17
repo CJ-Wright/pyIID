@@ -28,8 +28,8 @@ class PDFAtoms(Atoms):
         for i in ['MPI-GPU', 'Multi-GPU', 'Serial-CPU']:
             try:
                 if i == 'MPI-GPU':
-                        # TEST FOR MPI
-                        pass
+                    # TEST FOR MPI
+                    from pyiid.wrappers.mpi_gpu_wrap import wrap_fq, wrap_fq_grad_gpu
                 elif i == 'Multi-GPU':
                     cuda.get_current_device()
                     self.processor = 'gpu'
@@ -37,8 +37,7 @@ class PDFAtoms(Atoms):
                     cuda.close()
                 elif i == 'Serial-CPU':
                     self.processor = 'cpu'
-                from pyiid.wrappers. import wrap_fq, wrap_fq_grad
-
+                    from pyiid.wrappers.serial_cpu_wrap import wrap_fq, wrap_fq_grad
             except:
                 continue
 
