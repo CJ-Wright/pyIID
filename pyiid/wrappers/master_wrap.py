@@ -1,7 +1,5 @@
 __author__ = 'christopher'
 from pyiid.kernels.serial_kernel import *
-import numpy
-from numbapro import autojit
 
 
 def wrap_atoms(atoms, qmax=25., qbin=.1):

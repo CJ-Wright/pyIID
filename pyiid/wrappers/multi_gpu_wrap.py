@@ -1,13 +1,8 @@
 __author__ = 'christopher'
 import numpy as np
-
 from numba import cuda
 import math
-from pyiid.kernels.serial_kernel import get_pdf_at_qmin, grad_pdf, get_rw, \
-    get_grad_rw, get_chi_sq, get_grad_chi_sq
-# from multiprocessing import Process, Queue
 from threading import Thread
-from Queue import Queue
 
 
 def sub_fq(gpu, q, scatter_array, fq_q, qmax_bin, qbin, m, n_cov):
@@ -149,6 +144,7 @@ def wrap_fq(atoms, qmax=25., qbin=.1):
     fq = np.nan_to_num(1 / na * fq)
     np.seterr(**old_settings)
     return fq
+
 
 def sub_grad(gpu, q, scatter_array, grad_q, qmax_bin, qbin, m, n_cov,
              index_list):
@@ -335,10 +331,6 @@ if __name__ == '__main__':
     wrap_atoms(atoms)
 
     fq = wrap_fq(atoms)
-    pdf, fq = wrap_pdf(atoms)
     grad_fq = wrap_fq_grad(atoms)
     print grad_fq
-    plt.plot(pdf), plt.show()
-    # for i in range(10):
-    # gfq = wrap_fq_grad_gpu(atomsio)
-    # ''', sort='tottime')
+    plt.plot(fq), plt.show()
