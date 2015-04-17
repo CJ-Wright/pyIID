@@ -55,7 +55,7 @@ def wrap_pdf(atoms, qmax=25., qmin=0.0, qbin=.1, rmax=40., rstep=.01):
     Parameters
     -----------
     atoms: ase.Atoms
-        The atomic configuration
+        The atomic config   uration
     qmax: float
         The maximum scatter vector value
     qmin: float
@@ -75,13 +75,55 @@ def wrap_pdf(atoms, qmax=25., qmin=0.0, qbin=.1, rmax=40., rstep=.01):
     fq:1darray
         The reduced structure function
     """
+    qmin_bin = int(qmin / qbin)
     fq = wrap_fq(atoms, qmax, qbin)
-    fq[:int(qmin/qbin)] = 0
+    fq[:qmin_bin] = 0
     pdf0 = get_pdf_at_qmin(fq, rstep, qbin, np.arange(0, rmax, rstep))
     return pdf0, fq
 
 
-def wrap_rw(atoms, gobs, qmax=25., qmin=0.0, qbin=.1, rmin=0.0, rmax=40., rstep=.01):
+def wrap_rw(atoms, gobs, qmax=25., qmin=0.0, qbin=.1, rmin=0.0, rmax=40.,
+            rstep=.01):
+    """
+    Generate the Rw value
+
+    Parameters
+    -----------
+    :param rmin:
+    atoms: ase.Atoms
+        The atomic configuration
+    gobs: 1darray
+        The observed atomic pair distributuion function
+    qmax: float
+        The maximum scatter vector value
+    qmin: float
+        The minimum scatter vector value
+    qbin: float
+        The size of the scatter vector increment
+    rmax: float
+        Maximum r value
+    rstep: float
+        Size between r values
+
+    Returns
+    -------
+
+    rw: float
+        The Rw value in percent
+    scale: float
+        The scale factor between the observed and calculated PDF
+    pdf0:1darray
+        The atomic pair distributuion function
+    fq:1darray
+        The reduced structure function
+    """
+    g_calc, fq = wrap_pdf(atoms, qmax, qmin, qbin, rmax, rstep)
+    g_calc = g_calc[math.floor(rmin/rstep):]
+    rw, scale = get_rw(gobs, g_calc, weight=None)
+    return rw, scale, g_calc, fq
+
+
+def wrap_chi_sq(atoms, gobs, qmax=25., qmin=0.0, qbin=.1, rmin=0.0, rmax=40., rstep=.01):
     """
     Generate the Rw value
 
@@ -116,7 +158,7 @@ def wrap_rw(atoms, gobs, qmax=25., qmin=0.0, qbin=.1, rmin=0.0, rmax=40., rstep=
     """
     g_calc, fq = wrap_pdf(atoms, qmax, qmin, qbin, rmax, rstep)
     g_calc = g_calc[math.floor(rmin/rstep):]
-    rw, scale = get_rw(gobs, g_calc, weight=None)
+    rw, scale = get_chi_sq(gobs, g_calc)
     return rw, scale, g_calc, fq
 
 
@@ -144,8 +186,56 @@ def wrap_fq_grad(atoms, qmax=25., qbin=.1):
     return atoms.fq_grad_calc(atoms, qmax, qbin)
 
 
-def wrap_grad_rw(atoms, gobs, qmax=25., qmin=0.0, qbin=.1,rmin=0.0,
-                 rmax=40., rstep=.01, rw=None, gcalc=None, scale=None):
+def wrap_grad_rw(atoms, gobs, qmax=25., qmin=0.0, qbin=.1, rmin=0.0, rmax=40.,
+                 rstep=.01, rw=None, gcalc=None, scale=None):
+    """
+    Generate the Rw value gradient
+
+    Parameters
+    -----------
+    :param rmin:
+    atoms: ase.Atoms
+        The atomic configuration
+    gobs: 1darray
+        The observed atomic pair distributuion function
+    qmax: float
+        The maximum scatter vector value
+    qmin: float
+        The minimum scatter vector value
+    qbin: float
+        The size of the scatter vector increment
+    rmax: float
+        Maximum r value
+    rstep: float
+        Size between r values
+
+    Returns
+    -------
+
+    grad_rw: float
+        The gradient of the Rw value with respect to the atomic positions,
+        in percent
+
+    """
+    if rw is None:
+        rw, scale, gcalc, fq = wrap_rw(atoms, gobs, qmax, qmin, qbin,
+                                       rmin = rmin, rmax=rmax, rstep=rstep)
+    fq_grad = wrap_fq_grad(atoms, qmax, qbin)
+    qmin_bin = int(qmin / qbin)
+    for tx in range(len(atoms)):
+        for tz in range(3):
+            fq_grad[tx, tz, :qmin_bin] = 0.
+    pdf_grad = np.zeros((len(atoms), 3, rmax / rstep))
+    grad_pdf(pdf_grad, fq_grad, rstep, qbin, np.arange(0, rmax, rstep))
+    pdf_grad = pdf_grad[:,:,math.floor(rmin/rstep):]
+    grad_rw = np.zeros((len(atoms), 3))
+    get_grad_rw(grad_rw, pdf_grad, gcalc, gobs, rw, scale, weight=None)
+    return grad_rw
+
+
+def wrap_grad_chi_sq(atoms, gobs, qmax=25., qmin=0.0, qbin=.1, rmin=0.0, rmax=40.,
+                     rstep=.01,
+                     rw=None, gcalc=None, scale=None):
     """
     Generate the Rw value gradient
 
@@ -175,8 +265,8 @@ def wrap_grad_rw(atoms, gobs, qmax=25., qmin=0.0, qbin=.1,rmin=0.0,
 
     """
     if rw is None:
-        rw, scale, gcalc, fq = wrap_rw(atoms, gobs, qmax, qmin, qbin, rmin, rmax,
-                                       rstep)
+        rw, scale, gcalc, fq = wrap_rw(atoms, gobs, qmax, qmin, qbin,
+                                       rmax=rmax, rstep=rstep)
     fq_grad = wrap_fq_grad(atoms, qmax, qbin)
     qmin_bin = int(qmin / qbin)
     for tx in range(len(atoms)):
@@ -184,6 +274,7 @@ def wrap_grad_rw(atoms, gobs, qmax=25., qmin=0.0, qbin=.1,rmin=0.0,
             fq_grad[tx, tz, :qmin_bin] = 0.
     pdf_grad = np.zeros((len(atoms), 3, rmax / rstep))
     grad_pdf(pdf_grad, fq_grad, rstep, qbin, np.arange(0, rmax, rstep))
+    pdf_grad = pdf_grad[:,:,math.floor(rmin/rstep):]
     grad_rw = np.zeros((len(atoms), 3))
-    get_grad_rw(grad_rw, pdf_grad, gcalc, gobs, rw, scale, weight=None)
+    get_grad_chi_sq(grad_rw, pdf_grad, gcalc, gobs, scale)
     return grad_rw
