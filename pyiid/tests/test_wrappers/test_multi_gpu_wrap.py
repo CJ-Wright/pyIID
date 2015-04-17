@@ -3,11 +3,11 @@ __author__ = 'christopher'
 import numpy as np
 from numpy.testing import assert_allclose
 
-from pyiid.wrappers.kernel_wrap import wrap_fq as serial_fq
-from pyiid.wrappers.kernel_wrap import wrap_pdf as serial_pdf
-from pyiid.wrappers.kernel_wrap import wrap_rw as serial_rw
-from pyiid.wrappers.kernel_wrap import wrap_fq_grad as serial_grad_fq
-from pyiid.wrappers.kernel_wrap import wrap_grad_rw as serial_grad_rw
+from pyiid.wrappers.serial_cpu_wrap import wrap_fq as serial_fq
+from pyiid.wrappers.serial_cpu_wrap import wrap_pdf as serial_pdf
+from pyiid.wrappers.serial_cpu_wrap import wrap_rw as serial_rw
+from pyiid.wrappers.serial_cpu_wrap import wrap_fq_grad as serial_grad_fq
+from pyiid.wrappers.serial_cpu_wrap import wrap_grad_rw as serial_grad_rw
 
 from pyiid.wrappers.multi_gpu_wrap import wrap_fq as gpu_fq
 from pyiid.wrappers.multi_gpu_wrap import wrap_pdf as gpu_pdf
@@ -16,7 +16,7 @@ from pyiid.wrappers.multi_gpu_wrap import wrap_fq_grad_gpu as gpu_grad_fq
 from pyiid.wrappers.multi_gpu_wrap import wrap_grad_rw as gpu_grad_rw
 
 from ase.atoms import Atoms
-from pyiid.wrappers.kernel_wrap import wrap_atoms, grad_pdf
+from pyiid.wrappers.serial_cpu_wrap import wrap_atoms, grad_pdf
 n = 4
 
 

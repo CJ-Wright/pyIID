@@ -154,7 +154,7 @@ if __name__ == '__main__':
     from pyiid.sim.hmc import run_hmc
     from pyiid.wrappers.multi_gpu_wrap import wrap_rw, wrap_pdf
     from pyiid.calc.pdfcalc import PDFCalc
-    from pyiid.wrappers.kernel_wrap import wrap_atoms
+    from pyiid.wrappers.serial_cpu_wrap import wrap_atoms
     from pyiid.utils import tag_surface_atoms, build_sphere_np, load_gr_file, time_est
 
     ideal_atoms = Atoms('Au4', [[0, 0, 0], [3, 0, 0], [0, 3, 0], [3, 3, 0]])

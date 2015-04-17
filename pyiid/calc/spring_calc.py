@@ -15,7 +15,7 @@ class Spring(Calculator):
         Calculator.__init__(self, restart, ignore_bad_restart_file,
                             label, atoms, **kwargs)
 
-        from pyiid.wrappers.kernel_wrap import spring_nrg, spring_force
+        from pyiid.wrappers.serial_cpu_wrap import spring_nrg, spring_force
         self.nrg_func = spring_nrg
         self.f_func = spring_force
         self.k = k
@@ -79,7 +79,7 @@ if __name__ == '__main__':
     from ase.visualize import view
     from pyiid.calc.pdfcalc import PDFCalc
     from pyiid.wrappers.multi_gpu_wrap import wrap_pdf
-    from pyiid.wrappers.kernel_wrap import wrap_atoms
+    from pyiid.wrappers.serial_cpu_wrap import wrap_atoms
     from pyiid.kernels.serial_kernel import get_r_array, get_d_array
 
     ideal_atoms = Atoms('Au4', [[0,0,0], [1,0,0], [0, 1, 0], [1,1,0]])

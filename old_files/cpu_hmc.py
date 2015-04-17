@@ -9,7 +9,7 @@ from ase.io.trajectory import PickleTrajectory
 import ase.io as aseio
 
 from pyiid.sim.hmc import run_hmc
-from pyiid.wrappers.kernel_wrap import wrap_rw, wrap_pdf
+from pyiid.wrappers.serial_cpu_wrap import wrap_rw, wrap_pdf
 from pyiid.calc.pdfcalc import PDFCalc
 
 

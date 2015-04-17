@@ -16,7 +16,7 @@ from pyiid.wrappers.multi_gpu_wrap import wrap_fq_grad_gpu as gpu_grad_fq
 from pyiid.wrappers.multi_gpu_wrap import wrap_grad_rw as gpu_grad_rw
 
 from ase.atoms import Atoms
-from pyiid.wrappers.kernel_wrap import wrap_atoms, grad_pdf
+from pyiid.wrappers.serial_cpu_wrap import wrap_atoms, grad_pdf
 n = 600
 
 

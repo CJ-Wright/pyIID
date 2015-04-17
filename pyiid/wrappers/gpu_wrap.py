@@ -306,7 +306,7 @@ if __name__ == '__main__':
     # cProfile.run('''
     import ase.io as aseio
     import os
-    from pyiid.wrappers.kernel_wrap import wrap_atoms
+    from pyiid.wrappers.serial_cpu_wrap import wrap_atoms
     import matplotlib.pyplot as plt
 
     atoms_file = '/mnt/bulk-data/Dropbox/BNL_Project/Simulations/Models.d/2-AuNP-DFT.d/SizeVariation.d/Au55.xyz'

@@ -9,7 +9,7 @@ from ase.optimize.bfgs import BFGS
 
 from pyiid.wrappers.gpu_wrap import wrap_rw, wrap_pdf
 from pyiid.calc.pdfcalc import PDFCalc
-from pyiid.wrappers.kernel_wrap import wrap_atoms
+from pyiid.wrappers.serial_cpu_wrap import wrap_atoms
 
 
 atoms_file = '/mnt/bulk-data/Dropbox/BNL_Project/Simulations/Models.d/2-AuNP-DFT.d/SizeVariation.d/Au55.xyz'

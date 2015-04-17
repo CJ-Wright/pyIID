@@ -2,7 +2,7 @@ __author__ = 'christopher'
 from ase.atoms import Atoms
 import ase.io as aseio
 
-from pyiid.wrappers.kernel_wrap import wrap_atoms
+from pyiid.wrappers.serial_cpu_wrap import wrap_atoms
 from pyiid.calc.pdfcalc import PDFCalc
 from pyiid.wrappers.multi_gpu_wrap import wrap_rw, wrap_pdf
 from pyiid.utils import build_sphere_np

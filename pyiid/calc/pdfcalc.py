@@ -43,7 +43,7 @@ class PDFCalc(Calculator):
         else:
             # from pyiid.wrappers.kernel_wrap import *
             # from pyiid.wrappers.kernel_wrap import wrap_chi_sq, wrap_grad_chi_sq, wrap_rw, wrap_grad_rw
-            from pyiid.wrappers.kernel_wrap import wrap_rw, wrap_grad_rw
+            from pyiid.wrappers.serial_cpu_wrap import wrap_rw, wrap_grad_rw
 
         if potential == 'chi_sq':
             self.potential = wrap_chi_sq

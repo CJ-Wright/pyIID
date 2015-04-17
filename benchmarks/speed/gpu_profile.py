@@ -4,7 +4,7 @@ sys.path.extend(['/mnt/work-data/dev/pyIID'])
 from pyiid.wrappers.three_d_gpu_wrap import wrap_fq, wrap_fq_grad_gpu
 import ase.io as aseio
 import os
-from pyiid.wrappers.kernel_wrap import wrap_atoms
+from pyiid.wrappers.serial_cpu_wrap import wrap_atoms
 
 atoms_file = '/mnt/bulk-data/Dropbox/BNL_Project/Simulations/Models.d/2-AuNP-DFT.d/SizeVariation.d/Au55.xyz'
 atoms_file_no_ext = os.path.splitext(atoms_file)[0]

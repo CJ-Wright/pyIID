@@ -102,7 +102,7 @@ if __name__ == '__main__':
     from ase.visualize import view
     from pyiid.calc.pdfcalc import PDFCalc
     from pyiid.wrappers.multi_gpu_wrap import wrap_pdf
-    from pyiid.wrappers.kernel_wrap import wrap_atoms
+    from pyiid.wrappers.serial_cpu_wrap import wrap_atoms
     ideal_atoms = Atoms('Au4', [[0,0,0], [1,0,0], [0, 1, 0], [1,1,0]])
     start_atoms = Atoms('Au4', [[0,0,0], [.9,0,0], [0, .9, 0], [.9,.9,0]])
 

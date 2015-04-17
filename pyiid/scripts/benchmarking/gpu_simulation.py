@@ -11,7 +11,7 @@ import ase.io as aseio
 from pyiid.sim.hmc import simulate_dynamics
 from pyiid.wrappers.gpu_wrap import wrap_rw, wrap_pdf
 from pyiid.calc.pdfcalc_gpu import PDFCalc
-from pyiid.wrappers.kernel_wrap import wrap_atoms
+from pyiid.wrappers.serial_cpu_wrap import wrap_atoms
 
 
 atoms_file = '/mnt/bulk-data/Dropbox/BNL_Project/Simulations/Models.d/2-AuNP-DFT.d/SizeVariation.d/Au55.xyz'

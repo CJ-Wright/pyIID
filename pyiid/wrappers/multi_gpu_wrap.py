@@ -535,7 +535,7 @@ if __name__ == '__main__':
     # cProfile.run('''
     from ase.atoms import Atoms
     import os
-    from pyiid.wrappers.kernel_wrap import wrap_atoms
+    from pyiid.wrappers.serial_cpu_wrap import wrap_atoms
     import matplotlib.pyplot as plt
 
     # n = 400
