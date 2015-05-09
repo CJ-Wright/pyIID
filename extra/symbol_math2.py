@@ -25,8 +25,7 @@ pprint(sol)
 dg = symbols('Delta_g')
 
 # print(latex(sol))
-pprint(sol.subs((al(x)*gcalc-(gob(r))), dg))
-pprint()
+pprint(sol.subs((al*gcalc-(gob(r))), dg))
 pprint(dg)
 '''
 F = Function('F')(Q, x)
