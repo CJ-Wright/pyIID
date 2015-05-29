@@ -2,7 +2,7 @@ __author__ = 'christopher'
 import numpy as np
 from numpy.testing import assert_allclose
 from ase.atoms import Atoms
-from pyiid.wrappers.master_wrap import wrap_atoms
+from pyiid.wrappers.scatter import wrap_atoms
 
 n = 40
 

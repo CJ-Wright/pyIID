@@ -399,9 +399,9 @@ def spring_force_kernel(direction, d, r, mag):
                 direction[i,:] += d[i,j,:]/r[i,j] * mag[i, j]
 
 if __name__ == '__main__':
-    from pyiid.wrappers.scatter import Scatter
+    from pyiid.wrappers.scatter import Scatter, wrap_atoms
     from ase.atoms import Atoms
-    from pyiid.wrappers.master_wrap import wrap_atoms
+    from pyiid.wrappers.scatter import wrap_atoms
     import matplotlib.pyplot as plt
     from scipy.fftpack import dst, idst
     from scipy.signal import resample, argrelmax

@@ -1,10 +1,11 @@
+from pyiid.wrappers.scatter import wrap_atoms
+
 __author__ = 'christopher'
-import os
 from numba import cuda
 import numpy as np
 import math
 
-from pyiid.kernels.master_kernel import get_scatter_array, get_pdf_at_qmin, \
+from pyiid.kernels.master_kernel import get_pdf_at_qmin, \
     get_rw, grad_pdf, get_grad_rw, get_chi_sq, get_grad_chi_sq
 
 
@@ -73,29 +74,6 @@ def set_processor(processor=None):
 
 
 processor, low_wrap_fq, low_wrap_fq_grad = set_processor()
-
-
-def wrap_atoms(atoms, exp_dict=None):
-    """
-    Call this function before applying calculator, it will generate static
-    arrays for the scattering, preventing recalculation
-    :param exp_dict:
-    :param atoms:
-    :param qbin:
-    :return:
-    """
-
-    if exp_dict is None:
-        exp_dict = {'qmin': 0.0, 'qmax': 25., 'qbin': .1, 'rmin': 0.0,
-                            'rmax': 40.0, 'rstep': .01}
-    qbin = np.pi / (exp_dict['rmax'] + 6 * 2 * np.pi / exp_dict['qmax'])
-    n = len(atoms)
-    qmax_bin = int(math.ceil(exp_dict['qmax'] / qbin))
-    e_num = atoms.get_atomic_numbers()
-
-    scatter_array = np.zeros((n, qmax_bin), dtype=np.float32)
-    get_scatter_array(scatter_array, e_num, qbin)
-    atoms.set_array('scatter', scatter_array)
 
 
 def wrap_fq(atoms, qmax=25, qbin=.1):

@@ -389,7 +389,7 @@ if __name__ == '__main__':
     # import cProfile
     # cProfile.run('''
     from ase.atoms import Atoms
-    from pyiid.wrappers.master_wrap import wrap_atoms
+    from pyiid.wrappers.scatter import wrap_atoms
 
     n = 400
     pos = np.random.random((n, 3)) * 10.

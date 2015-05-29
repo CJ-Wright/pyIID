@@ -5,11 +5,34 @@ import math
 import sys
 sys.path.extend(['/mnt/work-data/dev/pyIID'])
 
-from pyiid.kernels.master_kernel import get_pdf_at_qmin, grad_pdf
+from pyiid.kernels.master_kernel import get_pdf_at_qmin, grad_pdf, \
+    get_scatter_array
 
 from pyiid.wrappers.cpu_wrap import wrap_fq as cpu_wrap_fq
 from pyiid.wrappers.cpu_wrap import wrap_fq_grad as cpu_wrap_fq_grad
 
+
+def wrap_atoms(atoms, exp_dict=None):
+    """
+    Call this function before applying calculator, it will generate static
+    arrays for the scattering, preventing recalculation
+    :param exp_dict:
+    :param atoms:
+    :param qbin:
+    :return:
+    """
+
+    if exp_dict is None:
+        exp_dict = {'qmin': 0.0, 'qmax': 25., 'qbin': .1, 'rmin': 0.0,
+                            'rmax': 40.0, 'rstep': .01}
+    qbin = np.pi / (exp_dict['rmax'] + 6 * 2 * np.pi / exp_dict['qmax'])
+    n = len(atoms)
+    qmax_bin = int(math.ceil(exp_dict['qmax'] / qbin))
+    e_num = atoms.get_atomic_numbers()
+
+    scatter_array = np.zeros((n, qmax_bin), dtype=np.float32)
+    get_scatter_array(scatter_array, e_num, qbin)
+    atoms.set_array('scatter', scatter_array)
 
 def check_mpi():
     # Test if MPI GPU is viable
@@ -166,7 +189,6 @@ class Scatter(object):
 
 if __name__ == '__main__':
     from ase.atoms import Atoms
-    from pyiid.wrappers.master_wrap import wrap_atoms
     import matplotlib.pyplot as plt
 
     # atoms = Atoms('Au4', [[0, 0, 0], [3, 0, 0], [0, 3, 0], [3, 3, 0]])

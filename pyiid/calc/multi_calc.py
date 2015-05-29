@@ -97,7 +97,7 @@ if __name__ == '__main__':
     from ase.visualize import view
     from pyiid.calc.pdfcalc import PDFCalc
     from pyiid.calc.spring_calc import Spring
-    from pyiid.wrappers.master_wrap import wrap_pdf, wrap_atoms
+    from pyiid.wrappers.scatter import wrap_atoms
     from ase.cluster.octahedron import Octahedron
     from ase.calculators.lammpslib import LAMMPSlib
     import numpy as np

@@ -2,7 +2,7 @@ __author__ = 'christopher'
 from ase.calculators.calculator import Calculator
 import numpy as np
 
-from pyiid.wrappers.scatter import Scatter
+from pyiid.wrappers.scatter import Scatter, wrap_atoms
 from pyiid.kernels.master_kernel import get_rw, grad_pdf, get_grad_rw, \
     get_chi_sq, get_grad_chi_sq
 
@@ -236,7 +236,7 @@ class PDFCalc(Calculator):
 if __name__ == '__main__':
     from ase.atoms import Atoms
     from ase.visualize import view
-    from pyiid.wrappers.master_wrap import wrap_pdf, wrap_atoms
+    from pyiid.wrappers.scatter import wrap_atoms
     from ase.cluster.octahedron import Octahedron
     import numpy as np
     import matplotlib.pyplot as plt
@@ -247,7 +247,6 @@ if __name__ == '__main__':
 
     scat = Scatter()
     print scat.get_grad_pdf(ideal_atoms)
-    AAA
     gobs = scat.get_pdf(ideal_atoms)
 
     # calc1 = PDFCalc(gobs=gobs, scatter=scat)

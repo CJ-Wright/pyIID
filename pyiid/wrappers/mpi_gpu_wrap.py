@@ -351,7 +351,7 @@ if __name__ == '__main__':
     # cProfile.run('''
     from ase.atoms import Atoms
     import os
-    from pyiid.wrappers.master_wrap import wrap_atoms
+    from pyiid.wrappers.scatter import wrap_atoms
     import matplotlib.pyplot as plt
     import sys
     sys.path.extend(['/mnt/work-data/dev/pyIID'])

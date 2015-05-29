@@ -10,7 +10,8 @@ from pyiid.wrappers.multi_gpu_wrap import wrap_fq as gpu_fq
 from pyiid.wrappers.multi_gpu_wrap import wrap_fq_grad as gpu_grad_fq
 
 from ase.atoms import Atoms
-from pyiid.wrappers.master_wrap import wrap_atoms
+from pyiid.wrappers.scatter import wrap_atoms
+
 n = 1500
 
 

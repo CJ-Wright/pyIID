@@ -98,7 +98,8 @@ class PDFCalc(Calculator):
 if __name__ == '__main__':
     from ase.atoms import Atoms
     from ase.visualize import view
-    from pyiid.wrappers.master_wrap import wrap_pdf, wrap_atoms
+    from pyiid.wrappers.master_wrap import wrap_pdf
+    from pyiid.wrappers.scatter import wrap_atoms
     from ase.cluster.octahedron import Octahedron
     import numpy as np
     import matplotlib.pyplot as plt

@@ -2,7 +2,8 @@ __author__ = 'christopher'
 from ase.atoms import Atoms
 import ase.io as aseio
 
-from pyiid.wrappers.master_wrap import wrap_atoms, wrap_rw, wrap_pdf
+from pyiid.wrappers.master_wrap import wrap_rw, wrap_pdf
+from pyiid.wrappers.scatter import wrap_atoms
 from pyiid.calc.pdfcalc import PDFCalc
 from pyiid.utils import build_sphere_np
 
