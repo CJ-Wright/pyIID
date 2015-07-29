@@ -1,31 +1,24 @@
 from pyiid.wrappers import *
-
-__author__ = 'christopher'
 from threading import Thread
 from pyiid.wrappers.k_atomic_gpu import *
+__author__ = 'christopher'
 
 
-def subs_fq(gpu, q, scatter_array, fq_q, qbin, il, jl):
+def subs_fq(gpu, q, scatter_array, final, qbin, m, k_cov):
     # set up GPU
     with gpu:
-        final = atomic_fq(q, scatter_array, qbin, il, jl)
-        fq_q.append(final)
-        del final
+        final += atomic_fq(q, scatter_array, qbin, m, k_cov)
 
 
 def wrap_fq(atoms, qbin=.1, sum_type='fq'):
     q, n, qmax_bin, scatter_array, gpus, mem_list = setup_gpu_calc(atoms,
                                                                    sum_type)
 
-    # setup test_flat map
-    # il = np.zeros((n ** 2 - n) / 2., dtype=np.uint32)
-    # jl = il.copy()
-    # get_ij_lists(il, jl, n)
     k_max = int((n ** 2 - n) / 2.)
 
-    fq_q = []
     k_cov = 0
     p_dict = {}
+    final = np.zeros(qmax_bin)
 
     while k_cov < k_max:
         for gpu, mem in zip(gpus, mem_list):
@@ -36,7 +29,7 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
                 if k_cov >= k_max:
                     break
                 p = Thread(target=subs_fq, args=(
-                    gpu, q, scatter_array, fq_q, qbin, m, k_cov
+                    gpu, q, scatter_array, final, qbin, m, k_cov
                 ))
                 p.start()
                 p_dict[gpu] = p
@@ -46,9 +39,6 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
                     break
     for value in p_dict.values():
         value.join()
-    final = np.zeros(qmax_bin)
-    for ele in fq_q:
-        final[:] += ele
     na = np.average(scatter_array, axis=0) ** 2 * n
     old_settings = np.seterr(all='ignore')
     final = np.nan_to_num(1 / na * final)
@@ -56,12 +46,9 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
     return 2 * final
 
 
-def subs_grad_fq(gpu, q, scatter_array, grad_q, qbin, k_cov, m):
-    # set up GPU
+def subs_grad_fq(gpu, q, scatter_array, grad_p, qbin, k_cov, m):
     with gpu:
-        new_grad2 = atomic_grad_fq(q, scatter_array, qbin, k_cov, m)
-    grad_q.append(new_grad2)
-    del k_cov, new_grad2
+        grad_p += atomic_grad_fq(q, scatter_array, qbin, k_cov, m)
 
 
 def wrap_fq_grad(atoms, qbin=.1, sum_type='fq'):
@@ -72,7 +59,6 @@ def wrap_fq_grad(atoms, qbin=.1, sum_type='fq'):
     k_max = int((n ** 2 - n) / 2.)
 
     gpus, mem_list = get_gpus_mem()
-    grad_q = []
     k_cov = 0
     p_dict = {}
     grad_p = np.zeros((n, 3, qmax_bin))
@@ -84,34 +70,19 @@ def wrap_fq_grad(atoms, qbin=.1, sum_type='fq'):
                     m = k_max - k_cov
 
                 p = Thread(target=subs_grad_fq, args=(
-                    gpu, q, scatter_array, grad_q, qbin, k_cov, m,
+                    gpu, q, scatter_array, grad_p, qbin, k_cov, m,
                 ))
                 p.start()
                 p_dict[gpu] = p
                 k_cov += m
-                # print float(k_cov) / k_max * 100., '%'
                 if k_cov >= k_max:
                     break
-        # TODO: sum arrays during processing to cut down on memory
-        # if queue is not empty sum the queue down
-        # remove entries from queue
-        for i in range(len(grad_q)):
-            # print len(grad_q)
-            grad_p += grad_q.pop(0)
-
     for value in p_dict.values():
         value.join()
-    # print len(grad_q)
-    for i in range(len(grad_q)):
-        grad_p += grad_q.pop(0)
-    # print len(grad_q)
-    # grad_p = np.sum(grad_q, axis=0)
-    # '''
     na = np.average(scatter_array, axis=0) ** 2 * n
     old_settings = np.seterr(all='ignore')
     for tx in range(n):
         for tz in range(3):
             grad_p[tx, tz, :] = np.nan_to_num(1 / na * grad_p[tx, tz, :])
     np.seterr(**old_settings)
-    # '''
     return grad_p
