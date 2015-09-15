@@ -1,6 +1,9 @@
 from threading import Thread
 
-from numbapro.cudalib import cufft
+try:
+    from numbapro.cudalib import cufft
+except ImportError:
+    pass
 
 from pyiid.experiments.elasticscatter.atomics.gpu_atomics import *
 from pyiid.experiments import *
