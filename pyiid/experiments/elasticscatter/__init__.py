@@ -40,11 +40,10 @@ def check_gpu():
 
 
 def check_cudafft():
-    tf = False
     try:
         from numbapro.cudalib import cufft
         tf = True
-    except ImportError:
+    except:
         tf = False
         print 'no cudafft'
     return tf
