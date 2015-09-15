@@ -40,6 +40,7 @@ def check_gpu():
 
 
 def check_cudafft():
+    tf = False
     try:
         from numbapro.cudalib import cufft
         tf = True
@@ -47,6 +48,7 @@ def check_cudafft():
         tf = False
         print 'no cudafft'
     return tf
+
 
 class ElasticScatter(object):
     """
@@ -137,7 +139,8 @@ class ElasticScatter(object):
             self.grad = flat_grad
             self.alg = 'flat'
             if check_cudafft():
-                from pyiid.experiments.elasticscatter.gpu_wrappers.gpu_wrap import \
+                from pyiid.experiments.elasticscatter.gpu_wrappers.gpu_wrap \
+                    import \
                     grad_pdf
                 self.grad_pdf = grad_pdf
             else:
