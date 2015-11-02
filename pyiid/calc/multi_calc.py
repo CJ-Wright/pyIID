@@ -3,8 +3,6 @@ import numpy as np
 from copy import deepcopy as dc
 __author__ = 'christopher'
 
-__author__ = 'christopher'
-
 
 class MultiCalc(Calculator):
     """
@@ -81,3 +79,6 @@ class MultiCalc(Calculator):
             forces[:, :] += atoms.get_forces()
 
         self.results['forces'] = forces
+
+    def calculate_voxel_energy(self, atoms, resolution):
+        pass
