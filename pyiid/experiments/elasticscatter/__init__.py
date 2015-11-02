@@ -523,6 +523,12 @@ class ElasticScatter(object):
         self.pdf_grad_result = pdf_grad
         return pdf_grad
 
+    def get_fq_voxels(self, atoms, resolution):
+        pass
+
+    def get_pdf_voxels(self, atoms, resolution):
+        pass
+
     def get_scatter_vector(self):
         """
         Calculate the scatter vector Q for the current experiment

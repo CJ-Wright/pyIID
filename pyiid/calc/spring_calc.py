@@ -80,6 +80,9 @@ class Spring(Calculator):
 
         self.results['forces'] = forces
 
+    def calculate_voxel_energy(self, atoms, resolution):
+        pass
+
 
 def spring_nrg(atoms, k, rt):
     q = atoms.get_positions().astype(np.float32)

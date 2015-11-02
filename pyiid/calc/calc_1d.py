@@ -93,3 +93,6 @@ class Calc1D(Calculator):
                            self.target_data) * self.rw_to_eV
 
         self.results['forces'] = forces
+
+    def calculate_voxel_energy(self, atoms, resolution):
+        pass
