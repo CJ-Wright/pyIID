@@ -20,10 +20,8 @@ def check_scatter_fq(value):
     scat = ElasticScatter(exp_dict=exp)
     scat.set_processor(proc, alg)
 
-    assert scat.check_state(atoms) != []
     # Test a set of different sized ensembles
     ans = scat.get_fq(atoms)
-    assert scat.check_state(atoms) == []
 
     # Check that Scatter gave back something
     assert ans is not None
@@ -46,9 +44,7 @@ def check_scatter_sq(value):
     scat = ElasticScatter(exp_dict=exp)
     scat.set_processor(proc, alg)
     # Test a set of different sized ensembles
-    assert scat.check_state(atoms) != []
     ans = scat.get_sq(atoms)
-    assert scat.check_state(atoms) == []
     # Check that Scatter gave back something
     assert ans is not None
     # Check that all the values are not zero
@@ -69,9 +65,7 @@ def check_scatter_iq(value):
     scat = ElasticScatter(exp_dict=exp)
     scat.set_processor(proc, alg)
     # Test a set of different sized ensembles
-    assert scat.check_state(atoms) != []
     ans = scat.get_iq(atoms)
-    assert scat.check_state(atoms) == []
     # Check that Scatter gave back something
     assert ans is not None
     # Check that all the values are not zero
@@ -92,9 +86,7 @@ def check_scatter_pdf(value):
     scat = ElasticScatter(exp_dict=exp)
     scat.set_processor(proc, alg)
     # Test a set of different sized ensembles
-    assert scat.check_state(atoms) != []
     ans = scat.get_pdf(atoms)
-    assert scat.check_state(atoms) == []
     # Check that Scatter gave back something
     assert ans is not None
     # Check that all the values are not zero
