@@ -96,3 +96,6 @@ class Calc1D(Calculator):
 
     def calculate_voxel_energy(self, atoms, resolution):
         pass
+
+    def calculate_atomwise_energy(self, atoms):
+        pass
