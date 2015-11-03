@@ -35,8 +35,8 @@ def check_voxel_nrg(value):
                 atoms2 = dc(atoms)
                 atoms2 += Atom('Au', (x, y, z))
                 voxel_nrg2[i, j, k] += atoms2.get_potential_energy() - e0
-    stats_check(voxel_nrg, voxel_nrg2, rtol=2e-7)
-    assert_allclose(voxel_nrg, voxel_nrg2, rtol=2e-7)
+    stats_check(voxel_nrg, voxel_nrg2, rtol=6e-5, atol=1e-7)
+    assert_allclose(voxel_nrg, voxel_nrg2, rtol=6e-5, atol=1e-7)
 
 
 def check_atomwise_nrg(value):
@@ -58,8 +58,8 @@ def check_atomwise_nrg(value):
         atoms2 = dc(atoms)
         del atoms2[atom.index]
         nrg2[atom.index] += atoms2.get_potential_energy() - e0
-    stats_check(voxel_nrg, nrg2)
-    assert_allclose(voxel_nrg, nrg2)
+    stats_check(voxel_nrg, nrg2, rtol=2e-6)
+    assert_allclose(voxel_nrg, nrg2, rtol=2e-6)
 
 tests = [
     check_voxel_nrg,
@@ -68,8 +68,8 @@ tests = [
 
 test_data = tuple(
     product(tests,
-            # test_atoms,
-            [test_atom_squares[0][0]],
+            test_atoms,
+            # [test_atom_squares[0][0]],
             test_spring_kwargs))
 
 
