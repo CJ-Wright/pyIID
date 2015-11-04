@@ -1,19 +1,19 @@
 from copy import deepcopy as dc
 from time import time
-
 import numpy as np
 from ase.atom import Atom
 from ase.units import *
-
 from pyiid.sim import Ensemble
 
 __author__ = 'christopher'
+
+
 # TODO: can we work with PDF overlaps? What is the relationship between PDF
 # overlap and the PES?
 
-# TODO: do we want to use voxels regardless/have option for voxels but not
-# voxel energy?
-def add_atom(atoms, chem_potentials, beta, resolution=None):
+def add_atom(atoms, chem_potentials, beta,
+             resolution=None,
+             voxel_energy=False):
     # make the proposed system
     atoms_prime = dc(atoms)
 
@@ -21,14 +21,23 @@ def add_atom(atoms, chem_potentials, beta, resolution=None):
     new_symbol = np.random.choice(atoms.get_chemical_symbols())
     e0 = atoms.get_potential_energy()
     if resolution is None:
-        new_position = np.random.uniform(0, np.max(atoms.get_cell(), 0))
+        new_position = np.zeros(3)
+        for i in xrange(3):
+            new_position[i] = np.random.uniform(0, np.max(
+                np.diagonal(atoms.get_cell())[i]))
     else:
-        # Get the voxel energy using exponential weighting
-        voxel_nrg = atoms.calc.calculate_voxel_energy(atoms, resolution)
-        prob = np.exp(-1 * beta * (voxel_nrg - e0))
-        prob /= np.sum(prob)
-        qvr = np.random.choice(prob.size, p=prob.ravel())
-        qv = np.asarray(np.unravel_index(qvr, prob.shape))
+        if voxel_energy:
+            # Get the voxel energy using exponential weighting
+            voxel_nrg = atoms.calc.calculate_voxel_energy(atoms, resolution)
+            prob = np.exp(-1 * beta * (voxel_nrg - e0))
+            prob -= np.min(prob)
+            prob /= np.sum(prob)
+            qvr = np.random.choice(prob.size, p=prob.ravel())
+            qv = np.asarray(np.unravel_index(qvr, prob.shape))
+        else:
+            c = np.int32(np.ceil(np.diagonal(atoms.get_cell()) / resolution))
+            qvr = np.random.choice(np.product(c))
+            qv = np.asarray(np.unravel_index(qvr, c))
         new_position = (qv + .5) * resolution
     new_atom = Atom(new_symbol, np.asarray(new_position))
 
@@ -100,25 +109,29 @@ class GrandCanonicalEnsemble(Ensemble):
 
     def __init__(self, atoms, chemical_potentials, temperature=100,
                  restart=None, logfile=None, trajectory=None, seed=None,
-                 verbose=False, scatter=None, target_pdf=None):
+                 verbose=False, scatter=None, target_pdf=None, resolution=None,
+                 voxel_energy=False, atomwise=False):
         Ensemble.__init__(self, atoms, restart, logfile, trajectory, seed,
                           verbose)
+        self.resolution = resolution
         self.beta = 1. / (temperature * kB)
         self.chem_pot = chemical_potentials
         self.metadata = {'rejected_additions': 0, 'accepted_removals': 0,
                          'accepted_additions': 0, 'rejected_removals': 0}
-        self.scatter=scatter
-        self.target_pdf=target_pdf
+        self.scatter = scatter
+        self.target_pdf = target_pdf
+        self.voxel_energy = voxel_energy
+        self.atomwise = atomwise
 
     def step(self):
         if self.random_state.uniform() >= .5:
             mv = 'remove'
             new_atoms = del_atom(self.traj[-1], self.chem_pot, self.beta,
-                                 self.scatter)
+                                 self.atomwise)
         else:
             mv = 'add'
             new_atoms = add_atom(self.traj[-1], self.chem_pot, self.beta,
-                                 self.scatter, self.target_pdf)
+                                 self.resolution, self.voxel_energy)
         if new_atoms is not None:
             if self.verbose:
                 print '\t' + mv + ' atom accepted', len(new_atoms)
