@@ -8,14 +8,13 @@ from ase.units import s
 import numpy as np
 from numba import cuda
 
-from pyiid.experiments.elasticscatter.cpu_wrappers.nxn_cpu_wrap import \
-    wrap_fq_grad as cpu_wrap_fq_grad
-from pyiid.experiments.elasticscatter.cpu_wrappers.nxn_cpu_wrap import \
-    wrap_fq as cpu_wrap_fq
-from pyiid.experiments.elasticscatter.kernels.master_kernel import \
+from .cpu_wrappers.nxn_cpu_wrap import \
+    (wrap_fq_grad as cpu_wrap_fq_grad,
+     wrap_fq as cpu_wrap_fq,
+     wrap_voxel_fq as cpu_wrap_voxel_fq)
+from .kernels.master_kernel import \
     grad_pdf as cpu_grad_pdf, get_pdf_at_qmin, get_scatter_array
-from ase.calculators.calculator import equal
-
+from .kernels.cpu_flat import get_normalization_array as flat_norm
 __author__ = 'christopher'
 
 
@@ -47,12 +46,11 @@ def check_cudafft():
     return tf
 
 
-# TODO: maybe add gradients as saved data?
 class ElasticScatter(object):
     """
     Scatter contains all the methods associated with producing theoretical
     diffraction patterns and PDFs from atomic configurations.  It does not
-    include potential energies, such as Rw and chi**2 which are under the
+    include potential energies, such as Rw and chi**2, which are under the
     Calculator object.
     >>>from ase.atoms import Atoms
     >>>from pyiid.adp import ADP
@@ -70,6 +68,7 @@ class ElasticScatter(object):
 
     """
 
+# Internal Utilities ----------------------------------------------------------
     def __init__(self, exp_dict=None):
         # Currently supported processor architectures, in order of most
         # advanced to least
@@ -94,6 +93,7 @@ class ElasticScatter(object):
         self.fq = cpu_wrap_fq
         self.grad = cpu_wrap_fq_grad
         self.grad_pdf = cpu_grad_pdf
+        self.voxel_fq = cpu_wrap_voxel_fq
         self.processor = 'CPU'
         self.alg = 'nxn'
 
@@ -226,6 +226,29 @@ class ElasticScatter(object):
         else:
             return False
 
+    def get_scatter_vector(self):
+        """
+        Calculate the scatter vector Q for the current experiment
+
+        Returns
+        -------
+        1darray:
+            The Q range for this experiment
+        """
+        return np.arange(self.exp['qmin'], self.exp['qmax'], self.exp['qbin'])
+
+    def get_r(self):
+        """
+        Calculate the inter-atomic distance range for the current experiment
+
+        Returns
+        -------
+        1darray:
+            The r range for this experiment
+        """
+        return np.arange(self.exp['rmin'], self.exp['rmax'], self.exp['rstep'])
+
+# Get experimental simulation results -----------------------------------------
     def get_fq(self, atoms):
         """
         Calculate the reduced structure factor F(Q)
@@ -305,8 +328,9 @@ class ElasticScatter(object):
         1darray:
             The scattering intensity
         """
-        return self.get_sq(atoms) * np.average(
-            atoms.get_array('F(Q) scatter')) ** 2
+        # FIXME: there is a problem in the normalization
+        return self.get_sq(atoms) * \
+               np.average(atoms.get_array('F(Q) scatter')) ** 2
 
     def get_2d_scatter(self, atoms, pixel_array):
         """
@@ -380,33 +404,21 @@ class ElasticScatter(object):
                                  self.exp['qmin'])
         return pdf_grad
 
-    def get_fq_voxels(self, atoms, resolution):
-        pass
+    def get_fq_voxels(self, atoms, new_atom, resolution):
+        fq = self.get_fq(atoms)
+        # FIXME: there is a problem in the normalization
+        qmax_bin = len(fq)
+        n = len(atoms)
+        scatter_array = atoms.get_array('F(Q) scatter')
+        norm2 = np.zeros((n * (n - 1) / 2., qmax_bin), np.float32)
+        flat_norm(norm2, scatter_array, 0)
+        na = np.mean(norm2, axis=0, dtype=np.float32) * np.float32(n)
+        fq *= na
+        voxels = self.voxel_fq(atoms, new_atom, resolution, fq, self.exp['qbin'])
+        return voxels
 
     def get_pdf_voxels(self, atoms, resolution):
         pass
-
-    def get_scatter_vector(self):
-        """
-        Calculate the scatter vector Q for the current experiment
-
-        Returns
-        -------
-        1darray:
-            The Q range for this experiment
-        """
-        return np.arange(self.exp['qmin'], self.exp['qmax'], self.exp['qbin'])
-
-    def get_r(self):
-        """
-        Calculate the inter-atomic distance range for the current experiment
-
-        Returns
-        -------
-        1darray:
-            The r range for this experiment
-        """
-        return np.arange(self.exp['rmin'], self.exp['rmax'], self.exp['rstep'])
 
 
 def wrap_atoms(atoms, exp_dict=None):

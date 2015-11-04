@@ -18,16 +18,12 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
     ----------
     atoms: ase.Atoms
         The atomic configuration
-    qmax: float
-        The maximum scatter vector value
-    qmin: float
-        The minimum scatter vector value
     qbin: float
         The size of the scatter vector increment
-
+    sum_type: 'fq' or 'pdf'
+        Determines the type of scatter array to use
     Returns
     -------
-    
     fq:1darray
         The reduced structure function
     """

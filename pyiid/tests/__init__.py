@@ -199,7 +199,7 @@ travis = False
 if os.getenv('TRAVIS'):
     travis = True
     num_exp = 1
-    proc_alg_pairs = list(product(['CPU'], ['nxn', 'flat', 'flat-serial']))
+    proc_alg_pairs = list(product(['CPU'], ['nxn', 'flat-serial', 'flat']))
     comparison_pro_alg_pairs = list(combinations(proc_alg_pairs, 2))
 
     if bool(os.getenv('NUMBA_DISABLE_JIT')):
@@ -211,19 +211,22 @@ if os.getenv('TRAVIS'):
 
 else:
     ns = [
-        10, 100,
+        10,
+        # 15,
+        100,
         # 400,
         1000
     ]
-    num_exp = 3
-    proc_alg_pairs = [('CPU', 'nxn'),
-                      ('CPU', 'flat'),
-                      ('CPU', 'flat-serial'),
-                      ('Multi-GPU', 'flat'),
-                      ]
+    num_exp = 1
+    proc_alg_pairs = {
+        ('CPU', 'nxn'),
+        ('CPU', 'flat-serial'),
+        ('CPU', 'flat'),
+        ('Multi-GPU', 'flat'),
+    }
     comparison_pro_alg_pairs = [
-        # (('CPU', 'nxn'), ('CPU', 'flat-serial')),
-        # (('CPU', 'flat-serial'), ('CPU', 'flat')),
+        (('CPU', 'nxn'), ('CPU', 'flat-serial')),
+        (('CPU', 'flat-serial'), ('CPU', 'flat')),
         (('CPU', 'nxn'), ('CPU', 'flat')),
         (('CPU', 'flat'), ('Multi-GPU', 'flat')),
 

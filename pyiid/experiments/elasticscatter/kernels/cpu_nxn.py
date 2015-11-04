@@ -11,7 +11,7 @@ if bool(os.getenv('NUMBA_DISABLE_JIT')):
 processor_target = 'cpu'
 
 
-# F(sv) test_kernels ----------------------------------------------------------
+# F(Q) test_kernels ----------------------------------------------------------
 
 @jit(void(f4[:, :, :], f4[:, :]), target=processor_target, nopython=True,
      cache=cache)
@@ -306,3 +306,73 @@ def get_dfq_dadp_inplace(dtau_dadp, omega, norm):
             for j in xrange(i4(n)):
                 for w in xrange(i4(3)):
                     dtau_dadp[i, j, w, qx] *= norm[i, j, qx] * omega[i, j, qx]
+
+
+@jit(void(f4[:, :, :, :, :], f4[:, :], f4), target=processor_target,
+     nopython=True, cache=cache)
+def get_voxel_displacements(d, q, resolution):
+    n, _, im, jm, km = d.shape
+    for i in xrange(im):
+        x = (i + .5) * resolution
+        for j in xrange(jm):
+            y = (j + .5) * resolution
+            for k in xrange(km):
+                z = (k + .5) * resolution
+                for l in xrange(n):
+                    d[l, 0, i, j, k] = x - q[l, 0]
+                    d[l, 1, i, j, k] = y - q[l, 1]
+                    d[l, 2, i, j, k] = z - q[l, 2]
+
+
+@jit(void(f4[:, :, :, :, :], f4[:, :, :, :], f4), target=processor_target,
+     nopython=True, cache=cache)
+def get_voxel_omega(omega, r, qbin):
+    """
+    Generate F(sv), not normalized, via the Debye sum
+
+    Parameters:
+    ---------
+    fq: Nd array
+        The reduced scatter pattern
+    r: NxN array
+        The pair distance array
+    scatter_array: NxM array
+        The scatter factor array
+    qbin: float
+        The qbin size
+    """
+    n, qmax_bin, im, jm, km = omega.shape
+    for i in xrange(im):
+        for j in xrange(jm):
+            for k in xrange(km):
+                for qx in xrange(i4(qmax_bin)):
+                    sv = f4(qx) * qbin
+                    for l in xrange(n):
+                        rij = r[l, i, j, k]
+                        if rij != 0.0:
+                            omega[l, qx, i, j, k] = math.sin(sv * rij) / rij
+
+@jit(void(f4[:, :, :, :], f4[:, :, :, :, :], f4[:, :]), target=processor_target, nopython=True,
+     cache=cache)
+def get_voxel_fq(fq, omega, norm):
+    """
+    Generate F(sv), not normalized, via the Debye sum
+
+    Parameters:
+    ---------
+    fq: Nd array
+        The reduced scatter pattern
+    r: NxN array
+        The pair distance array
+    scatter_array: NxM array
+        The scatter factor array
+    qbin: float
+        The qbin size
+    """
+    n, qmax_bin, im, jm, km = omega.shape
+    for i in xrange(im):
+        for j in xrange(jm):
+            for k in xrange(km):
+                for qx in xrange(i4(qmax_bin)):
+                    for l in xrange(n):
+                        fq[qx, i, j, k] += omega[l, qx, i, j, k] * norm[l, qx]
