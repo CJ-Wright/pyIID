@@ -16,6 +16,7 @@ class Calc1D(Calculator):
                  atoms=None,
                  target_data=None,
                  exp_function=None, exp_grad_function=None,
+                 exp_voxel_function=None, exp_atomwise_function=None,
                  conv=1., potential='rw', **kwargs):
 
         Calculator.__init__(self, restart, ignore_bad_restart_file,
@@ -30,6 +31,8 @@ class Calc1D(Calculator):
         self.target_data = target_data
         self.exp_function = exp_function
         self.exp_grad_function = exp_grad_function
+        self.exp_voxel_function = exp_voxel_function
+        self.exp_atomwise_function = exp_atomwise_function
         self.scale = 1
         self.rw_to_eV = conv
         if potential == 'chi_sq':
@@ -77,9 +80,15 @@ class Calc1D(Calculator):
 
     def calculate_energy(self, atoms):
         """
-        Calculate energy
-        :param atoms:
-        :return:
+        Calculate the energy of the atomic configuration
+        Parameters
+        ----------
+        atoms: ASE Atoms object
+            The atomic configuration
+
+        Returns
+        -------
+
         """
         energy, scale = self.potential(self.exp_function(atoms),
                                        self.target_data)
@@ -87,6 +96,17 @@ class Calc1D(Calculator):
         self.results['energy'] = energy * self.rw_to_eV
 
     def calculate_forces(self, atoms):
+        """
+        Calculate the forces on the atomic configuration
+        Parameters
+        ----------
+        atoms: ASE Atoms object
+            The atomic configuration
+
+        Returns
+        -------
+
+        """
         # self.results['forces'] = np.zeros((len(atoms), 3))
         forces = self.grad(self.exp_grad_function(atoms),
                            self.exp_function(atoms),
@@ -95,7 +115,8 @@ class Calc1D(Calculator):
         self.results['forces'] = forces
 
     def calculate_voxel_energy(self, atoms, resolution):
-        pass
+        voxels = self.exp_voxel_function(atoms, resolution)
+
 
     def calculate_atomwise_energy(self, atoms):
-        pass
+        atomwise = self.exp_atomwise_function(atoms)

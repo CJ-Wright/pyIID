@@ -7,8 +7,6 @@ from multiprocessing import Pool, cpu_count
 
 __author__ = 'christopher'
 
-__author__ = 'christopher'
-
 targ = 'cpu'
 
 
@@ -37,6 +35,27 @@ def get_scatter_array(scatter_array, numbers, qbin):
             scatter_array[tx, kq] = xraylib.FF_Rayl(numbers[tx],
                                                     kq * qbin / 4 / np.pi)
 
+
+@jit(target=targ)
+def get_single_scatter_array(scatter_array, numbers, qbin):
+    """
+    Generate the scattering array, which holds all the Q dependant scatter
+    factors
+
+    Parameters:
+    ---------
+    scatter_array: NxQ array
+        Holds the scatter factors
+    numbers: Nd array
+        Holds the atomic numbers
+    qbin: float
+        The qbin size
+    """
+    qmax_bin = scatter_array.shape[-1]
+    for kq in range(0, qmax_bin):
+        # note xraylib uses q = sin(th/2)
+        # as opposed to our q = 4pi sin(th/2)
+        scatter_array[kq] = xraylib.FF_Rayl(numbers, kq * qbin / 4 / np.pi)
 
 def get_pdf_at_qmin(fpad, rstep, qstep, rgrid, qmin):
     """

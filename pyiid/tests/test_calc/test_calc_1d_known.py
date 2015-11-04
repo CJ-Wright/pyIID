@@ -13,8 +13,13 @@ def check_meta(value):
 def check_nrg(value):
     """
     Check for PDF energy against known value
-    :param value:
-    :return:
+    Parameters
+    ----------
+    value
+
+    Returns
+    -------
+
     """
     # setup
     atoms1, atoms2 = value[0]
