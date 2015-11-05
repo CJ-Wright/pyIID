@@ -166,7 +166,7 @@ def wrap_voxel_fq(atoms, new_atom, resolution,fq, qbin=.1, sum_type='fq'):
     else:
         scatter_array = atoms.get_array('PDF scatter')
     new_scatter = np.zeros(scatter_array.shape[1], np.float32)
-    get_single_scatter_array(new_scatter, new_atom.get_atomic_number(), qbin)
+    get_single_scatter_array(new_scatter, new_atom.number, qbin)
 
     # define scatter_q information and initialize constants
 
@@ -193,7 +193,7 @@ def wrap_voxel_fq(atoms, new_atom, resolution,fq, qbin=.1, sum_type='fq'):
 
     # Normalize fq
     norm2 = np.zeros((n * (n - 1) / 2., qmax_bin), np.float32)
-    flat_norm(norm2, scatter_array, 0)
+    flat_norm(norm2, np.vstack((scatter_array, new_scatter)), 0)
     na = np.mean(norm2, axis=0, dtype=np.float32) * np.float32(n+1)
     im, jm, km = v
     vfq *= 2

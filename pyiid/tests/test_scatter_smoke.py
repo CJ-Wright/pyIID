@@ -179,8 +179,14 @@ def check_scatter_fq_voxels(value):
                 atoms2 += Atom('Au', (x, y, z))
                 ans2[:, i, j, k] = scat.get_fq(atoms2)
     assert np.any(ans2)
-    stats_check(ans, ans2, rtol=3e-6, atol=3e-6)
-    assert_allclose(ans, ans2, rtol=3e-6, atol=3e-6)
+    stats_check(ans, ans2,
+                rtol=3e-6,
+                atol=3e-6
+                )
+    assert_allclose(ans, ans2,
+                    rtol=3e-6,
+                    atol=3e-6
+                    )
     del atoms, exp, proc, alg, scat, ans
     return
 

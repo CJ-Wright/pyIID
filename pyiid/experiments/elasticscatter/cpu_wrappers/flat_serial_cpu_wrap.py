@@ -1,11 +1,10 @@
 import numpy as np
-
 from pyiid.experiments.elasticscatter.kernels.cpu_flat import *
 from pyiid.experiments.elasticscatter.kernels.cpu_experimental import \
     experimental_sum_grad_cpu
-
 from pyiid.experiments.elasticscatter.kernels import antisymmetric_reshape, \
     symmetric_reshape
+from ..kernels.master_kernel import get_single_scatter_array
 
 __author__ = 'christopher'
 
@@ -141,3 +140,73 @@ def wrap_fq_grad(atoms, qbin=.1, sum_type='fq'):
     np.seterr(**old_settings)
     del d, r, scatter_array, norm, omega, grad_omega
     return rtn
+
+'''
+def wrap_voxel_fq(atoms, new_atom, resolution, fq, qbin=.1, sum_type='fq'):
+    """
+    Generate the reduced structure function
+
+    Parameters
+    ----------
+    atoms: ase.Atoms
+        The atomic configuration
+    qbin: float
+        The size of the scatter vector increment
+    sum_type: 'fq' or 'pdf'
+        Determines the type of scatter array to use
+    Returns
+    -------
+    fq:1darray
+        The reduced structure function
+    """
+    # Pre-pool
+    # get scatter array
+    if sum_type == 'fq':
+        scatter_array = atoms.get_array('F(Q) scatter')
+    else:
+        scatter_array = atoms.get_array('PDF scatter')
+    new_scatter = np.zeros(scatter_array.shape[1], np.float32)
+    get_single_scatter_array(new_scatter, new_atom.number, qbin)
+
+    # define scatter_q information and initialize constants
+    # Get normalization array
+    norm = np.float32(scatter_array * new_scatter)
+    # Set up all the variables of interest
+    qbin = np.float32(qbin)
+    q = atoms.get_positions().astype(np.float32)
+    resolution = np.float32(resolution)
+    v = tuple(np.int32(np.ceil(np.diagonal(atoms.get_cell()) / resolution)))
+    n, qmax_bin = scatter_array.shape
+
+    # Inside pool
+
+    # Get pair coordinate distance array
+    r = np.zeros((n, np.product(v)), np.float32)
+    get_voxel_distances(r, q, resolution, v)
+
+    # Get omega
+    omega = np.zeros((n, qmax_bin, np.product(v)), np.float32)
+    get_voxel_omega(omega, r, qbin)
+
+    vfq = np.zeros((qmax_bin, np.product(v)), np.float32)
+    # get non-normalized fq
+    get_voxel_fq(vfq, omega, norm)
+
+    # Post-Pool
+    # Normalize fq
+    vfq = np.reshape(vfq, (qmax_bin, ) + v)
+    norm2 = np.zeros((n * (n - 1) / 2., qmax_bin), np.float32)
+    flat_norm(norm2, np.vstack((scatter_array, new_scatter)), 0)
+    na = np.mean(norm2, axis=0, dtype=np.float32) * np.float32(n + 1)
+    im, jm, km = v
+    vfq *= 2
+    for i in xrange(im):
+        for j in xrange(jm):
+            for k in xrange(km):
+                old_settings = np.seterr(all='ignore')
+                vfq[:, i, j, k] += fq
+                vfq[:, i, j, k] = np.nan_to_num(vfq[:, i, j, k] / na)
+                np.seterr(**old_settings)
+    del q, r, norm, omega, na
+    return vfq
+'''
