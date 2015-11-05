@@ -14,12 +14,17 @@ __author__ = 'christopher'
 def add_atom(atoms, chem_potentials, beta,
              resolution=None,
              voxel_energy=False):
+    # Current energy of the system
+    e0 = atoms.get_potential_energy()
+
     # make the proposed system
     atoms_prime = dc(atoms)
 
     # make new atom
     new_symbol = np.random.choice(atoms.get_chemical_symbols())
-    e0 = atoms.get_potential_energy()
+    new_atom = Atom(new_symbol, [0, 0, 0])
+
+    # If we don't specify a resolution use floating point uniform distribution
     if resolution is None:
         new_position = np.zeros(3)
         for i in xrange(3):
@@ -29,17 +34,20 @@ def add_atom(atoms, chem_potentials, beta,
         if voxel_energy:
             # Get the voxel energy using exponential weighting
             voxel_nrg = atoms.calc.calculate_voxel_energy(atoms, resolution)
-            prob = np.exp(-1 * beta * (voxel_nrg - e0))
+            prob = np.exp(-beta * (voxel_nrg - e0))
             prob -= np.min(prob)
             prob /= np.sum(prob)
             qvr = np.random.choice(prob.size, p=prob.ravel())
             qv = np.asarray(np.unravel_index(qvr, prob.shape))
         else:
+            # Use voxels for resolution
             c = np.int32(np.ceil(np.diagonal(atoms.get_cell()) / resolution))
             qvr = np.random.choice(np.product(c))
             qv = np.asarray(np.unravel_index(qvr, c))
         new_position = (qv + .5) * resolution
-    new_atom = Atom(new_symbol, np.asarray(new_position))
+
+    # Set the atomic position based on sampling procedure
+    new_atom.position = np.asarray(new_position)
 
     # append new atom to system
     atoms_prime.append(new_atom)

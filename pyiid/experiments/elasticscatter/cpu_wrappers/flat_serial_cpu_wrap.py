@@ -10,7 +10,7 @@ from pyiid.experiments.elasticscatter.kernels import antisymmetric_reshape, \
 __author__ = 'christopher'
 
 
-def wrap_fq(atoms, qbin=.1, sum_type='fq'):
+def wrap_fq(atoms, qbin=.1, sum_type='fq', normalization=True):
     """
     Generate the reduced structure function
 
@@ -75,11 +75,13 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
     # Normalize fq
     # '''
     fq = np.sum(fq, 0, dtype=np.float32)
-    na = np.mean(norm, axis=0, dtype=np.float32) * np.float32(n)
-    old_settings = np.seterr(all='ignore')
-    fq = np.nan_to_num(fq / na)
-    np.seterr(**old_settings)
-    del q, d, r, norm, omega, na
+    if normalization:
+        na = np.mean(norm, axis=0, dtype=np.float32) * np.float32(n)
+        old_settings = np.seterr(all='ignore')
+        fq = np.nan_to_num(fq / na)
+        np.seterr(**old_settings)
+        del na
+    del q, d, r, norm, omega
     return fq * 2.
 
 

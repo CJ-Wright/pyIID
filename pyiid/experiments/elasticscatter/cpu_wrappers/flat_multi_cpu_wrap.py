@@ -27,7 +27,7 @@ def setup_cpu_calc(atoms, sum_type):
             np.float32)
 
 
-def wrap_fq(atoms, qbin=.1, sum_type='fq'):
+def wrap_fq(atoms, qbin=.1, sum_type='fq', normalization=True):
     """
     :param atoms:
     :param qbin:
@@ -48,12 +48,13 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
 
     # sum the answers
     final = np.sum(ans, axis=0)
-    norm = np.empty((k_max, qmax_bin), np.float32)
-    get_normalization_array(norm, scatter_array, 0)
-    na = np.mean(norm, axis=0) * n
-    old_settings = np.seterr(all='ignore')
-    final = np.nan_to_num(final / na)
-    np.seterr(**old_settings)
+    if normalization:
+        norm = np.empty((k_max, qmax_bin), np.float32)
+        get_normalization_array(norm, scatter_array, 0)
+        na = np.mean(norm, axis=0) * n
+        old_settings = np.seterr(all='ignore')
+        final = np.nan_to_num(final / na)
+        np.seterr(**old_settings)
     del q, n, qmax_bin, scatter_array, k_max, ans
     return 2 * final
 
