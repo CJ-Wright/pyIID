@@ -144,28 +144,32 @@ def stats_check(ans1, ans2, rtol=1e-7, atol=0):
                           (atol + rtol * np.abs(ans2[fails])).tolist())
             else:
                 print 'large number of failed tests'
+
             print '\n', 'without atol rtol = ', '\n'
+            a = np.abs(ans1[fails] - ans2[fails]) / np.abs(ans2[fails])
             if ans1[fails].size <= 251:
-                print np.abs(ans1[fails] - ans2[fails]) / np.abs(ans2[fails])
-            print np.nanmax(
-                np.abs(ans1[fails] - ans2[fails]) / np.abs(ans2[fails]))
+                print a
+            print np.nanmax(a)
+
             print 'without rtol atol = ', '\n'
+            a = np.abs(ans1[fails] - ans2[fails])
             if ans1[fails].size <= 251:
-                print np.abs(ans1[fails] - ans2[fails])
-            print np.nanmax(np.abs(ans1[fails] - ans2[fails]))
+                print a
+            print np.nanmax(a)
+
             print '\n', 'with current atol rtol = ', '\n'
-            if ans1[fails].size <= 251:
-                print (np.abs(ans1[fails] - ans2[fails]) - atol) / np.abs(
+            a = (np.abs(ans1[fails] - ans2[fails]) - atol) / np.abs(
                     ans2[fails])
-            print np.nanmax(
-                (np.abs(ans1[fails] - ans2[fails]) - atol) / np.abs(
-                    ans2[fails]))
+            if ans1[fails].size <= 251:
+                print a
+            print np.nanmax(a)
+
             print 'with current rtol atol = ', '\n'
-            if ans1[fails].size <= 251:
-                print np.abs(ans1[fails] - ans2[fails]) - rtol * np.abs(
+            a = np.abs(ans1[fails] - ans2[fails]) - rtol * np.abs(
                     ans2[fails])
-            print np.nanmax(
-                np.abs(ans1[fails] - ans2[fails]) - rtol * np.abs(ans2[fails]))
+            if ans1[fails].size <= 251:
+                print a
+            print np.nanmax(a)
         else:
             print np.abs(ans1 - ans2)
             print atol + rtol * np.abs(ans2)
