@@ -236,12 +236,3 @@ else:
 test_exp.extend([generate_experiment() for i in range(num_exp)])
 test_atoms = [setup_atoms(int(n)) for n in ns]
 test_double_atoms = [setup_double_atoms(int(n)) for n in ns]
-
-test_atoms_adp = []
-for atoms in test_atoms:
-    adps = ADP(atoms, np.random.normal(0, .1, atoms.positions.shape))
-    new_atoms = dc(atoms)
-    new_atoms.adps = adps
-    test_atoms_adp.append(new_atoms)
-test_atoms.extend(test_atoms_adp)
-# test_atoms = test_atoms_adp
