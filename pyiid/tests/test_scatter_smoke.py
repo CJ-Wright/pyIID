@@ -166,20 +166,20 @@ def check_scatter_fq_voxels(value):
                 atoms2 += Atom('Au', (x, y, z))
                 ans2[:, i, j, k] = scat.get_fq(atoms2)
     assert np.any(ans2)
-    stats_check(ans, ans2, atol=3e-6)
-    assert_allclose(ans, ans2, atol=3e-6)
+    stats_check(ans, ans2, rtol=3e-6, atol=3e-6)
+    assert_allclose(ans, ans2, rtol=3e-6, atol=3e-6)
     del atoms, exp, proc, alg, scat, ans
     return
 
 
 tests = [
+    check_scatter_fq,
+    check_scatter_sq,
+    check_scatter_iq,
+    check_scatter_pdf,
+    check_scatter_grad_fq,
+    check_scatter_grad_pdf,
     check_scatter_fq_voxels,
-    # check_scatter_fq,
-    # check_scatter_sq,
-    # check_scatter_iq,
-    # check_scatter_pdf,
-    # check_scatter_grad_fq,
-    # check_scatter_grad_pdf,
 ]
 test_data = tuple(product(
     tests,
@@ -192,33 +192,6 @@ test_data = tuple(product(
 def test_meta():
     for v in test_data:
         yield check_meta, v
-
-
-'''
-def test_gen_scatter_smoke_fq():
-    for v in test_data:
-        yield check_scatter_fq, v
-
-def test_gen_scatter_smoke_grad_fq():
-    for v in test_data:
-        yield check_scatter_grad_fq, v
-
-def test_gen_scatter_smoke_sq():
-    for v in test_data:
-        yield check_scatter_sq, v
-
-def test_gen_scatter_smoke_iq():
-    for v in test_data:
-        yield check_scatter_iq, v
-
-def test_gen_scatter_smoke_pdf():
-    for v in test_data:
-        yield check_scatter_pdf, v
-
-def test_gen_scatter_smoke_grad_pdf():
-    for v in test_data:
-        yield check_scatter_grad_pdf, v
-'''
 
 if __name__ == '__main__':
     import nose
