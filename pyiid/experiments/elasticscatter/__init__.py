@@ -552,15 +552,9 @@ class ElasticScatter(object):
         return pdf_grad
 
     def get_fq_voxels(self, atoms, new_atom, resolution):
-        fq = self.get_fq(atoms)
-        # FIXME: there is a problem in the normalization
-        qmax_bin = len(fq)
-        n = len(atoms)
-        scatter_array = atoms.get_array('F(Q) scatter')
-        norm2 = np.zeros((n * (n - 1) / 2., qmax_bin), np.float32)
-        flat_norm(norm2, scatter_array, 0)
-        na = np.mean(norm2, axis=0, dtype=np.float32) * np.float32(n)
-        fq *= na
+        if self.check_state(atoms):
+            wrap_atoms(atoms, self.exp)
+        fq = self.fq(atoms, self.exp['qbin'], normalization=False)
         voxels = self.voxel_fq(atoms, new_atom, resolution, fq, self.exp['qbin'])
         return voxels
 

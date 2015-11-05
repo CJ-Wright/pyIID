@@ -10,7 +10,7 @@ from pyiid.experiments.elasticscatter.kernels import antisymmetric_reshape, \
 __author__ = 'christopher'
 
 
-def wrap_fq(atoms, qbin=.1, sum_type='fq'):
+def wrap_fq(atoms, qbin=.1, sum_type='fq', normalization=True):
     """
     Generate the reduced structure function
 
@@ -22,7 +22,8 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
         The size of the scatter vector increment
     sum_type: {'fq', 'pdf'}
         Which scatter array should be used for the calculation
-
+    normalization: bool
+        If True normalize F(Q) else don't
     Returns
     -------
     fq:1darray
@@ -57,6 +58,15 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
     fq = omega
     # Normalize fq
     # '''
+    fq = np.sum(fq, axis=0, dtype=np.float64)
+    fq = fq.astype(np.float32)
+    if normalization:
+        na = np.mean(norm, axis=0, dtype=np.float32) * np.float32(n)
+        old_settings = np.seterr(all='ignore')
+        fq = np.nan_to_num(fq / na)
+        np.seterr(**old_settings)
+        del na
+    del q, d, r, norm, omega
     # fq = np.sum(fq, axis=0, dtype=np.float32)
     fq = np.sum(fq, axis=0, dtype=np.float64)
     fq = fq.astype(np.float32)

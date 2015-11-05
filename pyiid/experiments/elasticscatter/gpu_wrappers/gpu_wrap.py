@@ -117,7 +117,7 @@ def sub_grad_pdf(gpu, gpadc, gpadcfft, atoms_per_thread, n_cov):
             del data_out, batch_output
 
 
-def wrap_fq(atoms, qbin=.1, sum_type='fq'):
+def wrap_fq(atoms, qbin=.1, sum_type='fq', normalization=True):
     """
     Function which handles all the threads for the computation of F(Q)
 
@@ -132,6 +132,8 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
         if anything other than 'fq' is provided.  This is needed because
         the PDF runs at a different Q resolution and thus a different scatter
         factor array for the atoms
+    normalization: bool
+        If Ture, use F(Q) normalization
     Returns
     -------
     1darray;
@@ -146,12 +148,13 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
     fq = gpu_multithreading(subs_fq, allocation, master_task, (n, qmax_bin),
                             (gpus, mem_list))
     fq = fq.astype(np.float32)
-    norm = np.empty((n * (n - 1) / 2., qmax_bin), np.float32)
-    get_normalization_array(norm, scatter_array, 0)
-    na = np.mean(norm, axis=0) * n
-    old_settings = np.seterr(all='ignore')
-    fq = np.nan_to_num(fq / na)
-    np.seterr(**old_settings)
+    if normalization:
+        norm = np.empty((n * (n - 1) / 2., qmax_bin), np.float32)
+        get_normalization_array(norm, scatter_array, 0)
+        na = np.mean(norm, axis=0) * n
+        old_settings = np.seterr(all='ignore')
+        fq = np.nan_to_num(fq / na)
+        np.seterr(**old_settings)
     # Note we only calculated half of the scattering, but the symmetry allows
     # us to multiply by 2 and get it correct
     return 2 * fq

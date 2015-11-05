@@ -18,7 +18,7 @@ def setup_cpu_calc(atoms, sum_type):
         np.float32)
 
 
-def wrap_fq(atoms, qbin=.1, sum_type='fq'):
+def wrap_fq(atoms, qbin=.1, sum_type='fq', normalization=True):
     """
     Generate the reduced structure function
 
@@ -30,7 +30,8 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
         The size of the scatter vector increment
     sum_type: {'fq', 'pdf'}
         Which scatter array should be used for the calculation
-
+    normalization: bool
+        If True apply normalization, else don't
     Returns
     -------
     fq:1darray
@@ -48,13 +49,13 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
     # sum the answers
     final = np.sum(ans, axis=0, dtype=np.float64)
     final = final.astype(np.float32)
-    norm = np.empty((k_max, qmax_bin), np.float32)
-    get_normalization_array(norm, scatter_array, 0)
-    na = np.mean(norm, axis=0, dtype=np.float32) * np.float32(n)
-    # na = np.mean(norm, axis=0, dtype=np.float64) * n
-    old_settings = np.seterr(all='ignore')
-    final = np.nan_to_num(final / na)
-    np.seterr(**old_settings)
+    if normalization:
+        norm = np.empty((k_max, qmax_bin), np.float32)
+        get_normalization_array(norm, scatter_array, 0)
+        na = np.mean(norm, axis=0, dtype=np.float32) * np.float32(n)
+        old_settings = np.seterr(all='ignore')
+        final = np.nan_to_num(final / na)
+        np.seterr(**old_settings)
     del q, n, qmax_bin, scatter_array, k_max, ans
     return 2 * final
 

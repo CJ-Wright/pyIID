@@ -7,7 +7,7 @@ from ..kernels.master_kernel import get_single_scatter_array
 __author__ = 'christopher'
 
 
-def wrap_fq(atoms, qbin=.1, sum_type='fq'):
+def wrap_fq(atoms, qbin=.1, sum_type='fq', normalization=True):
     """
     Generate the reduced structure function
 
@@ -19,7 +19,8 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
         The size of the scatter vector increment
     sum_type: {'fq', 'pdf'}
         Which scatter array should be used for the calculation
-
+    normalization: bool
+        If True, use F(Q) normalization
     Returns
     -------
     fq:1darray
@@ -57,16 +58,15 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
     # Normalize fq
     fq = np.sum(fq, axis=(0,1), dtype=np.float64)
     fq = fq.astype(np.float32)
-    # fq = np.sum(fq, axis=0, dtype=np.float32)
-    # fq = np.sum(fq, axis=0, dtype=np.float32)
-    norm2 = np.zeros((n * (n - 1) / 2., qmax_bin), np.float32)
-    flat_norm(norm2, scatter_array, 0)
-    na = np.mean(norm2, axis=0, dtype=np.float32) * np.float32(n)
-    # na = np.mean(norm2, axis=0, dtype=np.float64) * n
-    old_settings = np.seterr(all='ignore')
-    fq = np.nan_to_num(fq / na)
-    np.seterr(**old_settings)
-    del q, d, r, norm, omega, na
+    if normalization:
+        norm2 = np.zeros((n * (n - 1) / 2., qmax_bin), np.float32)
+        flat_norm(norm2, scatter_array, 0)
+        na = np.mean(norm2, axis=0, dtype=np.float32) * np.float32(n)
+        old_settings = np.seterr(all='ignore')
+        fq = np.nan_to_num(fq / na)
+        np.seterr(**old_settings)
+        del na
+    del q, d, r, norm, omega
     return fq
 
 
@@ -192,7 +192,6 @@ def wrap_voxel_fq(atoms, new_atom, resolution,fq, qbin=.1, sum_type='fq'):
     get_voxel_fq(vfq, omega, norm)
 
     # Normalize fq
-    # FIXME: normalization prevents F(Q) and F(V,Q) from direct addition
     norm2 = np.zeros((n * (n - 1) / 2., qmax_bin), np.float32)
     flat_norm(norm2, scatter_array, 0)
     na = np.mean(norm2, axis=0, dtype=np.float32) * np.float32(n+1)

@@ -179,8 +179,8 @@ def check_scatter_fq_voxels(value):
                 atoms2 += Atom('Au', (x, y, z))
                 ans2[:, i, j, k] = scat.get_fq(atoms2)
     assert np.any(ans2)
-    stats_check(ans, ans2, atol=1e-6)
-    assert_allclose(ans, ans2, atol=1e-6)
+    stats_check(ans, ans2, atol=3e-6)
+    assert_allclose(ans, ans2, atol=3e-6)
     del atoms, exp, proc, alg, scat, ans
     return
 
@@ -217,7 +217,7 @@ if __name__ == '__main__':
         '--with-doctest',
         # '--nocapture',
         '-v',
-        # '-x',
+        '-x',
     ],
         # env={"NOSE_PROCESSES": 1, "NOSE_PROCESS_TIMEOUT": 599},
         exit=False)
