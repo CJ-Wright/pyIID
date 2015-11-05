@@ -13,7 +13,6 @@ import os
 from copy import deepcopy as dc
 import random
 from pyiid.testing.decorators import *
-
 from pyiid.experiments.elasticscatter import wrap_atoms
 from pyiid.calc.spring_calc import Spring
 from pyiid.adp import ADP
@@ -146,20 +145,25 @@ def stats_check(ans1, ans2, rtol=1e-7, atol=0):
             else:
                 print 'large number of failed tests'
             print '\n', 'without atol rtol = ', '\n'
-            print np.abs(ans1[fails] - ans2[fails]) / np.abs(ans2[fails])
+            if ans1[fails].size <= 251:
+                print np.abs(ans1[fails] - ans2[fails]) / np.abs(ans2[fails])
             print np.nanmax(
                 np.abs(ans1[fails] - ans2[fails]) / np.abs(ans2[fails]))
             print 'without rtol atol = ', '\n'
-            print np.abs(ans1[fails] - ans2[fails])
+            if ans1[fails].size <= 251:
+                print np.abs(ans1[fails] - ans2[fails])
             print np.nanmax(np.abs(ans1[fails] - ans2[fails]))
             print '\n', 'with current atol rtol = ', '\n'
-            print (np.abs(ans1[fails] - ans2[fails]) - atol) / np.abs(
-                ans2[fails])
-            print np.nanmax((np.abs(ans1[fails] - ans2[fails]) - atol) / np.abs(
-                ans2[fails]))
+            if ans1[fails].size <= 251:
+                print (np.abs(ans1[fails] - ans2[fails]) - atol) / np.abs(
+                    ans2[fails])
+            print np.nanmax(
+                (np.abs(ans1[fails] - ans2[fails]) - atol) / np.abs(
+                    ans2[fails]))
             print 'with current rtol atol = ', '\n'
-            print np.abs(ans1[fails] - ans2[fails]) - rtol * np.abs(
-                ans2[fails])
+            if ans1[fails].size <= 251:
+                print np.abs(ans1[fails] - ans2[fails]) - rtol * np.abs(
+                    ans2[fails])
             print np.nanmax(
                 np.abs(ans1[fails] - ans2[fails]) - rtol * np.abs(ans2[fails]))
         else:
