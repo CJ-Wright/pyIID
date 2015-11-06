@@ -1,7 +1,5 @@
 from threading import Thread
-
 from numbapro.cudalib import cufft
-
 from pyiid.experiments.elasticscatter.atomics.gpu_atomics import *
 from pyiid.experiments import *
 from pyiid.experiments.elasticscatter.kernels.cpu_flat import \
@@ -111,7 +109,7 @@ def sub_grad_pdf(gpu, gpadc, gpadcfft, atoms_per_thread, n_cov):
         batch_operations = atoms_per_thread
         plan = cufft.FFTPlan(input_shape, np.complex64, np.complex64,
                              batch_operations)
-        for i in xrange(3):
+        for i in range(3):
             batch_input = np.ravel(
                 gpadc[n_cov:n_cov + atoms_per_thread, i, :]).astype(
                 np.complex64)
@@ -121,9 +119,8 @@ def sub_grad_pdf(gpu, gpadc, gpadcfft, atoms_per_thread, n_cov):
             del batch_input
             data_out = np.reshape(batch_output,
                                   (atoms_per_thread, input_shape[0]))
-            data_out /= input_shape[0]
-
-            gpadcfft[n_cov:n_cov + atoms_per_thread, i, :] = data_out
+            gpadcfft[n_cov:n_cov + atoms_per_thread, i, :] = data_out / \
+                                                             input_shape[0]
             del data_out, batch_output
 
 
@@ -264,7 +261,9 @@ def grad_pdf(grad_fq, rstep, qstep, rgrid, qmin):
         for gpu, mem in zip(gpus, mems):
             if gpu not in p_dict.keys() or p_dict[gpu].is_alive() is False:
                 atoms_per_thread = int(
-                    math.floor(mem / gpadcfft.shape[-1] / 64 / 2))
+                    math.floor(float(mem) / gpadcfft.shape[-1] / 64
+                               / 2
+                               ))
                 if atoms_per_thread > n - n_cov:
                     atoms_per_thread = n - n_cov
                 if n_cov >= n:
