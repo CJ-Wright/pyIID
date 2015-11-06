@@ -101,7 +101,7 @@ def sub_grad_pdf(gpu, gpadc, gpadcfft, atoms_per_thread, n_cov):
         batch_operations = atoms_per_thread
         plan = cufft.FFTPlan(input_shape, np.complex64, np.complex64,
                              batch_operations)
-        for i in xrange(3):
+        for i in range(3):
             batch_input = np.ravel(
                 gpadc[n_cov:n_cov + atoms_per_thread, i, :]).astype(
                 np.complex64)
@@ -111,9 +111,8 @@ def sub_grad_pdf(gpu, gpadc, gpadcfft, atoms_per_thread, n_cov):
             del batch_input
             data_out = np.reshape(batch_output,
                                   (atoms_per_thread, input_shape[0]))
-            data_out /= input_shape[0]
-
-            gpadcfft[n_cov:n_cov + atoms_per_thread, i, :] = data_out
+            gpadcfft[n_cov:n_cov + atoms_per_thread, i, :] = data_out / \
+                                                             input_shape[0]
             del data_out, batch_output
 
 
@@ -133,7 +132,7 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq', normalization=True):
         the PDF runs at a different Q resolution and thus a different scatter
         factor array for the atoms
     normalization: bool
-        If Ture, use F(Q) normalization
+        If True, use F(Q) normalization
     Returns
     -------
     1darray;

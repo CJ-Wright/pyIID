@@ -42,6 +42,7 @@ def check_gpu():
 
 
 def check_cudafft():
+    return False
     try:
         from numbapro.cudalib import cufft
         tf = True
