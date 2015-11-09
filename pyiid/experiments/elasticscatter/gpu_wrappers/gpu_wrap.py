@@ -140,9 +140,10 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
     master_task = [fq, q, adps, scatter_array, qbin]
     fq = gpu_multithreading(subs_fq, allocation, master_task, (n, qmax_bin),
                             (gpus, mem_list))
-    norm = np.empty((n * (n - 1) / 2., qmax_bin), np.float32)
-    get_normalization_array(norm, scatter_array, 0)
-    na = np.mean(norm, axis=0) * n
+    norm = np.empty(qmax_bin, np.float32)
+    k_max = n * (n - 1) / 2.
+    get_normalization_sum_array(norm, scatter_array, 0)
+    na = norm / k_max * n
     old_settings = np.seterr(all='ignore')
     fq = np.nan_to_num(fq / na)
     np.seterr(**old_settings)

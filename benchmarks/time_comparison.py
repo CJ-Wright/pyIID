@@ -26,7 +26,7 @@ benchmarks = [
     ('Multi-GPU', 'flat')
 ]
 colors=['b', 'r']
-sizes = range(10, 30, 5)
+sizes = range(10, 55, 5)
 print sizes
 for proc, alg in benchmarks:
     print proc, alg

@@ -26,9 +26,8 @@ def run():
 
 
 if __name__ == '__main__':
-    os.environ["SHORT_TEST"] = "1"
     try:
+        os.environ["SHORT_TEST"] = "1"
         run()
-    except:
-        pass
-    os.environ["SHORT_TEST"] = "0"
+    finally:
+        os.environ["SHORT_TEST"] = "0"
