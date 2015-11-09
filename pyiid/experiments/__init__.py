@@ -14,8 +14,8 @@ def get_gpus_mem():
         mem_list.append(int(meminfo[0]))
     sort_gpus = [x for (y, x) in sorted(zip(mem_list, gpus), reverse=True)]
     sort_gmem = [y for (y, x) in sorted(zip(mem_list, gpus), reverse=True)]
-    # return [sort_gpus[0]], [sort_gmem[0]]
-    return sort_gpus, sort_gmem
+    return [sort_gpus[0]], [sort_gmem[0]]
+    # return sort_gpus, sort_gmem
     # return [sort_gpus[1]], [sort_gmem[1]]
 
 

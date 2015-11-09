@@ -3,7 +3,7 @@ from numbapro.cudalib import cufft
 from pyiid.experiments.elasticscatter.atomics.gpu_atomics import *
 from pyiid.experiments import *
 from pyiid.experiments.elasticscatter.kernels.cpu_flat import \
-    get_normalization_array
+    get_normalization_sum_array
 
 __author__ = 'christopher'
 
@@ -98,20 +98,15 @@ def sub_grad_pdf(gpu, gpadc, gpadcfft, atoms_per_thread, n_cov):
     Returns
     """
     input_shape = [gpadcfft.shape[-1]]
+    pre_batch_input = gpadc[n_cov:n_cov + atoms_per_thread, :, :]
+    pre_batch_output = np.zeros(pre_batch_input.shape, dtype=np.complex64)
+    batch_input = [np.ravel(pre_batch_input[:, i, :]) for i in range(3)]
+    batch_output = [np.ravel(pre_batch_output[:, i, :]) for i in range(3)]
     with gpu:
-        batch_operations = atoms_per_thread
         plan = cufft.FFTPlan(input_shape, np.complex64, np.complex64,
-                             batch_operations)
-        pre_batch_input = gpadc[n_cov:n_cov + atoms_per_thread, :, :]
-        pre_batch_output = np.zeros(pre_batch_input.shape, dtype=np.complex64)
-        batch_input = []
-        batch_output = []
-        for i in range(3):
-            batch_input.append(np.ravel(pre_batch_input[:, i, :]))
-            batch_output.append(np.ravel(pre_batch_output[:, i, :]))
+                             atoms_per_thread)
         for i in range(3):
             _ = plan.inverse(batch_input[i], out=batch_output[i])
-
     gpadcfft[n_cov:n_cov + atoms_per_thread, :, :] = np.reshape(
         np.asarray(batch_output),
         (atoms_per_thread, 3, input_shape[0])) / input_shape[0]
@@ -185,9 +180,11 @@ def wrap_fq_grad(atoms, qbin=.1, sum_type='fq'):
     grad_p = gpu_multithreading(subs_grad_fq, allocation, master_task,
                                 (n, qmax_bin),
                                 (gpus, mem_list))
-    norm = np.empty((n * (n - 1) / 2., qmax_bin), np.float32)
-    get_normalization_array(norm, scatter_array, 0)
-    na = np.mean(norm, axis=0) * n
+    norm = np.empty(qmax_bin, np.float32)
+    k_max = n * (n - 1) / 2.
+    get_normalization_sum_array(norm, scatter_array, 0)
+    na = norm / k_max * n
+    del norm
     old_settings = np.seterr(all='ignore')
     grad_p = np.nan_to_num(grad_p / na)
     np.seterr(**old_settings)
@@ -240,7 +237,7 @@ def grad_pdf(grad_fq, rstep, qstep, rgrid, qmin):
     gpadc = gpadc.astype(np.complex64)
 
     gpus, mems = get_gpus_mem()
-    print [mem / 1e9 for mem in mems]
+    print [mem / 1e9 for mem in mems], gpadc.nbytes * 2 / 1e9
     n_cov = 0
     p_dict = {}
 

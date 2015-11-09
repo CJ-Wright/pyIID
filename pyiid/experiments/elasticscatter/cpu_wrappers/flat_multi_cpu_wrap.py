@@ -62,9 +62,10 @@ def wrap_fq_grad(atoms, qbin=.1, sum_type='fq'):
     # print ans
     grad_p = np.sum(ans, axis=0)
     # print grad_p.shape
-    norm = np.empty((k_max, qmax_bin), np.float32)
-    get_normalization_array(norm, scatter_array, 0)
-    na = np.mean(norm, axis=0) * n
+    norm = np.empty(qmax_bin, np.float32)
+    k_max = n * (n - 1) / 2.
+    get_normalization_sum_array(norm, scatter_array, 0)
+    na = norm / k_max * n
     old_settings = np.seterr(all='ignore')
     grad_p = np.nan_to_num(grad_p / na)
     np.seterr(**old_settings)

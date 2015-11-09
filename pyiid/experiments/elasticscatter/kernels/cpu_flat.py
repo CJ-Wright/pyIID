@@ -232,3 +232,26 @@ def fast_fast_flat_sum(new_grad, grad, k_cov):
                 for qx in xrange(grad.shape[2]):
                     for tz in xrange(i4(3)):
                         new_grad[i, tz, qx] += grad[k, tz, qx] * alpha
+
+
+@jit(void(f4[:], f4[:, :], i4), target=processor_target, nopython=True,
+     cache=cache)
+def get_normalization_sum_array(norm, scat, offset):
+    """
+    Generate the sv dependant normalization factors for the F(sv) array
+
+    Parameters:
+    -----------
+    norm_array: kxQ array
+        Normalization array
+    scatter_array: NxQ array
+        The scatter factor array
+    offset: int
+        The amount of previously covered pairs
+    """
+    n, qmax_bin = scat.shape
+    kmax = n*(n-1)/2.
+    for k in xrange(i4(kmax)):
+        i, j = k_to_ij(i4(k + offset))
+        for qx in xrange(i4(qmax_bin)):
+            norm[qx] += scat[i, qx] * scat[j, qx]
