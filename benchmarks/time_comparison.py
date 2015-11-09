@@ -1,10 +1,9 @@
 __author__ = 'christopher'
 from ase.atoms import Atoms
 import ase.io as aseio
-
-from pyiid.wrappers.elasticscatter import wrap_atoms
-from pyiid.calc.pdfcalc import PDFCalc
 from pyiid.utils import build_sphere_np
+from pyiid.calc.calc_1d import Calc1D
+import numpy as np
 
 import matplotlib.pyplot as plt
 from pprint import pprint
@@ -27,7 +26,7 @@ benchmarks = [
     ('Multi-GPU', 'flat')
 ]
 colors=['b', 'r']
-sizes = range(10, 80, 5)
+sizes = range(10, 30, 5)
 print sizes
 for proc, alg in benchmarks:
     print proc, alg
@@ -42,7 +41,9 @@ for proc, alg in benchmarks:
             atoms.rattle()
             print len(atoms), i/10.
             number_of_atoms.append(len(atoms))
-            calc = PDFCalc(obs_data=pdf, scatter=scat, conv=1, potential='rw')
+            calc = Calc1D(target_data=pdf, exp_function=scat.get_pdf,
+                          exp_grad_function=scat.get_grad_pdf,
+                          conv=1, potential='rw')
             atoms.set_calculator(calc)
 
             s = time.time()
@@ -53,7 +54,7 @@ for proc, alg in benchmarks:
             nrg_l.append(f-s)
 
             s = time.time()
-            # force = atoms.get_forces()
+            force = atoms.get_forces()
             # scat.get_grad_fq(atoms)
             f = time.time()
             f_l.append(f-s)
@@ -78,16 +79,20 @@ plt.savefig('speed3.eps', bbox_inches='tight', transparent=True)
 plt.savefig('speed3.png', bbox_inches='tight', transparent=True)
 plt.show()
 '''
-names = ['GPU', 'CPU']
+names = [b[0] for b in benchmarks]
 fig = plt.figure()
 ax1 = fig.add_subplot(111)
 ax2 = ax1.twiny()
 
 for i in range(len(benchmarks)):
     for j, (calc_type, line) in enumerate(zip(['energy', 'force'], ['o', 's'])):
+        print names[i], calc_type, time_list[i][j]
         ax1.semilogy(sizes,time_list[i][j], color=colors[i], marker=line, label= '{0} {1}'.format(names[i], calc_type))
 
+print 'energy', np.asarray(time_list[0][0])/np.asarray(time_list[1][0])
+print 'forces', np.asarray(time_list[0][1])/np.asarray(time_list[1][1])
 ax1.legend(loc='best')
+ax1.set_xticks(sizes)
 ax1.set_xlabel('NP diameter in Angstrom')
 ax1.set_ylabel('Elapsed running time (s)')
 ax2.set_xlim(ax1.get_xlim())
