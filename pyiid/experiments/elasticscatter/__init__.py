@@ -13,7 +13,9 @@ from .cpu_wrappers.nxn_cpu_wrap import \
      wrap_fq as cpu_wrap_fq,
      wrap_voxel_fq as cpu_wrap_voxel_fq)
 from .kernels.master_kernel import \
-    grad_pdf as cpu_grad_pdf, get_pdf_at_qmin, get_scatter_array
+    (grad_pdf as cpu_grad_pdf,
+     voxel_pdf as cpu_wrap_voxel_pdf,
+     get_pdf_at_qmin, get_scatter_array)
 from .kernels.cpu_flat import get_normalization_array as flat_norm
 __author__ = 'christopher'
 
@@ -37,7 +39,7 @@ def check_gpu():
 
 
 def check_cudafft():
-    return False
+    # return False
     try:
         from numbapro.cudalib import cufft
         tf = True
@@ -95,6 +97,7 @@ class ElasticScatter(object):
         self.grad = cpu_wrap_fq_grad
         self.grad_pdf = cpu_grad_pdf
         self.voxel_fq = cpu_wrap_voxel_fq
+        self.voxel_pdf = cpu_wrap_voxel_pdf
         self.processor = 'CPU'
         self.alg = 'nxn'
 
@@ -284,7 +287,6 @@ class ElasticScatter(object):
         if self.check_state(atoms):
             wrap_atoms(atoms, self.exp)
         fq = self.fq(atoms, self.pdf_qbin, 'PDF')
-        self.fq_result = fq
         r = self.get_r()
         pdf0 = get_pdf_at_qmin(
             fq,
@@ -411,10 +413,21 @@ class ElasticScatter(object):
         fq = self.fq(atoms, self.exp['qbin'], normalization=False)
         voxels = self.voxel_fq(atoms, new_atom, resolution, fq, self.exp['qbin'])
         return voxels
+    #TODO: change order of array
+    def get_pdf_voxels(self, atoms, new_atom, resolution):
+        if self.check_state(atoms):
+            wrap_atoms(atoms, self.exp)
+        r = self.get_r()
+        fq = self.fq(atoms, self.pdf_qbin, 'PDF', normalization=False)
+        voxels = self.voxel_fq(atoms, new_atom, resolution, fq, self.pdf_qbin, 'PDF')
 
-    def get_pdf_voxels(self, atoms, resolution):
-        pass
-
+        qmin_bin = int(self.exp['qmin'] / self.pdf_qbin)
+        voxels[:qmin_bin, :, :, :] = 0.
+        # vpdf = self.voxel_pdf(voxels, self.exp['rstep'], self.pdf_qbin,
+        #                          r,
+        #                          self.exp['qmin'])
+        # return vpdf
+        return voxels
 
 def wrap_atoms(atoms, exp_dict=None):
     """

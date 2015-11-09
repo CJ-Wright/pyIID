@@ -57,6 +57,7 @@ def get_single_scatter_array(scatter_array, numbers, qbin):
         # as opposed to our q = 4pi sin(th/2)
         scatter_array[kq] = xraylib.FF_Rayl(numbers, kq * qbin / 4 / np.pi)
 
+
 def get_pdf_at_qmin(fpad, rstep, qstep, rgrid, qmin):
     """
     Get the atomic pair distribution function
@@ -289,7 +290,6 @@ def get_chi_sq(gobs, gcalc):
     return np.sum((gobs - scale * gcalc) ** 2), scale
 
 
-
 # Gradient test_kernels -------------------------------------------------------
 
 
@@ -311,6 +311,25 @@ def grad_pdf(grad_fq, rstep, qstep, rgrid, qmin):
     p.close()
     pdf_grad_flat = np.asarray(pdf_grad_l)
     pdf_grad = np.reshape(pdf_grad_flat, (n, 3, len(rgrid)))
+    return pdf_grad
+
+
+def voxel_pdf(voxel_fq, rstep, qstep, rgrid, qmin):
+    qmax_bin, im, jm, km = voxel_fq.shape
+    grad_iter = []
+    pool_size = cpu_count()
+    if pool_size <= 0:
+        pool_size = 1
+    p = Pool(pool_size)
+    for i in xrange(im):
+        for j in xrange(jm):
+            for k in xrange(km):
+                grad_iter.append(
+                    (voxel_fq[:, i, j, k], rstep, qstep, rgrid, qmin))
+    pdf_grad_l = p.map(grad_pdf_pool_worker, grad_iter)
+    p.close()
+    pdf_grad_flat = np.asarray(pdf_grad_l)
+    pdf_grad = np.reshape(pdf_grad_flat, (len(rgrid), im, jm, km))
     return pdf_grad
 
 

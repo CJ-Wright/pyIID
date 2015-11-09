@@ -1,7 +1,7 @@
 import numpy as np
 from ase.calculators.calculator import Calculator
 
-from pyiid.calc import wrap_rw, wrap_chi_sq, wrap_grad_rw, wrap_grad_chi_sq
+from pyiid.calc import *
 
 __author__ = 'christopher'
 
@@ -41,6 +41,7 @@ class Calc1D(Calculator):
         elif potential == 'rw':
             self.potential = wrap_rw
             self.grad = wrap_grad_rw
+            self.voxel = wrap_voxel_rw
         else:
             raise NotImplementedError('Potential not implemented')
 
@@ -113,9 +114,10 @@ class Calc1D(Calculator):
 
         self.results['forces'] = forces
 
-    def calculate_voxel_energy(self, atoms, resolution):
-        voxels = self.exp_voxel_function(atoms, resolution)
-
+    def calculate_voxel_energy(self, atoms, new_atom, resolution):
+        voxels = self.exp_voxel_function(atoms, new_atom, resolution)
+        rw, scale = self.voxel(voxels, self.target_data)
+        return rw
 
     def calculate_atomwise_energy(self, atoms):
         atomwise = self.exp_atomwise_function(atoms)

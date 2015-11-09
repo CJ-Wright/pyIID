@@ -148,3 +148,43 @@ def wrap_grad_chi_sq(grad_gcalc, gcalc, gobs):
     grad_chi_sq = np.zeros((len(grad_gcalc), 3))
     get_grad_chi_sq(grad_chi_sq, grad_gcalc, gcalc, gobs, scale)
     return grad_chi_sq
+
+
+def wrap_voxel_rw(gcalc, gobs):
+    """
+    Generate the Rw value
+
+    Parameters
+    -----------
+    :param gcalc:
+    atoms: ase.Atoms
+        The atomic configuration
+    gobs: 1darray
+        The observed atomic pair distribution function
+    qmax: float
+        The maximum scatter vector value
+    qmin: float
+        The minimum scatter vector value
+    qbin: float
+        The size of the scatter vector increment
+    rmax: float
+        Maximum r value
+    rstep: float
+        Size between r values
+
+    Returns
+    -------
+
+    rw: float
+        The Rw value in percent
+    scale: float
+        The scale factor between the observed and calculated PDF
+    """
+    a, im, jm, km = gcalc.shape
+    rw = np.zeros((im, jm, km))
+    scale = np.zeros((im, jm, km))
+    for i in xrange(im):
+        for j in xrange(jm):
+            for k in xrange(km):
+                rw[i, j, k], scale[i, j, k] = get_rw(gobs, gcalc[:, i, j, k], weight=None)
+    return rw, scale

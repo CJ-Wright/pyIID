@@ -178,14 +178,53 @@ def check_scatter_fq_voxels(value):
     return
 
 
+def check_scatter_pdf_voxels(value):
+    atoms, exp = dc(value[0:2])
+    proc, alg = value[-1]
+
+    scat = ElasticScatter(exp_dict=exp)
+    scat.set_processor(proc, alg)
+    # Test a set of different sized ensembles
+    res = 1.
+    atoms.center(res)
+    ans = scat.get_pdf_voxels(atoms, Atom('Au', [0, 0, 0]), res)
+    print ans.shape
+    # Check that Scatter gave back something
+    assert ans is not None
+    # Check that all the values are not zero
+    assert np.any(ans)
+    ans2 = np.zeros(ans.shape)
+    _, im, jm, km = ans.shape
+    for i in xrange(im):
+        x = (i + .5) * res
+        for j in xrange(jm):
+            y = (j + .5) * res
+            for k in xrange(km):
+                z = (k + .5) * res
+                atoms2 = dc(atoms)
+                atoms2 += Atom('Au', (x, y, z))
+                ans2[:, i, j, k] = scat.get_pdf(atoms2)
+    assert np.any(ans2)
+    stats_check(ans, ans2,
+                rtol=3e-6,
+                atol=3e-6
+                )
+    assert_allclose(ans, ans2,
+                    rtol=3e-6,
+                    atol=3e-6
+                    )
+    del atoms, exp, proc, alg, scat, ans
+    return
+
 tests = [
-    check_scatter_fq,
-    check_scatter_sq,
-    check_scatter_iq,
-    check_scatter_pdf,
-    check_scatter_grad_fq,
-    check_scatter_grad_pdf,
+    # check_scatter_fq,
+    # check_scatter_sq,
+    # check_scatter_iq,
+    # check_scatter_pdf,
+    # check_scatter_grad_fq,
+    # check_scatter_grad_pdf,
     check_scatter_fq_voxels,
+    # check_scatter_pdf_voxels,
 ]
 test_data = tuple(product(
     tests,
