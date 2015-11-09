@@ -211,13 +211,17 @@ if os.getenv('TRAVIS'):
     comparison_pro_alg_pairs = list(combinations(proc_alg_pairs, 2))
 
     if bool(os.getenv('NUMBA_DISABLE_JIT')):
+        jit_disabled = True
         pass
     else:
         # Use a slightly bigger test set, since we are using the JIT
         ns = [10, 100, 400]
         num_exp = 3
+        jit_disabled = False
 
 else:
+    # jit_disabled = True
+    jit_disabled = False
     ns = [
         10,
         # 15,

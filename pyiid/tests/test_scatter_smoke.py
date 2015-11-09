@@ -216,14 +216,15 @@ def check_scatter_pdf_voxels(value):
     del atoms, exp, proc, alg, scat, ans
     return
 
+
 tests = [
-    # check_scatter_fq,
-    # check_scatter_sq,
-    # check_scatter_iq,
-    # check_scatter_pdf,
-    # check_scatter_grad_fq,
-    # check_scatter_grad_pdf,
-    # check_scatter_fq_voxels,
+    check_scatter_fq,
+    check_scatter_sq,
+    check_scatter_iq,
+    check_scatter_pdf,
+    check_scatter_grad_fq,
+    check_scatter_grad_pdf,
+    check_scatter_fq_voxels,
     check_scatter_pdf_voxels,
 ]
 test_data = tuple(product(
@@ -232,11 +233,20 @@ test_data = tuple(product(
     test_exp,
     proc_alg_pairs,
 ))
+new_test_data = list(test_data)
+for test in new_test_data[:]:
+    if jit_disabled:
+        if 'check_scatter_fq_voxels' in test[0].__name__ \
+                or 'check_scatter_pdf_voxels' in test[0].__name__:
+            if len(test[1]) > 50:
+                new_test_data.remove(test)
+test_data = tuple(new_test_data)
 
 
 def test_meta():
     for v in test_data:
         yield check_meta, v
+
 
 if __name__ == '__main__':
     import nose
