@@ -168,7 +168,7 @@ def check_scatter_fq_voxels(value):
     # Check that all the values are not zero
     assert np.any(ans)
     ans2 = np.zeros(ans.shape)
-    _, im, jm, km = ans.shape
+    im, jm, km, _ = ans.shape
     for i in xrange(im):
         x = (i + .5) * res
         for j in xrange(jm):
@@ -177,7 +177,7 @@ def check_scatter_fq_voxels(value):
                 z = (k + .5) * res
                 atoms2 = dc(atoms)
                 atoms2 += Atom('Au', (x, y, z))
-                ans2[:, i, j, k] = scat.get_fq(atoms2)
+                ans2[i, j, k, :] = scat.get_fq(atoms2)
     assert np.any(ans2)
     stats_check(ans, ans2,
                 rtol=3e-6,
@@ -207,7 +207,7 @@ def check_scatter_pdf_voxels(value):
     # Check that all the values are not zero
     assert np.any(ans)
     ans2 = np.zeros(ans.shape)
-    _, im, jm, km = ans.shape
+    im, jm, km, _ = ans.shape
     for i in xrange(im):
         x = (i + .5) * res
         for j in xrange(jm):
@@ -216,7 +216,7 @@ def check_scatter_pdf_voxels(value):
                 z = (k + .5) * res
                 atoms2 = dc(atoms)
                 atoms2 += Atom('Au', (x, y, z))
-                ans2[:, i, j, k] = scat.get_pdf(atoms2)
+                ans2[i, j, k, :] = scat.get_pdf(atoms2)
     assert np.any(ans2)
     stats_check(ans, ans2,
                 rtol=3e-6,
@@ -224,7 +224,7 @@ def check_scatter_pdf_voxels(value):
                 )
     assert_allclose(ans, ans2,
                     rtol=3e-6,
-                    atol=3e-6
+                    atol=5e-6
                     )
     del atoms, exp, proc, alg, scat, ans
     return
@@ -236,8 +236,8 @@ tests = [
     # check_scatter_pdf,
     # check_scatter_grad_fq,
     # check_scatter_grad_pdf,
-    check_scatter_fq_voxels,
-    # check_scatter_pdf_voxels,
+    # check_scatter_fq_voxels,
+    check_scatter_pdf_voxels,
 ]
 test_data = tuple(product(
     tests,
@@ -260,7 +260,7 @@ if __name__ == '__main__':
         '--with-doctest',
         # '--nocapture',
         '-v',
-        '-x',
+        # '-x',
     ],
         # env={"NOSE_PROCESSES": 1, "NOSE_PROCESS_TIMEOUT": 599},
         exit=False)

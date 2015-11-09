@@ -83,7 +83,7 @@ def get_omega(omega, r, qbin):
 
     Parameters
     ---------
-    omega: Nd array4
+    omega: Nd array
         The reduced scatter pattern
     r: NxN array
         The pair distance array
@@ -198,7 +198,7 @@ def get_grad_fq_inplace(grad_omega, norm):
 @jit(void(f4[:, :, :, :, :], f4[:, :], f4), target=processor_target,
      nopython=True, cache=cache)
 def get_voxel_displacements(d, q, resolution):
-    n, _, im, jm, km = d.shape
+    im, jm, km, n, _ = d.shape
     for i in xrange(im):
         x = (i + .5) * resolution
         for j in xrange(jm):
@@ -206,9 +206,9 @@ def get_voxel_displacements(d, q, resolution):
             for k in xrange(km):
                 z = (k + .5) * resolution
                 for l in xrange(n):
-                    d[l, 0, i, j, k] = x - q[l, 0]
-                    d[l, 1, i, j, k] = y - q[l, 1]
-                    d[l, 2, i, j, k] = z - q[l, 2]
+                    d[i, j, k, l, 0] = x - q[l, 0]
+                    d[i, j, k, l, 1] = y - q[l, 1]
+                    d[i, j, k, l, 2] = z - q[l, 2]
 
 
 @jit(void(f4[:, :, :, :, :], f4[:, :, :, :], f4), target=processor_target,
@@ -228,16 +228,16 @@ def get_voxel_omega(omega, r, qbin):
     qbin: float
         The qbin size
     """
-    n, qmax_bin, im, jm, km = omega.shape
+    im, jm, km, n, qmax_bin = omega.shape
     for i in xrange(im):
         for j in xrange(jm):
             for k in xrange(km):
                 for qx in xrange(i4(qmax_bin)):
                     sv = f4(qx) * qbin
                     for l in xrange(n):
-                        rij = r[l, i, j, k]
+                        rij = r[i, j, k, l]
                         if rij != 0.0:
-                            omega[l, qx, i, j, k] = math.sin(sv * rij) / rij
+                            omega[i, j, k, l, qx] = math.sin(sv * rij) / rij
 
 @jit(void(f4[:, :, :, :], f4[:, :, :, :, :], f4[:, :]), target=processor_target, nopython=True,
      cache=cache)
@@ -256,10 +256,10 @@ def get_voxel_fq(fq, omega, norm):
     qbin: float
         The qbin size
     """
-    n, qmax_bin, im, jm, km = omega.shape
+    im, jm, km, n, qmax_bin = omega.shape
     for i in xrange(im):
         for j in xrange(jm):
             for k in xrange(km):
                 for qx in xrange(i4(qmax_bin)):
                     for l in xrange(n):
-                        fq[qx, i, j, k] += omega[l, qx, i, j, k] * norm[l, qx]
+                        fq[i, j, k, qx] += omega[i, j, k, l, qx] * norm[l, qx]
