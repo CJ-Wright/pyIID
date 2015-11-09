@@ -13,7 +13,9 @@ from .cpu_wrappers.nxn_cpu_wrap import \
      wrap_fq as cpu_wrap_fq,
      wrap_voxel_fq as cpu_wrap_voxel_fq)
 from .kernels.master_kernel import \
-    grad_pdf as cpu_grad_pdf, get_pdf_at_qmin, get_scatter_array
+    (grad_pdf as cpu_grad_pdf,
+     voxel_pdf as cpu_wrap_voxel_pdf,
+     get_pdf_at_qmin, get_scatter_array)
 from .kernels.cpu_flat import get_normalization_array as flat_norm
 from ase.calculators.calculator import equal
 
@@ -42,7 +44,6 @@ def check_gpu():
 
 
 def check_cudafft():
-    return False
     try:
         from numbapro.cudalib import cufft
         tf = True
@@ -155,6 +156,7 @@ class ElasticScatter(object):
         self.grad = cpu_wrap_fq_grad
         self.grad_pdf = cpu_grad_pdf
         self.voxel_fq = cpu_wrap_voxel_fq
+        self.voxel_pdf = cpu_wrap_voxel_pdf
         self.processor = 'CPU'
         self.alg = 'nxn'
 
@@ -559,5 +561,17 @@ class ElasticScatter(object):
         voxels = self.voxel_fq(atoms, new_atom, resolution, fq, self.exp['qbin'])
         return voxels
 
-    def get_pdf_voxels(self, atoms, resolution):
-        pass
+    #TODO: change order of array
+    def get_pdf_voxels(self, atoms, new_atom, resolution):
+        if self.check_state(atoms):
+            wrap_atoms(atoms, self.exp)
+        r = self.get_r()
+        fq = self.fq(atoms, self.pdf_qbin, 'PDF', normalization=False)
+        voxels = self.voxel_fq(atoms, new_atom, resolution, fq, self.pdf_qbin, 'PDF')
+        qmin_bin = int(self.exp['qmin'] / self.pdf_qbin)
+        voxels[:qmin_bin, :, :, :] = 0.
+        # vpdf = self.voxel_pdf(voxels, self.exp['rstep'], self.pdf_qbin,
+        #                          r,
+        #                          self.exp['qmin'])
+        # return vpdf
+        return voxels
