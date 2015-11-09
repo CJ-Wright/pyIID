@@ -315,7 +315,7 @@ def grad_pdf(grad_fq, rstep, qstep, rgrid, qmin):
 
 
 def voxel_pdf(voxel_fq, rstep, qstep, rgrid, qmin):
-    qmax_bin, im, jm, km = voxel_fq.shape
+    im, jm, km, qmax_bin = voxel_fq.shape
     grad_iter = []
     pool_size = cpu_count()
     if pool_size <= 0:
@@ -325,11 +325,11 @@ def voxel_pdf(voxel_fq, rstep, qstep, rgrid, qmin):
         for j in xrange(jm):
             for k in xrange(km):
                 grad_iter.append(
-                    (voxel_fq[:, i, j, k], rstep, qstep, rgrid, qmin))
+                    (voxel_fq[i, j, k, :], rstep, qstep, rgrid, qmin))
     pdf_grad_l = p.map(grad_pdf_pool_worker, grad_iter)
     p.close()
     pdf_grad_flat = np.asarray(pdf_grad_l)
-    pdf_grad = np.reshape(pdf_grad_flat, (len(rgrid), im, jm, km))
+    pdf_grad = np.reshape(pdf_grad_flat, (im, jm, km, len(rgrid)))
     return pdf_grad
 
 

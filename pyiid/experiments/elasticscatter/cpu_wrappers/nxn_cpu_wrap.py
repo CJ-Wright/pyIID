@@ -274,22 +274,20 @@ def wrap_voxel_fq(atoms, new_atom, resolution,fq, qbin=.1, sum_type='fq'):
 
     n, qmax_bin = scatter_array.shape
     # Get pair coordinate distance array
-    d = np.zeros((n, 3) + v, np.float32)
+    d = np.zeros(v + (n, 3), np.float32)
     get_voxel_displacements(d, q, resolution)
 
     # Get pair distance array
     d *= d
-    r = np.sum(d, axis=1)
+    r = np.sum(d, axis=-1)
     r = np.sqrt(r)
-
     # Get normalization array
     norm = np.float32(scatter_array * new_scatter)
 
     # Get omega
-    omega = np.zeros((n, qmax_bin) + v, np.float32)
+    omega = np.zeros(v + (n, qmax_bin), np.float32)
     get_voxel_omega(omega, r, qbin)
-
-    vfq = np.zeros((qmax_bin,) + v, np.float32)
+    vfq = np.zeros(v + (qmax_bin,), np.float32)
     # get non-normalized fq
     get_voxel_fq(vfq, omega, norm)
 
@@ -303,8 +301,8 @@ def wrap_voxel_fq(atoms, new_atom, resolution,fq, qbin=.1, sum_type='fq'):
         for j in xrange(jm):
             for k in xrange(km):
                 old_settings = np.seterr(all='ignore')
-                vfq[:, i, j, k] += fq
-                vfq[:, i, j, k] = np.nan_to_num(vfq[:, i, j, k] / na)
+                vfq[i, j, k, :] += fq
+                vfq[i, j, k, :] = np.nan_to_num(vfq[i, j, k, :] / na)
                 np.seterr(**old_settings)
     del q, d, r, norm, omega, na
     return vfq

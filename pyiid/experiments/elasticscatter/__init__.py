@@ -413,7 +413,7 @@ class ElasticScatter(object):
         fq = self.fq(atoms, self.exp['qbin'], normalization=False)
         voxels = self.voxel_fq(atoms, new_atom, resolution, fq, self.exp['qbin'])
         return voxels
-    #TODO: change order of array
+
     def get_pdf_voxels(self, atoms, new_atom, resolution):
         if self.check_state(atoms):
             wrap_atoms(atoms, self.exp)
@@ -422,11 +422,11 @@ class ElasticScatter(object):
         voxels = self.voxel_fq(atoms, new_atom, resolution, fq, self.pdf_qbin, 'PDF')
 
         qmin_bin = int(self.exp['qmin'] / self.pdf_qbin)
-        voxels[:qmin_bin, :, :, :] = 0.
-        # vpdf = self.voxel_pdf(voxels, self.exp['rstep'], self.pdf_qbin,
-        #                          r,
-        #                          self.exp['qmin'])
-        # return vpdf
+        voxels[:, :, :, :qmin_bin] = 0.
+        vpdf = self.voxel_pdf(voxels, self.exp['rstep'], self.pdf_qbin,
+                                 r,
+                                 self.exp['qmin'])
+        return vpdf
         return voxels
 
 def wrap_atoms(atoms, exp_dict=None):
