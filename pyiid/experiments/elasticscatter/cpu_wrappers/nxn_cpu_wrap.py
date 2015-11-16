@@ -56,7 +56,7 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq', normalization=True):
     fq = omega
 
     # Normalize fq
-    fq = np.sum(fq, axis=(0,1), dtype=np.float64)
+    fq = np.sum(fq, axis=(0, 1), dtype=np.float64)
     fq = fq.astype(np.float32)
     if normalization:
         norm2 = np.zeros((n * (n - 1) / 2., qmax_bin), np.float32)
@@ -137,7 +137,8 @@ def wrap_fq_grad(atoms, qbin=.1, sum_type='fq'):
     del d, r, scatter_array, norm, omega, grad_omega
     return grad_fq
 
-def wrap_voxel_fq(atoms, new_atom, resolution,fq, qbin=.1, sum_type='fq'):
+
+def wrap_voxel_fq(atoms, new_atom, resolution, fq, qbin=.1, sum_type='fq'):
     """
     Generate the reduced structure function
 
@@ -192,7 +193,7 @@ def wrap_voxel_fq(atoms, new_atom, resolution,fq, qbin=.1, sum_type='fq'):
     # Normalize fq
     norm2 = np.zeros((n * (n - 1) / 2., qmax_bin), np.float32)
     flat_norm(norm2, np.vstack((scatter_array, new_scatter)), 0)
-    na = np.mean(norm2, axis=0, dtype=np.float32) * np.float32(n+1)
+    na = np.mean(norm2, axis=0, dtype=np.float32) * np.float32(n + 1)
     im, jm, km = v
     vfq *= 2
     for i in xrange(im):

@@ -104,7 +104,6 @@ def wrap_atoms(atoms, exp_dict=None):
     atoms.info['scatter_atoms'] = n
 
 
-# TODO: maybe add gradients as saved data?
 class ElasticScatter(object):
     """
     Scatter contains all the methods associated with producing theoretical
@@ -244,10 +243,11 @@ class ElasticScatter(object):
             elif kernel_type == 'flat-serial':
                 from pyiid.experiments.elasticscatter.cpu_wrappers \
                     .flat_serial_cpu_wrap import \
-                    wrap_fq, wrap_fq_grad
+                    wrap_fq, wrap_fq_grad, wrap_voxel_fq
 
                 self.fq = wrap_fq
                 self.grad = wrap_fq_grad
+                self.voxel_fq = wrap_voxel_fq
                 self.alg = 'flat-serial'
 
             self.grad_pdf = cpu_grad_pdf
@@ -557,6 +557,10 @@ class ElasticScatter(object):
     def get_fq_voxels(self, atoms, new_atom, resolution):
         if self.check_state(atoms):
             wrap_atoms(atoms, self.exp)
+        if type(resolution) == float:
+            resolution = np.ones(3, np.float32) * resolution
+        elif not isinstance(resolution, np.ndarray):
+            raise NotImplementedError
         fq = self.fq(atoms, self.exp['qbin'], normalization=False)
         voxels = self.voxel_fq(atoms, new_atom, resolution, fq, self.exp['qbin'])
         return voxels
@@ -566,6 +570,10 @@ class ElasticScatter(object):
             wrap_atoms(atoms, self.exp)
         r = self.get_r()
         fq = self.fq(atoms, self.pdf_qbin, 'PDF', normalization=False)
+        if type(resolution) == float:
+            resolution = np.ones(3, np.float32) * resolution
+        elif not isinstance(resolution, np.ndarray):
+            raise NotImplementedError
         voxels = self.voxel_fq(atoms, new_atom, resolution, fq, self.pdf_qbin, 'PDF')
         qmin_bin = int(self.exp['qmin'] / self.pdf_qbin)
         voxels[:, :, :, :qmin_bin] = 0.

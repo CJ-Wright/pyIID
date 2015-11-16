@@ -135,11 +135,11 @@ def wrap_voxel_rw(gcalc, gobs):
     scale: float
         The scale factor between the observed and calculated PDF
     """
-    a, im, jm, km = gcalc.shape
+    im, jm, km, a = gcalc.shape
     rw = np.zeros((im, jm, km))
     scale = np.zeros((im, jm, km))
     for i in xrange(im):
         for j in xrange(jm):
             for k in xrange(km):
-                rw[i, j, k], scale[i, j, k] = get_rw(gobs, gcalc[:, i, j, k], weight=None)
+                rw[i, j, k], scale[i, j, k] = get_rw(gobs, gcalc[i, j, k,:], weight=None)
     return rw, scale

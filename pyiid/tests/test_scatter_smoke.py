@@ -231,14 +231,14 @@ def check_scatter_pdf_voxels(value):
 
 
 tests = [
-    check_scatter_fq,
-    check_scatter_sq,
-    check_scatter_iq,
-    check_scatter_pdf,
-    check_scatter_grad_fq,
-    check_scatter_grad_pdf,
+    # check_scatter_fq,
+    # check_scatter_sq,
+    # check_scatter_iq,
+    # check_scatter_pdf,
+    # check_scatter_grad_fq,
+    # check_scatter_grad_pdf,
     check_scatter_fq_voxels,
-    check_scatter_pdf_voxels,
+    # check_scatter_pdf_voxels,
 ]
 test_data = list(product(
     tests,
@@ -262,7 +262,7 @@ if __name__ == '__main__':
         '--with-doctest',
         # '--nocapture',
         '-v',
-        # '-x',
+        '-x',
     ],
         # env={"NOSE_PROCESSES": 1, "NOSE_PROCESS_TIMEOUT": 599},
         exit=False)

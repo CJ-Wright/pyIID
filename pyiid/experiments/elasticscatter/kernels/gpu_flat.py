@@ -1,13 +1,17 @@
 import math
-
 from numba import *
 from numba import cuda, f4, i4
-
 from pyiid.experiments.elasticscatter.kernels import cuda_k_to_ij, cuda_ij_to_k
 
 __author__ = 'christopher'
 
-# F(sv) kernels ---------------------------------------------------------------
+
+@cuda.jit(device=True)
+def index1d_to_3d(i, xm, ym, zm):
+    return i / ym / zm, (i / zm) % ym, i % zm
+
+
+# F(Q) kernels ---------------------------------------------------------------
 @cuda.jit(argtypes=[f4[:, :], f4[:, :], i4])
 def get_d_array(d, q, offset):
     """
@@ -297,6 +301,7 @@ def experimental_sum_grad_fq1(new_grad, grad, k_cov):
         a = grad[k, tz, qx]
         cuda.atomic.add(new_grad, (j, tz, qx), a)
         cuda.atomic.add(new_grad, (i, tz, qx), f4(-1.) * a)
+
 
 @cuda.jit(argtypes=[f4[:, :, :], f4[:, :]])
 def get_grad_fq_inplace(grad_omega, norm):

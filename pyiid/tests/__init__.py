@@ -30,7 +30,7 @@ __author__ = 'christopher'
 if os.environ.get('PYIID_TEST_SEED') is not None:
     seed = int(os.environ["PYIID_TEST_SEED"])
 else:
-    seed = int(random.random() * 2 ** 53)
+    seed = int(random.random() * 2 ** 32)
 
 rs = np.random.RandomState(seed)
 

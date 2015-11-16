@@ -195,16 +195,16 @@ def get_grad_fq_inplace(grad_omega, norm):
                     for qx in xrange(i4(qmax_bin)):
                         grad_omega[i, j, w, qx] *= norm[i, j, qx]
 
-@jit(void(f4[:, :, :, :, :], f4[:, :], f4), target=processor_target,
+@jit(void(f4[:, :, :, :, :], f4[:, :], f4[:]), target=processor_target,
      nopython=True, cache=cache)
 def get_voxel_displacements(d, q, resolution):
     im, jm, km, n, _ = d.shape
     for i in xrange(im):
-        x = (i + .5) * resolution
+        x = (i + .5) * resolution[0]
         for j in xrange(jm):
-            y = (j + .5) * resolution
+            y = (j + .5) * resolution[1]
             for k in xrange(km):
-                z = (k + .5) * resolution
+                z = (k + .5) * resolution[2]
                 for l in xrange(n):
                     d[i, j, k, l, 0] = x - q[l, 0]
                     d[i, j, k, l, 1] = y - q[l, 1]

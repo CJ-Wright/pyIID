@@ -130,7 +130,7 @@ def wrap_fq_grad(atoms, qbin=.1, sum_type='fq'):
     del d, r, scatter_array, norm, omega, grad_omega
     return rtn
 
-'''
+
 def wrap_voxel_fq(atoms, new_atom, resolution, fq, qbin=.1, sum_type='fq'):
     """
     Generate the reduced structure function
@@ -164,28 +164,28 @@ def wrap_voxel_fq(atoms, new_atom, resolution, fq, qbin=.1, sum_type='fq'):
     qbin = np.float32(qbin)
     q = atoms.get_positions().astype(np.float32)
     resolution = np.float32(resolution)
-    v = tuple(np.int32(np.ceil(np.diagonal(atoms.get_cell()) / resolution)))
+    v = np.int32(np.ceil(np.diagonal(atoms.get_cell()) / resolution))
     n, qmax_bin = scatter_array.shape
 
     # Inside pool
 
     # Get pair coordinate distance array
-    r = np.zeros((n, np.product(v)), np.float32)
+    r = np.zeros((np.product(v), n), np.float32)
     get_voxel_distances(r, q, resolution, v)
 
     # Get omega
-    omega = np.zeros((n, qmax_bin, np.product(v)), np.float32)
+    omega = np.zeros((np.product(v), n, qmax_bin), np.float32)
     get_voxel_omega(omega, r, qbin)
 
-    vfq = np.zeros((qmax_bin, np.product(v)), np.float32)
+    vfq = np.zeros((np.product(v), qmax_bin), np.float32)
     # get non-normalized fq
     get_voxel_fq(vfq, omega, norm)
 
     # Post-Pool
     # Normalize fq
-    vfq = np.reshape(vfq, (qmax_bin, ) + v)
+    vfq = np.reshape(vfq, tuple(v) + (qmax_bin, ))
     norm2 = np.zeros((n * (n - 1) / 2., qmax_bin), np.float32)
-    flat_norm(norm2, np.vstack((scatter_array, new_scatter)), 0)
+    get_normalization_array(norm2, np.vstack((scatter_array, new_scatter)), 0)
     na = np.mean(norm2, axis=0, dtype=np.float32) * np.float32(n + 1)
     im, jm, km = v
     vfq *= 2
@@ -193,9 +193,8 @@ def wrap_voxel_fq(atoms, new_atom, resolution, fq, qbin=.1, sum_type='fq'):
         for j in xrange(jm):
             for k in xrange(km):
                 old_settings = np.seterr(all='ignore')
-                vfq[:, i, j, k] += fq
-                vfq[:, i, j, k] = np.nan_to_num(vfq[:, i, j, k] / na)
+                vfq[i, j, k, :] += fq
+                vfq[i, j, k, :] = np.nan_to_num(vfq[i, j, k, :] / na)
                 np.seterr(**old_settings)
     del q, r, norm, omega, na
     return vfq
-'''
