@@ -263,7 +263,7 @@ else:
     proc_alg_pairs = [('CPU', 'nxn'),
                       ('CPU', 'flat-serial'),
                       ('CPU', 'flat'),
-                      ('Multi-GPU', 'flat'),
+                      # ('Multi-GPU', 'flat'),
                       ]
     comparison_pro_alg_pairs = [
         (('CPU', 'nxn'), ('CPU', 'flat-serial')),

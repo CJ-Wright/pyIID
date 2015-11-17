@@ -160,7 +160,6 @@ def wrap_voxel_fq(atoms, new_atom, resolution, fq, qbin=.1, sum_type='fq'):
     c = np.diagonal(atoms.get_cell())
     resolution = np.float32(resolution)
     v = tuple(np.int32(np.ceil(c / resolution)))
-
     # get scatter array
     if sum_type == 'fq':
         scatter_array = atoms.get_array('F(Q) scatter')

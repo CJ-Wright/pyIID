@@ -51,7 +51,8 @@ def cuda_ij_to_k(i, j):
 
 
 @cuda.jit(device=True)
-def cuda_index1d_to_3d(i, xm, ym, zm):
+def cuda_index1d_to_3d(i, v):
+    xm, ym, zm = v
     return i / ym / zm, (i / zm) % ym, i % zm
 
 @jit(target='cpu', nopython=True)

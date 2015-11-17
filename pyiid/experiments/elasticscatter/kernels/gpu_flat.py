@@ -321,7 +321,7 @@ def get_grad_fq_inplace(grad_omega, norm):
         grad_omega[k, w, qx] *= a
 
 
-@jit(f4[:, :], f4[:, :], f4[:], i4[:])
+@cuda.jit(argtypes=[f4[:, :], f4[:, :], f4[:], i4[:]])
 def get_voxel_distances(r, q, resolution, v):
     om, n = r.shape
     o, l = cuda.grid(2)
@@ -337,7 +337,7 @@ def get_voxel_distances(r, q, resolution, v):
     r[o, l] = math.sqrt(a * a + b * b + c * c)
 
 
-@jit(f4[:, :, :], f4[:, :], f4)
+@cuda.jit(argtypes=[f4[:, :, :], f4[:, :], f4])
 def get_voxel_omega(omega, r, qbin):
     """
     Generate F(sv), not normalized, via the Debye sum
@@ -363,7 +363,7 @@ def get_voxel_omega(omega, r, qbin):
         omega[o, l, qx] = math.sin(sv * rij) / rij
 
 
-@jit(f4[:, :], f4[:, :, :], f4[:, :])
+@cuda.jit(argtypes=[f4[:, :], f4[:, :, :], f4[:, :]])
 def get_voxel_fq(fq, omega, norm):
     """
     Generate F(sv), not normalized, via the Debye sum

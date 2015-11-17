@@ -166,6 +166,7 @@ def check_scatter_fq_voxels(value):
 
     ans = scat.get_fq_voxels(atoms, Atom('Au', [0, 0, 0]), res)
     # Check that Scatter gave back something
+    print ans.shape
     assert ans is not None
     # Check that all the values are not zero
     assert np.any(ans)
