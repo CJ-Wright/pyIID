@@ -216,7 +216,7 @@ def fast_fast_flat_sum(new_grad, grad, k_cov):
 
 @jit(void(f4[:, :], f4[:, :], f4[:], i4[:], i4),
      target=processor_target,
-     nopython=True, cache=cache)
+     nopython=True, cache=cache, nogil=True)
 def get_voxel_distances(r, q, resolution, v, offset):
     om, n = r.shape
     for o in xrange(om + offset):
@@ -232,7 +232,7 @@ def get_voxel_distances(r, q, resolution, v, offset):
 
 
 @jit(void(f4[:, :, :], f4[:, :], f4), target=processor_target,
-     nopython=True, cache=cache)
+     nopython=True, cache=cache, nogil=True)
 def get_voxel_omega(omega, r, qbin):
     """
     Generate F(sv), not normalized, via the Debye sum
@@ -260,7 +260,7 @@ def get_voxel_omega(omega, r, qbin):
 
 @jit(void(f4[:, :], f4[:, :, :], f4[:, :]),
      target=processor_target, nopython=True,
-     cache=cache)
+     cache=cache, nogil=True)
 def get_voxel_fq(fq, omega, norm):
     """
     Generate F(sv), not normalized, via the Debye sum

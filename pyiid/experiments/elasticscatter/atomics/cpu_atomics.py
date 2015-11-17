@@ -57,6 +57,7 @@ def k_space_grad_fq_allocation(mem, n, qmax_bin):
 
 
 def voxel_fq_allocation(mem, n, qmax_bin, v):
+    # return 2
     return int(math.floor(
         float(.8 * mem / 4 - 3 * n - qmax_bin * n) / (
         qmax_bin * n + qmax_bin + 1)))

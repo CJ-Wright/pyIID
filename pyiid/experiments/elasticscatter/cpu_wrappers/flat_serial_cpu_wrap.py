@@ -170,10 +170,8 @@ def wrap_voxel_fq(atoms, new_atom, resolution, fq, qbin=.1, sum_type='fq'):
     norm2 = np.zeros((n * (n - 1) / 2., qmax_bin), np.float32)
     get_normalization_array(norm2, np.vstack((scatter_array, new_scatter)), 0)
     na = np.mean(norm2, axis=0, dtype=np.float32) * np.float32(n + 1)
-    master_task = [q, norm, fq, na, qbin, resolution, v]
-    task = master_task + [np.product(v), 0.]
     # Inside pool
-    vfq = atomic_voxel_fq(task)
+    vfq = atomic_voxel_fq([q, norm, fq, na, qbin, resolution, v, np.product(v), 0.])
 
     # Post-Pool
     # Normalize fq
