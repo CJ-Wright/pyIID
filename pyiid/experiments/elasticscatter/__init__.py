@@ -214,7 +214,7 @@ class ElasticScatter(object):
                 (wrap_fq as flat_fq, wrap_fq_grad as flat_grad , wrap_voxel_fq)
             self.fq = flat_fq
             self.grad = flat_grad
-            self.voxel_fq = wrap_voxel_fq
+            # self.voxel_fq = wrap_voxel_fq
             self.alg = 'flat'
             if check_cudafft():
                 from pyiid.experiments.elasticscatter.gpu_wrappers.gpu_wrap import \

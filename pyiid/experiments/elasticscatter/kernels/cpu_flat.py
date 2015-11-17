@@ -214,12 +214,12 @@ def fast_fast_flat_sum(new_grad, grad, k_cov):
                         new_grad[i, tz, qx] += grad[k, tz, qx] * alpha
 
 
-@jit(void(f4[:, :], f4[:, :], f4[:], i4[:]),
+@jit(void(f4[:, :], f4[:, :], f4[:], i4[:], i4),
      target=processor_target,
      nopython=True, cache=cache)
-def get_voxel_distances(r, q, resolution, v):
+def get_voxel_distances(r, q, resolution, v, offset):
     om, n = r.shape
-    for o in xrange(om):
+    for o in xrange(om + offset):
         i, j, k = index1d_to_3d(o, v)
         x = (i + .5) * resolution[0]
         y = (j + .5) * resolution[1]

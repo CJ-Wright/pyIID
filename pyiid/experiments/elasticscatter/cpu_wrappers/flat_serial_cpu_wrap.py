@@ -5,7 +5,7 @@ from pyiid.experiments.elasticscatter.kernels.cpu_experimental import \
 from pyiid.experiments.elasticscatter.kernels import antisymmetric_reshape, \
     symmetric_reshape
 from ..kernels.master_kernel import get_single_scatter_array
-
+from ..atomics.cpu_atomics import *
 __author__ = 'christopher'
 
 
@@ -167,34 +167,15 @@ def wrap_voxel_fq(atoms, new_atom, resolution, fq, qbin=.1, sum_type='fq'):
     v = np.int32(np.ceil(np.diagonal(atoms.get_cell()) / resolution))
     n, qmax_bin = scatter_array.shape
 
+    norm2 = np.zeros((n * (n - 1) / 2., qmax_bin), np.float32)
+    get_normalization_array(norm2, np.vstack((scatter_array, new_scatter)), 0)
+    na = np.mean(norm2, axis=0, dtype=np.float32) * np.float32(n + 1)
+    master_task = [q, norm, fq, na, qbin, resolution, v]
+    task = master_task + [np.product(v), 0.]
     # Inside pool
-
-    # Get pair coordinate distance array
-    r = np.zeros((np.product(v), n), np.float32)
-    get_voxel_distances(r, q, resolution, v)
-
-    # Get omega
-    omega = np.zeros((np.product(v), n, qmax_bin), np.float32)
-    get_voxel_omega(omega, r, qbin)
-
-    vfq = np.zeros((np.product(v), qmax_bin), np.float32)
-    # get non-normalized fq
-    get_voxel_fq(vfq, omega, norm)
+    vfq = atomic_voxel_fq(task)
 
     # Post-Pool
     # Normalize fq
     vfq = np.reshape(vfq, tuple(v) + (qmax_bin, ))
-    norm2 = np.zeros((n * (n - 1) / 2., qmax_bin), np.float32)
-    get_normalization_array(norm2, np.vstack((scatter_array, new_scatter)), 0)
-    na = np.mean(norm2, axis=0, dtype=np.float32) * np.float32(n + 1)
-    im, jm, km = v
-    vfq *= 2
-    for i in xrange(im):
-        for j in xrange(jm):
-            for k in xrange(km):
-                old_settings = np.seterr(all='ignore')
-                vfq[i, j, k, :] += fq
-                vfq[i, j, k, :] = np.nan_to_num(vfq[i, j, k, :] / na)
-                np.seterr(**old_settings)
-    del q, r, norm, omega, na
     return vfq

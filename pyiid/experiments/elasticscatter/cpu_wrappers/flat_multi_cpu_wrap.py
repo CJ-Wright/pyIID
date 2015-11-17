@@ -139,7 +139,11 @@ def wrap_voxel_fq(atoms, new_atom, resolution, fq, qbin=.1, sum_type='fq'):
     v = np.int32(np.ceil(np.diagonal(atoms.get_cell()) / resolution))
     n, qmax_bin = scatter_array.shape
 
-    master_task = [q, norm, qbin, resolution, v]
+    norm2 = np.zeros((n * (n - 1) / 2., qmax_bin), np.float32)
+    get_normalization_array(norm2, np.vstack((scatter_array, new_scatter)), 0)
+    na = np.mean(norm2, axis=0, dtype=np.float32) * np.float32(n + 1)
+
+    master_task = [q, norm, fq, na, qbin, resolution, v]
     # Inside pool
     vfq = cpu_multiprocessing(atomic_voxel_fq, voxel_fq_allocation,
                               (n, qmax_bin, v), master_task, np.product(v))
@@ -147,19 +151,6 @@ def wrap_voxel_fq(atoms, new_atom, resolution, fq, qbin=.1, sum_type='fq'):
     # Normalize fq
     vfq = np.asarray(vfq)
     vfq = vfq.reshape(tuple(v) + (qmax_bin,))
-    norm2 = np.zeros((n * (n - 1) / 2., qmax_bin), np.float32)
-    get_normalization_array(norm2, np.vstack((scatter_array, new_scatter)), 0)
-    na = np.mean(norm2, axis=0, dtype=np.float32) * np.float32(n + 1)
-    im, jm, km = v
-    vfq *= 2
-    for i in xrange(im):
-        for j in xrange(jm):
-            for k in xrange(km):
-                old_settings = np.seterr(all='ignore')
-                vfq[i, j, k, :] += fq
-                vfq[i, j, k, :] = np.nan_to_num(vfq[i, j, k, :] / na)
-                np.seterr(**old_settings)
-    del q, norm, na
     return vfq
 
 

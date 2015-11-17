@@ -108,11 +108,11 @@ def atomic_grad_fq(task):
 
 
 def atomic_voxel_fq(task):
-    q, norm, qbin, resolution, v, v_per_thread, v_cov = task
+    q, norm, fq, na, qbin, resolution, v, v_per_thread, v_cov = task
     n, qmax_bin = norm.shape
 
     r = np.zeros((v_per_thread, n), np.float32)
-    get_voxel_distances(r, q, resolution, v)
+    get_voxel_distances(r, q, resolution, v, np.int32(v_cov))
 
     # Get omega
     omega = np.zeros(r.shape + (qmax_bin,), np.float32)
@@ -121,4 +121,7 @@ def atomic_voxel_fq(task):
     vfq = np.zeros((r.shape[0], qmax_bin), np.float32)
     # get non-normalized fq
     get_voxel_fq(vfq, omega, norm)
+    vfq *= 2
+    vfq += fq
+    vfq = np.nan_to_num(vfq / na)
     return vfq
