@@ -6,7 +6,7 @@ from pyiid.experiments import generate_grid
 __author__ = 'christopher'
 
 
-def gpu_fq_atoms_allocation(n, sv, mem):
+def gpu_fq_atoms_allocation(mem, n, sv):
     """
     Determine the maximum amount of atoms which can be placed on a gpu for a
     computation of F(sv).  This depends on how exactly the F(sv) function makes
@@ -40,7 +40,7 @@ def gpu_fq_atoms_allocation(n, sv, mem):
     ))
 
 
-def atoms_per_gpu_grad_fq(n, qmax_bin, mem):
+def atoms_per_gpu_grad_fq(mem, n, qmax_bin):
     """
     Determine the maximum amount of atoms which can be placed on a gpu for a
     computation of grad F(sv).  This depends on how exactly the grad F(sv)
@@ -66,25 +66,20 @@ def atoms_per_gpu_grad_fq(n, qmax_bin, mem):
             4 * (5 * qmax_bin + 4))))
 
 
-def gpu_k_space_fq_allocation(n, sv, mem):
+def gpu_k_space_fq_allocation(mem, n, sv):
     return int(math.floor(
         float(.8 * mem - 4 * sv * n - 4 * sv - 12 * n) / (16 * (sv + 1))))
 
 
-def gpu_k_space_fq_adp_allocation(n, sv, mem):
-    return int(math.floor(
-        float(.8 * mem - 4 * sv * n - 4 * sv - 24 * n) / (20 * (sv + 1))))
-
-
-def gpu_k_space_grad_fq_allocation(n, sv, mem):
+def gpu_k_space_grad_fq_allocation(mem, n, sv):
     return int(math.floor(
         float(.8 * mem - 16 * sv * n - 12 * n) / (16 * (2 * sv + 1))))
 
 
-def gpu_k_space_grad_fq_adp_allocation(n, sv, mem):
+def voxel_fq_allocation(mem, n, qmax_bin, v):
     return int(math.floor(
-        float(.8 * mem - 16 * sv * n - 24 * n) / (4 * (12 * sv + 5))))
-
+        float(.8 * mem / 4 - 3 * n - qmax_bin * n) / (
+        qmax_bin * n + qmax_bin + 1)))
 
 def atomic_fq(q, adps, scatter_array, qbin, k_cov, k_per_thread):
     """
@@ -278,3 +273,39 @@ def atomic_grad_fq(q, adps, scatter_array, qbin, k_cov, k_per_thread):
     del dq, dscat, dd, dr, domega, dnorm, dgrad_omega, dgrad, dnew_grad
     cuda.current_context().trashing.clear()
     return rtn
+
+
+def atomic_voxel_fq(q, norm, qbin, resolution, v, v_per_thread, v_cov):
+    n, qmax_bin = norm.shape
+    from ..kernels.gpu_flat import (get_voxel_omega,
+                                    get_voxel_fq,
+                                    get_voxel_distances)
+    elements_per_dim_2 = [v_per_thread, n]
+    tpb_vn = [16, 16]
+    bpg_vn = generate_grid(elements_per_dim_2, tpb_vn)
+
+    elements_per_dim_3 = [v_per_thread, n, qmax_bin]
+    tpb_vnq = [4, 4, 4]
+    bpg_vnq = generate_grid(elements_per_dim_3, tpb_vnq)
+
+    s1 = cuda.stream()
+    s2 = cuda.stream()
+
+    domega = cuda.device_array((v_per_thread, n, qmax_bin),
+                               dtype=np.float32, stream=s2)
+    dr = cuda.device_array((v_per_thread, n), dtype=np.float32, steram=s1)
+    dq = cuda.to_device(q, s1)
+    dresolution = cuda.to_device(resolution, s1)
+    dv = cuda.to_device(v, s1)
+    vfq = np.zeros((v_per_thread, qmax_bin), np.float32)
+    dvfq = cuda.to_device(vfq, s2)
+    get_voxel_distances[bpg_vn, tpb_vn, s1](dr, dq, dresolution, dv)
+    cuda.synchronize()
+
+    # Get omega
+    get_voxel_omega[bpg_vnq, tpb_vnq, s1](domega, dr, qbin)
+    # get non-normalized fq
+    get_voxel_fq[bpg_vnq, tpb_vnq, s1](dvfq, domega, norm)
+    dvfq.to_host()
+
+    return vfq

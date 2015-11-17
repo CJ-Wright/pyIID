@@ -194,6 +194,7 @@ class ElasticScatter(object):
                         processor=pro, kernel_type=kernel_type) is not None:
                     break
 
+        # MPI
         elif processor == self.avail_pro[0] and check_mpi() is True:
             from pyiid.experiments.elasticscatter.mpi_wrappers.mpi_gpu_wrap \
                 import \
@@ -207,14 +208,13 @@ class ElasticScatter(object):
             self.processor = processor
             return True
 
+        #GPU
         elif processor == self.avail_pro[1] and check_gpu() is True:
             from pyiid.experiments.elasticscatter.gpu_wrappers.gpu_wrap import \
-                wrap_fq as flat_fq
-            from pyiid.experiments.elasticscatter.gpu_wrappers.gpu_wrap import \
-                wrap_fq_grad as flat_grad
-
+                (wrap_fq as flat_fq, wrap_fq_grad as flat_grad , wrap_voxel_fq)
             self.fq = flat_fq
             self.grad = flat_grad
+            self.voxel_fq = wrap_voxel_fq
             self.alg = 'flat'
             if check_cudafft():
                 from pyiid.experiments.elasticscatter.gpu_wrappers.gpu_wrap import \
@@ -224,7 +224,7 @@ class ElasticScatter(object):
                 self.grad_pdf = cpu_grad_pdf
             self.processor = processor
             return True
-
+        # CPU
         elif processor == self.avail_pro[2]:
             if kernel_type == 'nxn':
                 self.fq = cpu_wrap_fq
@@ -234,10 +234,11 @@ class ElasticScatter(object):
             elif kernel_type == 'flat':
                 from pyiid.experiments.elasticscatter.cpu_wrappers \
                     .flat_multi_cpu_wrap import \
-                    wrap_fq, wrap_fq_grad
+                    wrap_fq, wrap_fq_grad, wrap_voxel_fq
 
                 self.fq = wrap_fq
                 self.grad = wrap_fq_grad
+                self.voxel_fq = wrap_voxel_fq
                 self.alg = 'flat'
 
             elif kernel_type == 'flat-serial':

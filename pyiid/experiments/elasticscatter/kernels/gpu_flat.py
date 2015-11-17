@@ -1,14 +1,11 @@
 import math
 from numba import *
 from numba import cuda, f4, i4
-from pyiid.experiments.elasticscatter.kernels import cuda_k_to_ij, cuda_ij_to_k
+from pyiid.experiments.elasticscatter.kernels import (cuda_k_to_ij,
+                                                      cuda_ij_to_k,
+                                                      cuda_index1d_to_3d)
 
 __author__ = 'christopher'
-
-
-@cuda.jit(device=True)
-def index1d_to_3d(i, xm, ym, zm):
-    return i / ym / zm, (i / zm) % ym, i % zm
 
 
 # F(Q) kernels ---------------------------------------------------------------
@@ -322,3 +319,68 @@ def get_grad_fq_inplace(grad_omega, norm):
     a = norm[k, qx]
     for w in xrange(i4(3)):
         grad_omega[k, w, qx] *= a
+
+
+@jit(f4[:, :], f4[:, :], f4[:], i4[:])
+def get_voxel_distances(r, q, resolution, v):
+    om, n = r.shape
+    o, l = cuda.grid(2)
+    if o >= om or l >= n:
+        return
+    i, j, k = cuda_index1d_to_3d(o, v)
+    x = (i + .5) * resolution[0]
+    y = (j + .5) * resolution[1]
+    z = (k + .5) * resolution[2]
+    a = x - q[l, 0]
+    b = y - q[l, 1]
+    c = z - q[l, 2]
+    r[o, l] = math.sqrt(a * a + b * b + c * c)
+
+
+@jit(f4[:, :, :], f4[:, :], f4)
+def get_voxel_omega(omega, r, qbin):
+    """
+    Generate F(sv), not normalized, via the Debye sum
+
+    Parameters:
+    ---------
+    fq: Nd array
+        The reduced scatter pattern
+    r: NxN array
+        The pair distance array
+    scatter_array: NxM array
+        The scatter factor array
+    qbin: float
+        The qbin size
+    """
+    om, n, qmax_bin = omega.shape
+    o, l, qx = cuda.grid(3)
+    if o >= om or l >= n or qx >= qmax_bin:
+        return
+    sv = f4(qx) * qbin
+    rij = r[o, l]
+    if rij != 0.0:
+        omega[o, l, qx] = math.sin(sv * rij) / rij
+
+
+@jit(f4[:, :], f4[:, :, :], f4[:, :])
+def get_voxel_fq(fq, omega, norm):
+    """
+    Generate F(sv), not normalized, via the Debye sum
+
+    Parameters:
+    ---------
+    fq: Nd array
+        The reduced scatter pattern
+    r: NxN array
+        The pair distance array
+    scatter_array: NxM array
+        The scatter factor array
+    qbin: float
+        The qbin size
+    """
+    om, n, qmax_bin = omega.shape
+    o, l, qx = cuda.grid(3)
+    if o >= om or l >= n or qx >= qmax_bin:
+        return
+    fq[o, qx] += omega[o, l, qx] * norm[l, qx]

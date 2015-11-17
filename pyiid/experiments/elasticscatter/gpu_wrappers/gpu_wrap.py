@@ -4,6 +4,7 @@ from pyiid.experiments.elasticscatter.atomics.gpu_atomics import *
 from pyiid.experiments import *
 from pyiid.experiments.elasticscatter.kernels.cpu_flat import \
     get_normalization_array
+from ..kernels.master_kernel import get_single_scatter_array
 
 __author__ = 'christopher'
 
@@ -116,6 +117,33 @@ def sub_grad_pdf(gpu, gpadc, gpadcfft, atoms_per_thread, n_cov):
             del data_out, batch_output
 
 
+def subs_voxel_fq(vfq, q, adps, scatter_array, qbin, gpu, k_cov, k_per_thread):
+    """
+    Thread function to calculate a chunk of F(Q)
+
+    Parameters
+    ----------
+    gpu: numba GPU context
+        The GPU on which to run
+    q: Nx3 array
+        Atomic positions
+    scatter_array: NxQ array
+        Atomic scatter factors
+    fq: 1darray
+        The F(Q), note that we add to it which prevents a rather nasty
+        memory leak
+    qbin: float
+        The Q resolution in A**-1
+    k_cov: int
+        Number of atomic pairs previously covered
+    k_per_thread: int
+        Number of atomic pairs to cover in this instance
+    """
+    # set up GPU
+    with gpu:
+        vfq.apend(atomic_voxel_fq(q, adps, scatter_array, qbin, k_cov, k_per_thread))
+
+
 def wrap_fq(atoms, qbin=.1, sum_type='fq', normalization=True):
     """
     Function which handles all the threads for the computation of F(Q)
@@ -142,10 +170,11 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq', normalization=True):
         atoms, sum_type)
     allocation = gpu_k_space_fq_allocation
 
+    k_max = int((n ** 2 - n) / 2.)
     fq = np.zeros(qmax_bin, np.float64)
     master_task = [fq, q, adps, scatter_array, qbin]
-    fq = gpu_multithreading(subs_fq, allocation, master_task, (n, qmax_bin),
-                            (gpus, mem_list))
+    fq = gpu_multithreading(subs_fq, allocation, (n, qmax_bin), master_task,
+                            k_max, (gpus, mem_list))
     fq = fq.astype(np.float32)
     if normalization:
         norm = np.empty((n * (n - 1) / 2., qmax_bin), np.float32)
@@ -182,12 +211,11 @@ def wrap_fq_grad(atoms, qbin=.1, sum_type='fq'):
     q, adps, n, qmax_bin, scatter_array, gpus, mem_list = setup_gpu_calc(
         atoms, sum_type)
     allocation = gpu_k_space_grad_fq_allocation
-
+    k_max = int((n ** 2 - n) / 2.)
     grad_p = np.zeros((n, 3, qmax_bin))
     master_task = [grad_p, q, adps, scatter_array, qbin]
-    grad_p = gpu_multithreading(subs_grad_fq, allocation, master_task,
-                                (n, qmax_bin),
-                                (gpus, mem_list))
+    grad_p = gpu_multithreading(subs_grad_fq, allocation, (n, qmax_bin),
+                                master_task, k_max, (gpus, mem_list))
     norm = np.empty((n * (n - 1) / 2., qmax_bin), np.float32)
     get_normalization_array(norm, scatter_array, 0)
     na = np.mean(norm, axis=0) * n
@@ -287,11 +315,72 @@ def grad_pdf(grad_fq, rstep, qstep, rgrid, qmin):
     return pdf1.real
 
 
-def gpu_multithreading(subs_function, allocation,
-                       master_task, constants, gpu_info):
-    n, qmax_bin = constants
+def wrap_voxel_fq(atoms, new_atom, resolution, fq, qbin=.1, sum_type='fq'):
+    """
+    Function which handles all the threads for the computation of F(Q)
+
+    Parameters
+    ----------
+    atoms: ase.Atoms
+        The atomic configuration
+    qbin: float
+        The Q resolution in A**-1
+    sum_type: str
+        The type of calculation being run, defaults to F(Q), but runs PDF
+        if anything other than 'fq' is provided.  This is needed because
+        the PDF runs at a different Q resolution and thus a different scatter
+        factor array for the atoms
+    normalization: bool
+        If True, use F(Q) normalization
+    Returns
+    -------
+    1darray;
+        The reduced structure factor
+    """
+    # Pre-pool
+    # get scatter array
+    q, adps, n, qmax_bin, scatter_array, gpus, mem_list = setup_gpu_calc(
+        atoms, sum_type)
+    new_scatter = np.zeros(scatter_array.shape[1], np.float32)
+    get_single_scatter_array(new_scatter, new_atom.number, qbin)
+
+    # define scatter_q information and initialize constants
+    # Get normalization array
+    norm = np.float32(scatter_array * new_scatter)
+    # Set up all the variables of interest
+    qbin = np.float32(qbin)
+    resolution = np.float32(resolution)
+    v = np.int32(np.ceil(np.diagonal(atoms.get_cell()) / resolution))
+
+    master_task = [q, norm, qbin, resolution, v]
+    # Inside pool
+    vfq = gpu_multithreading(atomic_voxel_fq, voxel_fq_allocation,
+                              (n, qmax_bin, v), master_task, np.product(v),
+                             (gpus, mem_list))
+    # Post-Pool
+    # Normalize fq
+    vfq = np.asarray(vfq)
+    vfq = vfq.reshape(tuple(v) + (qmax_bin,))
+    norm2 = np.zeros((n * (n - 1) / 2., qmax_bin), np.float32)
+    get_normalization_array(norm2, np.vstack((scatter_array, new_scatter)), 0)
+    na = np.mean(norm2, axis=0, dtype=np.float32) * np.float32(n + 1)
+    im, jm, km = v
+    vfq *= 2
+    for i in xrange(im):
+        for j in xrange(jm):
+            for k in xrange(km):
+                old_settings = np.seterr(all='ignore')
+                vfq[i, j, k, :] += fq
+                vfq[i, j, k, :] = np.nan_to_num(vfq[i, j, k, :] / na)
+                np.seterr(**old_settings)
+    del q, norm, na
+    return vfq
+
+
+def gpu_multithreading(subs_function, allocation, allocation_args, master_task,
+                       constants, gpu_info):
+    k_max = constants
     gpus, mem_list = gpu_info
-    k_max = int((n ** 2 - n) / 2.)
 
     k_cov = 0
     p_dict = {}
@@ -299,7 +388,7 @@ def gpu_multithreading(subs_function, allocation,
     while k_cov < k_max:
         for gpu, mem in zip(gpus, mem_list):
             if gpu not in p_dict.keys() or p_dict[gpu].is_alive() is False:
-                k_per_thread = allocation(n, qmax_bin, mem)
+                k_per_thread = allocation(mem, *allocation_args)
                 if k_per_thread > k_max - k_cov:
                     k_per_thread = k_max - k_cov
                 if k_cov >= k_max:

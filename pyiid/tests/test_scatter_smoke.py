@@ -162,6 +162,8 @@ def check_scatter_fq_voxels(value):
     # Test a set of different sized ensembles
     res = 1.
     atoms.center(res)
+    print scat.processor, scat.alg
+
     ans = scat.get_fq_voxels(atoms, Atom('Au', [0, 0, 0]), res)
     # Check that Scatter gave back something
     assert ans is not None

@@ -1,5 +1,4 @@
 import numpy as np
-
 from pyiid.experiments.elasticscatter.kernels.cpu_flat import *
 from pyiid.experiments.elasticscatter.kernels.cpu_experimental import \
     experimental_sum_grad_cpu
@@ -7,7 +6,7 @@ from pyiid.experiments.elasticscatter.kernels.cpu_experimental import \
 __author__ = 'christopher'
 
 
-def cpu_k_space_fq_allocation(n, sv, mem):
+def cpu_k_space_fq_allocation(mem, n, sv):
     """
     Determine the maximum amount of atoms which can be placed on a gpu for a
     computation of F(Q).  This depends on how exactly the F(Q) function makes
@@ -32,7 +31,7 @@ def cpu_k_space_fq_allocation(n, sv, mem):
     ))
 
 
-def k_space_grad_fq_allocation(n, qmax_bin, mem):
+def k_space_grad_fq_allocation(mem, n, qmax_bin):
     """
     Determine the maximum amount of atoms which can be placed on a gpu for a
     computation of grad F(Q).  This depends on how exactly the grad F(Q)
@@ -55,6 +54,12 @@ def k_space_grad_fq_allocation(n, qmax_bin, mem):
     return int(math.floor(
         float(.8 * mem - 16 * qmax_bin * n - 12 * n) / (
             16 * (2 * qmax_bin + 1))))
+
+
+def voxel_fq_allocation(mem, n, qmax_bin, v):
+    return int(math.floor(
+        float(.8 * mem / 4 - 3 * n - qmax_bin * n) / (
+        qmax_bin * n + qmax_bin + 1)))
 
 
 def atomic_fq(task):
@@ -100,3 +105,20 @@ def atomic_grad_fq(task):
 
     del grad, q, scatter_array, omega, r, d, norm
     return rtn
+
+
+def atomic_voxel_fq(task):
+    q, norm, qbin, resolution, v, v_per_thread, v_cov = task
+    n, qmax_bin = norm.shape
+
+    r = np.zeros((v_per_thread, n), np.float32)
+    get_voxel_distances(r, q, resolution, v)
+
+    # Get omega
+    omega = np.zeros(r.shape + (qmax_bin,), np.float32)
+    get_voxel_omega(omega, r, qbin)
+
+    vfq = np.zeros((r.shape[0], qmax_bin), np.float32)
+    # get non-normalized fq
+    get_voxel_fq(vfq, omega, norm)
+    return vfq

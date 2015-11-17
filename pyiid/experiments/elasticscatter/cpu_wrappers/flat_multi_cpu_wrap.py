@@ -1,6 +1,7 @@
 from multiprocessing import Pool, cpu_count
 import psutil
 from pyiid.experiments.elasticscatter.atomics.cpu_atomics import *
+from ..kernels.master_kernel import get_single_scatter_array
 
 __author__ = 'christopher'
 
@@ -43,8 +44,8 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq', normalization=True):
 
     master_task = [q, adps, scatter_array, qbin]
 
-    ans = cpu_multiprocessing(atomic_fq, allocation, master_task,
-                              (n, qmax_bin))
+    ans = cpu_multiprocessing(atomic_fq, allocation, (n, qmax_bin),
+                              master_task, k_max)
 
     # sum the answers
     final = np.sum(ans, axis=0, dtype=np.float64)
@@ -86,8 +87,8 @@ def wrap_fq_grad(atoms, qbin=.1, sum_type='fq'):
         return np.zeros((n, 3, qmax_bin)).astype(np.float32)
     allocation = k_space_grad_fq_allocation
     master_task = [q, adps, scatter_array, qbin]
-    ans = cpu_multiprocessing(atomic_grad_fq, allocation, master_task,
-                              (n, qmax_bin))
+    ans = cpu_multiprocessing(atomic_grad_fq, allocation, (n, qmax_bin),
+                              master_task, k_max)
     # sum the answers
     # print ans
     grad_p = np.sum(ans, axis=0)
@@ -102,11 +103,70 @@ def wrap_fq_grad(atoms, qbin=.1, sum_type='fq'):
     return grad_p
 
 
-def cpu_multiprocessing(atomic_function, allocation,
+def wrap_voxel_fq(atoms, new_atom, resolution, fq, qbin=.1, sum_type='fq'):
+    """
+    Generate the reduced structure function
+
+    Parameters
+    ----------
+    atoms: ase.Atoms
+        The atomic configuration
+    qbin: float
+        The size of the scatter vector increment
+    sum_type: 'fq' or 'pdf'
+        Determines the type of scatter array to use
+    Returns
+    -------
+    fq:1darray
+        The reduced structure function
+    """
+    # Pre-pool
+    # get scatter array
+    if sum_type == 'fq':
+        scatter_array = atoms.get_array('F(Q) scatter')
+    else:
+        scatter_array = atoms.get_array('PDF scatter')
+    new_scatter = np.zeros(scatter_array.shape[1], np.float32)
+    get_single_scatter_array(new_scatter, new_atom.number, qbin)
+
+    # define scatter_q information and initialize constants
+    # Get normalization array
+    norm = np.float32(scatter_array * new_scatter)
+    # Set up all the variables of interest
+    qbin = np.float32(qbin)
+    q = atoms.get_positions().astype(np.float32)
+    resolution = np.float32(resolution)
+    v = np.int32(np.ceil(np.diagonal(atoms.get_cell()) / resolution))
+    n, qmax_bin = scatter_array.shape
+
+    master_task = [q, norm, qbin, resolution, v]
+    # Inside pool
+    vfq = cpu_multiprocessing(atomic_voxel_fq, voxel_fq_allocation,
+                              (n, qmax_bin, v), master_task, np.product(v))
+    # Post-Pool
+    # Normalize fq
+    vfq = np.asarray(vfq)
+    vfq = vfq.reshape(tuple(v) + (qmax_bin,))
+    norm2 = np.zeros((n * (n - 1) / 2., qmax_bin), np.float32)
+    get_normalization_array(norm2, np.vstack((scatter_array, new_scatter)), 0)
+    na = np.mean(norm2, axis=0, dtype=np.float32) * np.float32(n + 1)
+    im, jm, km = v
+    vfq *= 2
+    for i in xrange(im):
+        for j in xrange(jm):
+            for k in xrange(km):
+                old_settings = np.seterr(all='ignore')
+                vfq[i, j, k, :] += fq
+                vfq[i, j, k, :] = np.nan_to_num(vfq[i, j, k, :] / na)
+                np.seterr(**old_settings)
+    del q, norm, na
+    return vfq
+
+
+def cpu_multiprocessing(atomic_function, allocation, allocation_args,
                         master_task, constants):
     # print atomic_function, allocation, master_task, constants
-    n, qmax_bin = constants
-    k_max = int((n ** 2 - n) / 2.)
+    k_max = constants
     # TODO: what if n is 1 kmax = 0???
     # break up problem
     pool_size = cpu_count()
@@ -116,10 +176,10 @@ def cpu_multiprocessing(atomic_function, allocation,
     tasks = []
     k_cov = 0
     # print k_max
+    # FIXME: If the problem is smaller than memory, break it up over the CPUs
     while k_cov < k_max:
-        # print type(allocation)
-        m = allocation(n, qmax_bin, float(
-            psutil.virtual_memory().available) / pool_size)
+        m = allocation(float(psutil.virtual_memory().available) / pool_size,
+                       *allocation_args)
         if m > k_max - k_cov:
             m = k_max - k_cov
         # print m, k_cov

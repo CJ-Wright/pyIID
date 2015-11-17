@@ -48,7 +48,7 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
     m_list = []
     while n_cov < n:
         for mem in mem_list:
-            m = gpu_fq_atoms_allocation(n, qmax_bin, mem)
+            m = gpu_fq_atoms_allocation(mem, n, qmax_bin)
             if m > n - n_cov:
                 m = n - n_cov
             m_list.append(m)
@@ -97,7 +97,7 @@ def wrap_fq_grad(atoms, qbin=.1, sum_type='fq'):
     m_list = []
     while n_cov < n:
         for mem in mem_list:
-            m = atoms_per_gpu_grad_fq(n, qmax_bin, mem)
+            m = atoms_per_gpu_grad_fq(mem, n, qmax_bin)
             if m > n - n_cov:
                 m = n - n_cov
             m_list.append(m)
