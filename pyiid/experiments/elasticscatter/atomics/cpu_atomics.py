@@ -57,7 +57,6 @@ def k_space_grad_fq_allocation(mem, n, qmax_bin):
 
 
 def voxel_fq_allocation(mem, n, qmax_bin, v):
-    # return 2
     return int(math.floor(
         float(.8 * mem / 4 - 3 * n - qmax_bin * n) / (
         qmax_bin * n + qmax_bin + 1)))
@@ -114,14 +113,14 @@ def atomic_voxel_fq(task):
 
     r = np.zeros((v_per_thread, n), np.float32)
     get_voxel_distances(r, q, resolution, v, np.int32(v_cov))
-
     # Get omega
     omega = np.zeros(r.shape + (qmax_bin,), np.float32)
     get_voxel_omega(omega, r, qbin)
-
     vfq = np.zeros((r.shape[0], qmax_bin), np.float32)
+    del r
     # get non-normalized fq
     get_voxel_fq(vfq, omega, norm)
+    del norm, omega
     vfq *= 2
     vfq += fq
     vfq = np.nan_to_num(vfq / na)

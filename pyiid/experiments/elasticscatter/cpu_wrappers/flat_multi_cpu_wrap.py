@@ -1,5 +1,4 @@
-from multiprocessing import Pool, cpu_count, log_to_stderr
-import logging
+from multiprocessing import Pool, cpu_count
 import psutil
 from pyiid.experiments.elasticscatter.atomics.cpu_atomics import *
 from pyiid.experiments.elasticscatter.kernels.master_kernel import get_single_scatter_array
@@ -146,13 +145,17 @@ def wrap_voxel_fq(atoms, new_atom, resolution, fq, qbin=.1, sum_type='fq'):
 
     master_task = [q, norm, fq, na, qbin, resolution, v]
     # Inside pool
-    vfq = cpu_multiprocessing(atomic_voxel_fq, voxel_fq_allocation,
+    vfq_list = cpu_multiprocessing(atomic_voxel_fq, voxel_fq_allocation,
                               (n, qmax_bin, v), master_task, np.product(v))
     # Post-Pool
+    vfq = None
+    for sub_fq in vfq_list:
+        if vfq is None:
+            vfq = sub_fq
+        else:
+            vfq = np.vstack((vfq, sub_fq))
     # Normalize fq
-    vfq = np.asarray(vfq)
     vfq = vfq.reshape(tuple(v) + (qmax_bin,))
-    print 'finish vfq'
     return vfq
 
 
@@ -165,9 +168,6 @@ def cpu_multiprocessing(atomic_function, allocation, allocation_args,
     pool_size = cpu_count()
     if pool_size <= 0:
         pool_size = 1
-    logger = log_to_stderr()
-    logger.setLevel(logging.INFO)
-    print 'call pool'
     p = Pool(pool_size, maxtasksperchild=1)
     tasks = []
     k_cov = 0
@@ -178,13 +178,11 @@ def cpu_multiprocessing(atomic_function, allocation, allocation_args,
                        *allocation_args)
         if m > k_max - k_cov:
             m = k_max - k_cov
-        print m, k_cov
         sub_task = tuple(master_task + [m, k_cov])
         tasks.append(sub_task)
         k_cov += m
     # multiprocessing map problem
     # print k_cov
-    print len(tasks)
     ans = p.map(atomic_function, tasks)
     p.close()
     p.join()

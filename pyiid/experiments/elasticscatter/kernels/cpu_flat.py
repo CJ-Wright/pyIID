@@ -219,8 +219,8 @@ def fast_fast_flat_sum(new_grad, grad, k_cov):
      nopython=True, cache=cache, nogil=True)
 def get_voxel_distances(r, q, resolution, v, offset):
     om, n = r.shape
-    for o in xrange(om + offset):
-        i, j, k = index1d_to_3d(o, v)
+    for o in xrange(om):
+        i, j, k = index1d_to_3d(o + offset, v)
         x = (i + .5) * resolution[0]
         y = (j + .5) * resolution[1]
         z = (k + .5) * resolution[2]
