@@ -321,13 +321,13 @@ def get_grad_fq_inplace(grad_omega, norm):
         grad_omega[k, w, qx] *= a
 
 
-@cuda.jit(argtypes=[f4[:, :], f4[:, :], f4[:], i4[:]])
-def get_voxel_distances(r, q, resolution, v):
+@cuda.jit(argtypes=[f4[:, :], f4[:, :], f4[:], i4[:], i4])
+def get_voxel_distances(r, q, resolution, v, offset):
     om, n = r.shape
     o, l = cuda.grid(2)
     if o >= om or l >= n:
         return
-    i, j, k = cuda_index1d_to_3d(o, v)
+    i, j, k = cuda_index1d_to_3d(o + offset, v)
     x = (i + .5) * resolution[0]
     y = (j + .5) * resolution[1]
     z = (k + .5) * resolution[2]

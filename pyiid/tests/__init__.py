@@ -31,6 +31,7 @@ if os.environ.get('PYIID_TEST_SEED') is not None:
     seed = int(os.environ["PYIID_TEST_SEED"])
 else:
     seed = int(random.random() * 2 ** 32)
+    print 'seed:', seed
 
 rs = np.random.RandomState(seed)
 
@@ -175,7 +176,8 @@ def stats_check(ans1, ans2, rtol=1e-7, atol=0):
             if ans1[fails].size <= 251:
                 print a
 
-            a = (np.abs(ans1[fails] - ans2[fails]) - atol) / np.abs(ans2[fails])
+            a = (np.abs(ans1[fails] - ans2[fails]) - atol) / np.abs(
+                ans2[fails])
             print '\n', 'with current atol rtol = ', np.nanmax(a), '\n'
             if ans1[fails].size <= 251:
                 print a
@@ -260,11 +262,12 @@ else:
         1000
     ]
     num_exp = 3
-    proc_alg_pairs = [('CPU', 'nxn'),
-                      ('CPU', 'flat-serial'),
-                      ('CPU', 'flat'),
-                      # ('Multi-GPU', 'flat'),
-                      ]
+    proc_alg_pairs = [
+        ('CPU', 'nxn'),
+        ('CPU', 'flat-serial'),
+        ('CPU', 'flat'),
+        ('Multi-GPU', 'flat'),
+    ]
     comparison_pro_alg_pairs = [
         (('CPU', 'nxn'), ('CPU', 'flat-serial')),
         (('CPU', 'flat-serial'), ('CPU', 'flat')),

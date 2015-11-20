@@ -186,6 +186,8 @@ class ElasticScatter(object):
         # Changing the processor invalidates the previous results
         self.fq_result = None
         self.pdf_result = None
+        self.fq_grad_result = None
+        self.pdf_grad_result = None
 
         if processor is None:
             # Test each processor in order of most advanced to least
@@ -496,7 +498,7 @@ class ElasticScatter(object):
         state = self.check_state(atoms)
         if state == [] and self.fq_grad_result is not None:
             if self.verbose:
-                print 'using previous fq'
+                print 'using previous grad fq'
             return self.fq_grad_result
         else:
             if any(x in ['exp', 'numbers'] for x in state):
@@ -528,12 +530,12 @@ class ElasticScatter(object):
         state = self.check_state(atoms)
         if state == [] and self.pdf_grad_result is not None:
             if self.verbose:
-                print 'using previous pdf'
-            return self.pdf_result
+                print 'using previous grad pdf'
+            return self.pdf_grad_result
         elif state and self.fq_grad_result is not None:
             if self.verbose:
-                print 'using previous fq'
-            fq_grad = self.fq_result
+                print 'using previous grad fq'
+            fq_grad = self.fq_grad_result
         else:
             if any(x in ['exp', 'numbers'] for x in state):
                 if self.verbose:
@@ -545,6 +547,7 @@ class ElasticScatter(object):
                 self.fq_grad_result = None
                 self.pdf_grad_result = None
             fq_grad = self.grad(atoms, self.pdf_qbin, 'PDF')
+            self.fq_grad_result = fq_grad
         qmin_bin = int(self.exp['qmin'] / self.pdf_qbin)
         fq_grad[:, :, :qmin_bin] = 0.
         rgrid = self.get_r()

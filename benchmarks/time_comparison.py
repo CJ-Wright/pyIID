@@ -1,9 +1,8 @@
-__author__ = 'christopher'
 from ase.atoms import Atoms
 import ase.io as aseio
 
-from pyiid.wrappers.elasticscatter import wrap_atoms
-from pyiid.calc.pdfcalc import PDFCalc
+from pyiid.experiments.elasticscatter import wrap_atoms
+from pyiid.calc.calc_1d import Calc1D
 from pyiid.utils import build_sphere_np
 
 import matplotlib.pyplot as plt
@@ -14,21 +13,26 @@ from collections import OrderedDict
 import pickle
 import traceback
 from pyiid.experiments.elasticscatter import ElasticScatter
+from pyiid.tests import *
+__author__ = 'christopher'
 
 exp = None
-scat = ElasticScatter()
+scat = ElasticScatter(
+    # verbose=True
+)
 atoms = Atoms('Au4', [[0,0,0], [3,0,0], [0,3,0], [3,3,0]])
 pdf = scat.get_pdf(atoms)
 
 type_list = []
 time_list = []
-benchmarks = [
-    ('CPU', 'flat'),
-    ('Multi-GPU', 'flat')
-]
-colors=['b', 'r']
-sizes = range(10, 80, 5)
-print sizes
+# benchmarks = [
+#     ('CPU', 'flat'),
+#     ('Multi-GPU', 'flat')
+# ]
+benchmarks = proc_alg_pairs
+colors=['b', 'r', 'k', 'g']
+sizes = range(10, 45, 5)
+print sizes, benchmarks
 for proc, alg in benchmarks:
     print proc, alg
     number_of_atoms = []
@@ -42,19 +46,22 @@ for proc, alg in benchmarks:
             atoms.rattle()
             print len(atoms), i/10.
             number_of_atoms.append(len(atoms))
-            calc = PDFCalc(obs_data=pdf, scatter=scat, conv=1, potential='rw')
+            calc = Calc1D(target_data=pdf, exp_function=scat.get_pdf,
+                          exp_grad_function=scat.get_grad_pdf,
+                          exp_voxel_function=scat.get_pdf_voxels,
+                          conv=1, potential='rw')
             atoms.set_calculator(calc)
 
             s = time.time()
-            nrg = atoms.get_potential_energy()
-            # scat.get_fq(atoms)
+            # nrg = atoms.get_potential_energy()
+            scat.get_fq(atoms)
             f = time.time()
 
             nrg_l.append(f-s)
 
             s = time.time()
             # force = atoms.get_forces()
-            # scat.get_grad_fq(atoms)
+            scat.get_grad_fq(atoms)
             f = time.time()
             f_l.append(f-s)
     except:
@@ -78,7 +85,9 @@ plt.savefig('speed3.eps', bbox_inches='tight', transparent=True)
 plt.savefig('speed3.png', bbox_inches='tight', transparent=True)
 plt.show()
 '''
-names = ['GPU', 'CPU']
+names = [a + ' ' + b for (a, b) in benchmarks]
+print len(names)
+print names
 fig = plt.figure()
 ax1 = fig.add_subplot(111)
 ax2 = ax1.twiny()
@@ -88,6 +97,7 @@ for i in range(len(benchmarks)):
         ax1.semilogy(sizes,time_list[i][j], color=colors[i], marker=line, label= '{0} {1}'.format(names[i], calc_type))
 
 ax1.legend(loc='best')
+ax1.set_xticks(sizes)
 ax1.set_xlabel('NP diameter in Angstrom')
 ax1.set_ylabel('Elapsed running time (s)')
 ax2.set_xlim(ax1.get_xlim())

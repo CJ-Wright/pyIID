@@ -1,7 +1,8 @@
 from multiprocessing import Pool, cpu_count
 import psutil
 from pyiid.experiments.elasticscatter.atomics.cpu_atomics import *
-from pyiid.experiments.elasticscatter.kernels.master_kernel import get_single_scatter_array
+from pyiid.experiments.elasticscatter.kernels.master_kernel import \
+    get_single_scatter_array
 
 __author__ = 'christopher'
 
@@ -146,7 +147,8 @@ def wrap_voxel_fq(atoms, new_atom, resolution, fq, qbin=.1, sum_type='fq'):
     master_task = [q, norm, fq, na, qbin, resolution, v]
     # Inside pool
     vfq_list = cpu_multiprocessing(atomic_voxel_fq, voxel_fq_allocation,
-                              (n, qmax_bin, v), master_task, np.product(v))
+                                   (n, qmax_bin, v), master_task,
+                                   np.product(v))
     # Post-Pool
     vfq = None
     for sub_fq in vfq_list:
@@ -172,48 +174,23 @@ def cpu_multiprocessing(atomic_function, allocation, allocation_args,
     tasks = []
     k_cov = 0
     # print k_max
-    # FIXME: If the problem is smaller than memory, break it up over the CPUs
     while k_cov < k_max:
-        m = allocation(float(psutil.virtual_memory().available) / pool_size,
+        m = allocation(float(psutil.virtual_memory().available),
                        *allocation_args)
         if m > k_max - k_cov:
             m = k_max - k_cov
-        sub_task = tuple(master_task + [m, k_cov])
-        tasks.append(sub_task)
-        k_cov += m
+        for i in range(pool_size):
+            if not k_cov < k_max:
+                break
+            n = math.ceil(float(m) / pool_size)
+            if n > k_max - k_cov:
+                n = k_max - k_cov
+            sub_task = tuple(master_task + [n, k_cov])
+            tasks.append(sub_task)
+            k_cov += n
     # multiprocessing map problem
     # print k_cov
     ans = p.map(atomic_function, tasks)
     p.close()
-    p.join()
     # print ans
     return ans
-
-
-if __name__ == '__main__':
-    from ase.atoms import Atoms
-    from pyiid.experiments.elasticscatter import wrap_atoms
-    # from pyiid.experiments.cpu_wrappers.nxn_cpu_wrap import wrap_fq_grad as
-    #  mfqg
-    import matplotlib.pyplot as plt
-
-    plt.ion()
-    n = 5000
-    pos = np.random.random((n, 3)) * 10.
-    atoms = Atoms('Au' + str(n), pos)
-    # atoms = Atoms('Au4', [[0, 0, 0], [3, 0, 0], [0, 3, 0], [3, 3, 0]])
-    wrap_atoms(atoms)
-
-    # fq = wrap_fq(atoms, atoms.info['exp']['qbin'])
-    # fq2 = mfq(atoms, atoms.info['exp']['qbin'])
-    # print fq2.shape
-    # plt.plot(fq)
-    # plt.plot(fq2)
-    # plt.plot((fq-fq2)/fq)
-    # plt.show()
-    # assert_allclose(fq, fq2, 3e-4)
-    grad_fq = wrap_fq_grad(atoms, atoms.info['exp']['qbin'])
-    print grad_fq
-    # mgrad_fq = mfqg(atoms, atoms.info['exp']['qbin'])
-    # assert_allclose(grad_fq, mgrad_fq)
-    # raw_input()

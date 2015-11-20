@@ -166,12 +166,12 @@ def check_scatter_fq_voxels(value):
 
     ans = scat.get_fq_voxels(atoms, Atom('Au', [0, 0, 0]), res)
     # Check that Scatter gave back something
-    print ans.shape
     assert ans is not None
     # Check that all the values are not zero
     assert np.any(ans)
     ans2 = np.zeros(ans.shape)
     im, jm, km, _ = ans.shape
+    scat.set_processor()
     for i in xrange(im):
         x = (i + .5) * res
         for j in xrange(jm):
@@ -204,13 +204,13 @@ def check_scatter_pdf_voxels(value):
     res = 1.
     atoms.center(res)
     ans = scat.get_pdf_voxels(atoms, Atom('Au', [0, 0, 0]), res)
-    print ans.shape
     # Check that Scatter gave back something
     assert ans is not None
     # Check that all the values are not zero
     assert np.any(ans)
     ans2 = np.zeros(ans.shape)
     im, jm, km, _ = ans.shape
+    scat.set_processor()
     for i in xrange(im):
         x = (i + .5) * res
         for j in xrange(jm):
@@ -229,7 +229,7 @@ def check_scatter_pdf_voxels(value):
                     rtol=3e-6,
                     atol=5e-6
                     )
-    del atoms, exp, proc, alg, scat, ans
+    del atoms, exp, proc, alg, scat, ans, ans2
     return
 
 
@@ -263,7 +263,7 @@ if __name__ == '__main__':
     nose.runmodule(argv=[
         # '-s',
         '--with-doctest',
-        # '--nocapture',
+        '--nocapture',
         '-v',
         '-x',
     ],
