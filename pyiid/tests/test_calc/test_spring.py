@@ -22,7 +22,7 @@ def check_voxel_nrg(value):
     calc = Spring(**value[1])
     atoms.set_calculator(calc)
     e0 = atoms.get_potential_energy()
-    voxel_nrg = atoms.calc.calculate_voxel_energy(atoms, resolution)
+    voxel_nrg = atoms.calc.calculate_voxel_energy(atoms, None, resolution)
 
     voxel_nrg2 = np.zeros(voxel_nrg.shape)
     im, jm, km = voxel_nrg2.shape
