@@ -8,7 +8,8 @@ from pyiid.sim import Ensemble
 __author__ = 'christopher'
 
 
-def add_atom(atoms, chem_potentials, beta, random_state, resolution=None):
+def add_atom(atoms, chem_potentials, beta, random_state, resolution=None,
+             voxel_weighting=False):
     """
     Perform a GCMC atomic addition
 
@@ -25,6 +26,10 @@ def add_atom(atoms, chem_potentials, beta, random_state, resolution=None):
         The random state to be used
     resolution: float or ndarray, optional
         If used denote the resolution for the voxels
+    voxel_weighting: True or function, optional
+        If True use the atoms' calculator's calculate_voxel_energy
+        If a function perform a call on that function, function(atoms)
+        Note that this must be paired with a resolution
 
     Returns
     -------
@@ -42,8 +47,23 @@ def add_atom(atoms, chem_potentials, beta, random_state, resolution=None):
     if resolution is None:
         new_position = np.random.uniform(0, np.max(atoms.get_cell(), 0))
     else:
-        c = np.int32(np.ceil(np.diagonal(atoms.get_cell()) / resolution))
-        qvr = np.random.choice(np.product(c))
+        if voxel_weighting is True:
+            # Get the voxel energy using exponential weighting
+            voxel_nrg = atoms.calc.calculate_voxel_energy(atoms, resolution)
+            prob = np.exp(-beta * (voxel_nrg - e0))
+            prob -= np.min(prob)
+            prob /= np.sum(prob)
+            qvr = np.random.choice(prob.size, p=prob.ravel())
+        elif hasattr(voxel_weighting, '__call__'):
+            voxel_nrg = voxel_weighting(atoms, resolution)
+            prob = np.exp(-beta * (voxel_nrg - e0))
+            prob -= np.min(prob)
+            prob /= np.sum(prob)
+            qvr = np.random.choice(prob.size, p=prob.ravel())
+        else:
+            # Use voxels for resolution
+            c = np.int32(np.ceil(np.diagonal(atoms.get_cell()) / resolution))
+            qvr = np.random.choice(np.product(c))
         qv = np.asarray(np.unravel_index(qvr, c))
         new_position = (qv + random_state.uniform(0, 1, 3)) * resolution
     new_atom = Atom(new_symbol, np.asarray(new_position))
@@ -128,7 +148,7 @@ class GrandCanonicalEnsemble(Ensemble):
 
     def __init__(self, atoms, chemical_potentials, temperature=100,
                  restart=None, logfile=None, trajectory=None, seed=None,
-                 verbose=False, resolution=None):
+                 verbose=False, resolution=None, voxel_weighting=False):
         Ensemble.__init__(self, atoms, restart, logfile, trajectory, seed,
                           verbose)
         self.beta = 1. / (temperature * kB)
@@ -136,6 +156,7 @@ class GrandCanonicalEnsemble(Ensemble):
         self.metadata = {'rejected_additions': 0, 'accepted_removals': 0,
                          'accepted_additions': 0, 'rejected_removals': 0}
         self.resolution = resolution
+        self.voxel_weighting = voxel_weighting
 
     def step(self):
         if self.random_state.uniform() >= .5:
@@ -146,7 +167,8 @@ class GrandCanonicalEnsemble(Ensemble):
         else:
             mv = 'add'
             new_atoms = add_atom(self.traj[-1], self.chem_pot, self.beta,
-                                 self.random_state, resolution=self.resolution
+                                 self.random_state, resolution=self.resolution,
+                                 voxel_weighting=self.voxel_weighting
                                  )
         if new_atoms is not None:
             if self.verbose:
