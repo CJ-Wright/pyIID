@@ -4,6 +4,7 @@ import numpy as np
 from ase.atom import Atom
 from ase.units import *
 from pyiid.sim import Ensemble
+from ase.calculators.calculator import Calculator
 
 __author__ = 'christopher'
 
@@ -43,26 +44,31 @@ def add_atom(atoms, chem_potentials, beta, random_state, resolution=None,
 
     # make new atom
     new_symbol = np.random.choice(chem_potentials.keys())
+    prop_atom = Atom(new_symbol, [0, 0, 0])
     e0 = atoms.get_potential_energy()
     if resolution is None:
         new_position = np.random.uniform(0, np.max(atoms.get_cell(), 0))
     else:
+        c = np.int32(np.ceil(np.diagonal(atoms.get_cell()) / resolution))
         if voxel_weighting is True:
             # Get the voxel energy using exponential weighting
-            voxel_nrg = atoms.calc.calculate_voxel_energy(atoms, resolution)
-            prob = np.exp(-beta * (voxel_nrg - e0))
+            voxel_nrg = atoms.calc.calculate_voxel_energy(atoms, prop_atom,
+                                                          resolution)
+            prob = np.float64(np.exp(-beta * (voxel_nrg - e0)))
             prob -= np.min(prob)
             prob /= np.sum(prob)
             qvr = np.random.choice(prob.size, p=prob.ravel())
-        elif hasattr(voxel_weighting, '__call__'):
-            voxel_nrg = voxel_weighting(atoms, resolution)
-            prob = np.exp(-beta * (voxel_nrg - e0))
+        elif isinstance(voxel_weighting, Calculator):
+            vw_e0 = voxel_weighting.calculate_energy(atoms)
+            voxel_nrg = voxel_weighting.calculate_voxel_energy(atoms, prop_atom,
+                                                               resolution)
+            prob = np.float64(np.exp(-beta * (voxel_nrg - vw_e0)))
             prob -= np.min(prob)
             prob /= np.sum(prob)
             qvr = np.random.choice(prob.size, p=prob.ravel())
         else:
             # Use voxels for resolution
-            c = np.int32(np.ceil(np.diagonal(atoms.get_cell()) / resolution))
+
             qvr = np.random.choice(np.product(c))
         qv = np.asarray(np.unravel_index(qvr, c))
         new_position = (qv + random_state.uniform(0, 1, 3)) * resolution

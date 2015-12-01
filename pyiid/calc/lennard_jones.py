@@ -61,14 +61,11 @@ class LJ(Calculator):
         :param atoms:
         :return:
         """
-        self.results['energy'] = lj_energy(atoms, self.param_dict)
+        a = lj_energy(atoms, self.param_dict)
+        self.results['energy'] = a
+        return a
 
     def calculate_forces(self, atoms):
-        # self.results['forces'] = np.zeros((len(atoms), 3))
-        forces = self.grad(self.exp_grad_function(atoms),
-                           self.exp_function(atoms),
-                           self.target_data) * self.rw_to_eV
-
         # self.results['forces'] = lj_forces(atoms, self.param_dict)
         self.results['forces'] = None
 

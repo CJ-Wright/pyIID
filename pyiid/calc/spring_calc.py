@@ -88,7 +88,7 @@ class Spring(Calculator):
 
         self.results['forces'] = forces
 
-    def calculate_voxel_energy(self, atoms, resolution):
+    def calculate_voxel_energy(self, atoms, new_atom, resolution):
         return self.v_nrg(atoms, self.k, self.rt, resolution)
 
     def calculate_atomwise_energy(self, atoms):
