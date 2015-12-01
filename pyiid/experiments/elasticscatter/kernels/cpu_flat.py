@@ -212,3 +212,20 @@ def fast_fast_flat_sum(new_grad, grad, k_cov):
                 for qx in xrange(grad.shape[2]):
                     for tz in xrange(i4(3)):
                         new_grad[i, tz, qx] += grad[k, tz, qx] * alpha
+
+
+@jit(void(f4[:, :], f4[:, :], f4[:], i4[:], i4),
+     target=processor_target,
+     nopython=True, cache=cache, nogil=True)
+def get_voxel_distances(r, q, resolution, v, offset):
+    om, n = r.shape
+    for o in xrange(om):
+        i, j, k = index1d_to_3d(o + offset, v)
+        x = (i + .5) * resolution[0]
+        y = (j + .5) * resolution[1]
+        z = (k + .5) * resolution[2]
+        for l in xrange(n):
+            a = x - q[l, 0]
+            b = y - q[l, 1]
+            c = z - q[l, 2]
+            r[o, l] = math.sqrt(a * a + b * b + c * c)

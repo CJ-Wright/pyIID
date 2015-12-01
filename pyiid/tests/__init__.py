@@ -90,7 +90,7 @@ def setup_atoms(n):
     """
     q = rs.random_sample((n, 3)) * 10
     atoms = Atoms('Au' + str(int(n)), q)
-    atoms.center()
+    atoms.center(.5)
     return atoms
 
 
@@ -108,8 +108,8 @@ def setup_double_atoms(n):
 
     q2 = rs.random_sample((n, 3)) * 10
     atoms2 = Atoms('Au' + str(int(n)), q2)
-    atoms.center()
-    atoms2.center()
+    atoms.center(.5)
+    atoms2.center(.5)
     return atoms, atoms2
 
 
@@ -133,7 +133,7 @@ def setup_atomic_square():
     :return:
     """
     atoms1 = Atoms('Au4', [[0, 0, 0], [3, 0, 0], [0, 3, 0], [3, 3, 0]])
-    atoms1.center()
+    atoms1.center(.5)
     atoms2 = atoms1.copy()
     scale = .75
     atoms2.positions *= scale
