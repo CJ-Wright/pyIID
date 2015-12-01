@@ -122,7 +122,6 @@ def lj_voxel_energy(atoms, new_atom, param_dict, resolution):
     epsilon = np.zeros((np.product(v), n), np.float32)
 
     symbols = atoms.get_chemical_symbols()
-    print len(symbols)
     ei = new_atom.symbol
 
     for j in xrange(n):

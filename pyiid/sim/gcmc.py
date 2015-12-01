@@ -46,6 +46,8 @@ def add_atom(atoms, chem_potentials, beta, random_state, resolution=None,
     new_symbol = np.random.choice(chem_potentials.keys())
     prop_atom = Atom(new_symbol, [0, 0, 0])
     e0 = atoms.get_potential_energy()
+    vi = None
+    prob_i = None
     if resolution is None:
         new_position = np.random.uniform(0, np.max(atoms.get_cell(), 0))
     else:
@@ -58,6 +60,8 @@ def add_atom(atoms, chem_potentials, beta, random_state, resolution=None,
             prob -= np.min(prob)
             prob /= np.sum(prob)
             qvr = np.random.choice(prob.size, p=prob.ravel())
+            prob_i = prob.ravel()[qvr]
+            vi = np.product(resolution)
         elif isinstance(voxel_weighting, Calculator):
             vw_e0 = voxel_weighting.calculate_energy(atoms)
             voxel_nrg = voxel_weighting.calculate_voxel_energy(atoms, prop_atom,
@@ -66,10 +70,13 @@ def add_atom(atoms, chem_potentials, beta, random_state, resolution=None,
             prob -= np.min(prob)
             prob /= np.sum(prob)
             qvr = np.random.choice(prob.size, p=prob.ravel())
+            prob_i = prob.ravel()[qvr]
+            vi = np.product(resolution)
         else:
             # Use voxels for resolution
-
             qvr = np.random.choice(np.product(c))
+            prob_i = 1./np.product(c)
+            vi = np.product(resolution)
         qv = np.asarray(np.unravel_index(qvr, c))
         new_position = (qv + random_state.uniform(0, 1, 3)) * resolution
     new_atom = Atom(new_symbol, np.asarray(new_position))
@@ -82,11 +89,19 @@ def add_atom(atoms, chem_potentials, beta, random_state, resolution=None,
     # get chemical potential
     mu = chem_potentials[new_symbol]
     # calculate acceptance
-    if np.random.random() < np.exp(
-            min([0, -1. * beta * delta_energy + beta * mu])):
-        return atoms_prime
+    # TODO: need to write the proper correction to the MH criteria
+    if vi is None:
+        if np.random.random() < np.exp(
+                min([0, -1. * beta * delta_energy + beta * mu])):
+            return atoms_prime
+        else:
+            return None
     else:
-        return None
+        if np.random.random() < np.exp(
+                min([0, np.log(vi/prob_i) - 1. * beta * delta_energy + beta * mu])):
+            return atoms_prime
+        else:
+            return None
 
 
 def del_atom(atoms, chem_potentials, beta, random_state):
@@ -114,7 +129,6 @@ def del_atom(atoms, chem_potentials, beta, random_state):
     """
     if len(atoms) <= 1:
         return None
-    print len(atoms)
     # make the proposed system
     atoms_prime = dc(atoms)
     e0 = atoms.get_potential_energy()
@@ -127,7 +141,6 @@ def del_atom(atoms, chem_potentials, beta, random_state):
     # get new energy
     delta_energy = atoms_prime.get_potential_energy() - e0
     # get chemical potential
-    # print delta_energy
     mu = chem_potentials[del_symbol]
     # calculate acceptance
     if np.random.random() < np.exp(
