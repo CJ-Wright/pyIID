@@ -1,6 +1,8 @@
 import numpy as np
 from ase.calculators.calculator import Calculator
 from pyiid.experiments.elasticscatter.kernels.cpu_flat import *
+import mkl
+from ase.atoms import symbols2numbers
 
 __author__ = 'christopher'
 
@@ -109,6 +111,7 @@ def lj_energy(atoms, param_dict):
     lj = epsilon * (c12 - 2 * c6)
     return np.sum(lj)
 
+
 def lj_voxel_energy(atoms, new_atom, param_dict, resolution):
     v = np.int32(np.ceil(np.diagonal(atoms.get_cell()) / resolution))
     q = atoms.get_positions().astype(np.float32)
@@ -119,18 +122,10 @@ def lj_voxel_energy(atoms, new_atom, param_dict, resolution):
 
     get_voxel_distances(r, q, resolution, v, i4(0))
     rm = np.zeros((np.product(v), n), np.float32)
+    rm[:, :] = param_dict.values()[0][0]
     epsilon = np.zeros((np.product(v), n), np.float32)
+    epsilon[:, :] = param_dict.values()[0][1]
 
-    symbols = atoms.get_chemical_symbols()
-    ei = new_atom.symbol
-
-    for j in xrange(n):
-        ej = symbols[j]
-        for key in param_dict.keys():
-            if ei in key and ej in key:
-                rm[:, j] = param_dict[key][0]
-                epsilon[:, j] = param_dict[key][1]
-                break
     c6 = (rm / r) ** 6
     del rm, r
     c12 = c6 ** 2

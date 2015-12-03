@@ -56,7 +56,7 @@ def add_atom(atoms, chem_potentials, beta, random_state, resolution=None,
             # Get the voxel energy using exponential weighting
             voxel_nrg = atoms.calc.calculate_voxel_energy(atoms, prop_atom,
                                                           resolution)
-            prob = np.float64(np.exp(-beta * (voxel_nrg - e0)))
+            prob = np.exp(np.float64(-beta * (voxel_nrg - e0)))
             prob -= np.min(prob)
             prob /= np.sum(prob)
             qvr = np.random.choice(prob.size, p=prob.ravel())
@@ -64,9 +64,10 @@ def add_atom(atoms, chem_potentials, beta, random_state, resolution=None,
             vi = np.product(resolution)
         elif isinstance(voxel_weighting, Calculator):
             vw_e0 = voxel_weighting.calculate_energy(atoms)
-            voxel_nrg = voxel_weighting.calculate_voxel_energy(atoms, prop_atom,
+            voxel_nrg = voxel_weighting.calculate_voxel_energy(atoms,
+                                                               prop_atom,
                                                                resolution)
-            prob = np.float64(np.exp(-beta * (voxel_nrg - vw_e0)))
+            prob = np.exp(np.float64(-beta * (voxel_nrg - vw_e0)))
             prob -= np.min(prob)
             prob /= np.sum(prob)
             qvr = np.random.choice(prob.size, p=prob.ravel())
@@ -75,7 +76,7 @@ def add_atom(atoms, chem_potentials, beta, random_state, resolution=None,
         else:
             # Use voxels for resolution
             qvr = np.random.choice(np.product(c))
-            prob_i = 1./np.product(c)
+            prob_i = 1. / np.product(c)
             vi = np.product(resolution)
         qv = np.asarray(np.unravel_index(qvr, c))
         new_position = (qv + random_state.uniform(0, 1, 3)) * resolution
@@ -90,7 +91,9 @@ def add_atom(atoms, chem_potentials, beta, random_state, resolution=None,
     mu = chem_potentials[new_symbol]
     # calculate acceptance
     # TODO: need to write the proper correction to the MH criteria
-    if vi is None:
+    # print '\t\taddition delta energy', delta_energy
+    # print '\t\taddition exp', np.exp(-1. * beta * delta_energy + beta * mu)
+    if vi is None or True:
         if np.random.random() < np.exp(
                 min([0, -1. * beta * delta_energy + beta * mu])):
             return atoms_prime
@@ -98,7 +101,8 @@ def add_atom(atoms, chem_potentials, beta, random_state, resolution=None,
             return None
     else:
         if np.random.random() < np.exp(
-                min([0, np.log(vi/prob_i) - 1. * beta * delta_energy + beta * mu])):
+                min([0, np.log(
+                            vi / prob_i) - 1. * beta * delta_energy + beta * mu])):
             return atoms_prime
         else:
             return None
@@ -142,6 +146,8 @@ def del_atom(atoms, chem_potentials, beta, random_state):
     delta_energy = atoms_prime.get_potential_energy() - e0
     # get chemical potential
     mu = chem_potentials[del_symbol]
+    # print '\t\tremoval delta energy', delta_energy
+    # print '\t\tremoval exp', np.exp(-1. * beta * delta_energy - beta * mu)
     # calculate acceptance
     if np.random.random() < np.exp(
             min([0, -1. * beta * delta_energy - beta * mu
