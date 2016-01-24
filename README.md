@@ -1,4 +1,7 @@
-#Python Infinite Improbability Drive
+#Python Infinite Improbability Drive 
+[![Build Status](https://magnum.travis-ci.com/CJ-Wright/pyIID.svg?token=5KvMJdLqpf5ZXrVzPA7y&branch=tringle_kernel)](https://magnum.travis-ci.com/CJ-Wright/pyIID)
+[![Coverage Status](https://coveralls.io/repos/ZhouHUB/pyIID/badge.svg?branch=master&t=Kitk02)](https://coveralls.io/r/ZhouHUB/pyIID?branch=master)
+
 Is designed for the Monte Carlo modeling of nanomaterials using atomic pair distributuion functions, other experimental data, and ab-initio structural calculations.
 
 Areas that need improvement:

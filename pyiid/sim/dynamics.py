@@ -1,10 +1,8 @@
+from pyiid.sim import leapfrog
 __author__ = 'christopher'
-import numpy as np
-from copy import deepcopy as dc
-from pyiid.sim.hmc import leapfrog
 
 
-def simulate_dynamics(atoms, stepsize, n_steps):
+def classical_dynamics(atoms, stepsize, n_steps):
     """
     Create a new atomic configuration by simulating the hamiltonian dynamics
     of the system
@@ -23,16 +21,8 @@ def simulate_dynamics(atoms, stepsize, n_steps):
          list of ase.Atoms
         This list contains all the moves made during the simulation
     """
-    # get the initial positions and momenta
-    grad = atoms.get_forces()
-    moves = [dc(atoms)]
-    atoms.set_velocities(atoms.get_velocities() + 0.5 * stepsize * grad)
-    atoms.set_positions(
-        atoms.get_positions() + stepsize * atoms.get_velocities())
-    moves += [dc(atoms)]
+    atoms.get_forces()
+    traj = [atoms]
     for n in range(n_steps):
-        prop_move = [dc(leapfrog(atoms, stepsize))]
-        moves += prop_move
-    atoms.set_velocities(atoms.get_velocities() + 0.5 * stepsize *
-                         atoms.get_forces())
-    return moves
+        traj.append(leapfrog(traj[-1], stepsize))
+    return traj

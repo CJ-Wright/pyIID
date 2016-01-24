@@ -1,0 +1,11 @@
+[run]
+source=pyiid
+[report]
+omit =
+    */python?.?/*
+    */site-packages/nose/*
+    *test*
+    pyiid/__init__.py
+
+exclude_lines =
+    def set_default

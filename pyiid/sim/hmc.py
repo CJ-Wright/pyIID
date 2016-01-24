@@ -1,7 +1,9 @@
-__author__ = 'christopher'
-
 import numpy as np
 from copy import deepcopy as dc
+
+__author__ = 'christopher'
+print 'This system is officially depreciated and is here for history ' \
+      'mostly, please use the nuts_hmc module'
 
 
 def leapfrog(atoms, step):
@@ -25,7 +27,6 @@ def leapfrog(atoms, step):
     atoms.set_momenta(atoms.get_momenta() + step * f)
     new_pos = atoms.get_positions() + step * atoms.get_momenta()
     atoms.set_positions(new_pos)
-    return atoms
 
 
 def simulate_dynamics(atoms, stepsize, n_steps):
@@ -53,15 +54,15 @@ def simulate_dynamics(atoms, stepsize, n_steps):
     atoms.set_positions(
         atoms.get_positions() + stepsize * atoms.get_velocities())
 
-    #do n leapfrog steps
+    # do n leapfrog steps
     for n in range(n_steps):
-        prop_move = leapfrog(atoms, stepsize)
+        leapfrog(atoms, stepsize)
 
     atoms.set_velocities(
         atoms.get_velocities() + 0.5 * stepsize * atoms.get_forces())
 
 
-def mh_accept(initial_energy, next_energy, T=1):
+def mh_accept(initial_energy, next_energy, temp=1):
     """
     Decide whether to accept or reject the new configuration
 
@@ -71,6 +72,8 @@ def mh_accept(initial_energy, next_energy, T=1):
         The Hamiltonian of the intial configuration
     next_energy: float
         The Hamiltonian of the proposed configuration
+    temp: float
+        The simulation temperature
 
     Returns
     -------
@@ -78,7 +81,7 @@ def mh_accept(initial_energy, next_energy, T=1):
         Whether to accept the new configuration
     """
     diff = initial_energy - next_energy
-    canon_part_prob = np.exp(diff * T)
+    canon_part_prob = np.exp(diff * temp)
 
     rand = np.random.random((1,))
 
@@ -88,16 +91,21 @@ def mh_accept(initial_energy, next_energy, T=1):
     return rand < canon_part_prob
 
 
-def hmc_move(atoms, stepsize, n_steps, T):
+def hmc_move(atoms, stepsize, n_steps, temp):
     """
     Move atoms and check if they are accepted, returning the new 
     configuration if accepted, the old if not
     
     Parameters
     -----------
-    atoms: ase.Atoms 
-    stepsize: 
-    n_steps:
+    atoms: ase.Atoms object
+        The atomic configuration
+    stepsize: float
+        The time step size
+    n_steps: int
+        Number of time steps
+    temp: float
+        Temperature in K
     
     Returns
     --------
@@ -113,7 +121,7 @@ def hmc_move(atoms, stepsize, n_steps, T):
 
     simulate_dynamics(prop, stepsize, n_steps)
 
-    accept = mh_accept(atoms.get_total_energy(), prop.get_total_energy(), T)
+    accept = mh_accept(atoms.get_total_energy(), prop.get_total_energy(), temp)
 
     if accept == 1:
         return True, prop
@@ -123,7 +131,7 @@ def hmc_move(atoms, stepsize, n_steps, T):
 
 def run_hmc(atoms, iterations, stepsize, n_steps, avg_acceptance_slowness,
             avg_acceptance_rate, target_acceptance_rate, stepsize_inc,
-            stepsize_dec, stepsize_min, stepsize_max, T=1, wtraj = None):
+            stepsize_dec, stepsize_min, stepsize_max, temp=1, wtraj=None):
     """
     Wrapper for running Hamiltonian (Hybrid) Monte Carlo refinements,
     using a dynamic step size refinement, based on whether moves are
@@ -151,8 +159,10 @@ def run_hmc(atoms, iterations, stepsize, n_steps, avg_acceptance_slowness,
         The minimum stepsize
     stepsize_max: float
         The maximum stepsize
-    T: float
+    temp: float
         The simulation temperature
+    wtraj: ase write traj
+        Trajectory to write to
 
     Returns
     -------
@@ -165,22 +175,24 @@ def run_hmc(atoms, iterations, stepsize, n_steps, avg_acceptance_slowness,
     # initialize lists for holding interesting variables
     traj = [atoms]
     accept_list = []
+    accept_num = []
 
     i = 0
     try:
         while i < iterations:
-            accept, atoms = hmc_move(atoms, stepsize, n_steps, T)
+            accept, atoms = hmc_move(atoms, stepsize, n_steps, temp)
             # print i, accept, atoms.get_potential_energy(), stepsize
             # print '--------------------------------'
             if accept is True:
                 traj += [atoms]
+                accept_num.append(i)
                 if wtraj is not None:
                     wtraj.write(atoms)
             accept_list.append(accept)
-            avg_acceptance_rate = avg_acceptance_slowness \
-                                  * avg_acceptance_rate \
-                                  + (1.0 - avg_acceptance_slowness) \
-                                    * np.average(np.array(accept_list))
+            avg_acceptance_rate = avg_acceptance_slowness * \
+                                  avg_acceptance_rate + \
+                                  (1.0 - avg_acceptance_slowness) * \
+                                  np.average(np.array(accept_list))
 
             if avg_acceptance_rate > target_acceptance_rate:
                 stepsize *= stepsize_inc
@@ -193,4 +205,4 @@ def run_hmc(atoms, iterations, stepsize, n_steps, avg_acceptance_slowness,
             i += 1
     except KeyboardInterrupt:
         pass
-    return traj, accept_list
+    return traj, accept_list, accept_num

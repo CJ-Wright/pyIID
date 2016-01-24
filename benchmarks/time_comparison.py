@@ -2,92 +2,98 @@ __author__ = 'christopher'
 from ase.atoms import Atoms
 import ase.io as aseio
 
-from pyiid.wrappers.kernel_wrap import wrap_atoms
+from pyiid.wrappers.elasticscatter import wrap_atoms
 from pyiid.calc.pdfcalc import PDFCalc
-from pyiid.wrappers.three_d_gpu_wrap import wrap_rw, wrap_pdf
+from pyiid.utils import build_sphere_np
 
 import matplotlib.pyplot as plt
 from pprint import pprint
 import time
 from copy import deepcopy as dc
 from collections import OrderedDict
+import pickle
+import traceback
+from pyiid.experiments.elasticscatter import ElasticScatter
 
+exp = None
+scat = ElasticScatter()
 atoms = Atoms('Au4', [[0,0,0], [3,0,0], [0,3,0], [3,3,0]])
+pdf = scat.get_pdf(atoms)
 
-wrap_atoms(atoms)
-atoms2 = dc(atoms)
-pdf, fq = wrap_pdf(atoms, qmin=0.0, qbin=.1)
-
-
-atoms.positions *= .95
-
-# Time for Rw
-gpu_3_d = []
-gpu_2_d = []
-cpu = []
-
-pu = [
-    'gpu_3_d',
-    'gpu_2_d',
-    'cpu'
+type_list = []
+time_list = []
+benchmarks = [
+    ('CPU', 'flat'),
+    ('Multi-GPU', 'flat')
 ]
-super_results_d = OrderedDict()
-for i in range(1, 150, 10):
-    atoms = dc(atoms2)
-    atoms *= (i, 1, 1)
-    atoms.rattle()
-    print i, len(atoms)
-    results_d = {}
-    for processor in pu:
-        sub_d = {}
-        calc = PDFCalc(gobs=pdf, qmin=0.0, conv=1, qbin=.1, processor=processor)
-        atoms.set_calculator(calc)
-        s = time.time()
-        nrg = atoms.get_potential_energy()
-        f = time.time()
-        sub_d['time for energy'] = f-s
-        sub_d['energy'] = nrg
-        s = time.time()
-        force = atoms.get_forces()
-        f = time.time()
-        sub_d['time for force'] = f-s
-        # sub_d['force'] = force
-        results_d[processor] = sub_d
-        atoms._del_calculator
-    super_results_d[i*4] = results_d
-# pprint(super_results_d)
+colors=['b', 'r']
+sizes = range(10, 80, 5)
+print sizes
+for proc, alg in benchmarks:
+    print proc, alg
+    number_of_atoms = []
+    scat.set_processor(proc, alg)
+    type_list.append((proc, alg))
+    nrg_l = []
+    f_l = []
+    try:
+        for i in sizes:
+            atoms = build_sphere_np('/mnt/work-data/dev/pyIID/benchmarks/1100138.cif', float(i) / 2)
+            atoms.rattle()
+            print len(atoms), i/10.
+            number_of_atoms.append(len(atoms))
+            calc = PDFCalc(obs_data=pdf, scatter=scat, conv=1, potential='rw')
+            atoms.set_calculator(calc)
 
-sizes = []
-cpu_f = []
-cpu_e = []
-gpu3_d_f = []
-gpu3_d_e = []
-gpu2_d_f = []
-gpu2_d_e = []
+            s = time.time()
+            nrg = atoms.get_potential_energy()
+            # scat.get_fq(atoms)
+            f = time.time()
 
-for key, value in super_results_d.iteritems():
-    sizes.append(key)
-    cpu_f.append(value['cpu']['time for force'])
-    cpu_e.append(value['cpu']['time for energy'])
+            nrg_l.append(f-s)
 
-    gpu3_d_e.append(value['gpu_3_d']['time for energy'])
-    gpu3_d_f.append(value['gpu_3_d']['time for force'])
+            s = time.time()
+            # force = atoms.get_forces()
+            # scat.get_grad_fq(atoms)
+            f = time.time()
+            f_l.append(f-s)
+    except:
+        print traceback.format_exc()
+        break
+    time_list.append((nrg_l, f_l))
 
-    gpu2_d_f.append(value['gpu_2_d']['time for force'])
-    gpu2_d_e.append(value['gpu_2_d']['time for energy'])
-
-# print sizes, gpu3_d_e
-
-plt.plot(sizes, cpu_f, 'bo', label='cpu energy')
-plt.plot(sizes, cpu_e, 'b-', label='cpu force')
-
-plt.plot(sizes, gpu3_d_e, 'ro', label='3D grid energy')
-plt.plot(sizes, gpu3_d_f, 'r-', label='3D grid force')
-
-plt.plot(sizes, gpu2_d_e, 'ko', label='2D grid energy')
-plt.plot(sizes, gpu2_d_f, 'k-', label='2D grid force')
-plt.legend(loc=2)
-plt.xlabel('Number of atoms')
+# for i in range(len(benchmarks)):
+#     for j, calc_type in enumerate(['energy', 'force']):
+#         f_str = benchmarks[i][0]+'_'+benchmarks[i][0]+'_'+calc_type+'.pkl'
+#         with open(f_str, 'w') as f:
+#             pickle.dump(time_list[i][j], f)
+'''
+for i in range(len(benchmarks)):
+    for j, (calc_type, line) in enumerate(zip(['energy', 'force'], ['o', 's'])):
+        plt.plot(sizes,time_list[i][j], color=colors[i], marker=line, label= '{0} {1}'.format(benchmarks[i][0], calc_type))
+plt.legend(loc='best')
+plt.xlabel('NP diameter in Angstrom')
 plt.ylabel('time (s) [lower is better]')
-plt.title('Scaling of algorithm')
+plt.savefig('speed3.eps', bbox_inches='tight', transparent=True)
+plt.savefig('speed3.png', bbox_inches='tight', transparent=True)
+plt.show()
+'''
+names = ['GPU', 'CPU']
+fig = plt.figure()
+ax1 = fig.add_subplot(111)
+ax2 = ax1.twiny()
+
+for i in range(len(benchmarks)):
+    for j, (calc_type, line) in enumerate(zip(['energy', 'force'], ['o', 's'])):
+        ax1.semilogy(sizes,time_list[i][j], color=colors[i], marker=line, label= '{0} {1}'.format(names[i], calc_type))
+
+ax1.legend(loc='best')
+ax1.set_xlabel('NP diameter in Angstrom')
+ax1.set_ylabel('Elapsed running time (s)')
+ax2.set_xlim(ax1.get_xlim())
+ax2.set_xticks(ax1.get_xticks())
+ax2.set_xticklabels(number_of_atoms)
+ax2.set_xlabel('Number of Atoms')
+# plt.savefig('/mnt/bulk-data/Dropbox/BNL_Project/HMC_paper/figures/speed_log.eps', bbox_inches='tight', transparent=True)
+# plt.savefig('/mnt/bulk-data/Dropbox/BNL_Project/HMC_paper/figures/speed_log.png', bbox_inches='tight', transparent=True)
 plt.show()

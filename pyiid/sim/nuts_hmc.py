@@ -1,238 +1,240 @@
-__author__ = 'christopher'
-from numbapro import autojit
-
-from ase.atoms import Atoms
 from copy import deepcopy as dc
+from ase.units import fs
 import numpy as np
+from numpy.random import RandomState
+from ase.md.velocitydistribution import MaxwellBoltzmannDistribution
+from pyiid.sim import leapfrog
+from pyiid.sim import Ensemble
+from ase.units import kB
+from time import time
 
-atoms = Atoms
+__author__ = 'christopher'
+Emax = 200
 
-@autojit(target='cpu')
-def leapfrog(atoms, step):
+
+def find_step_size(input_atoms, thermal_nrg):
     """
-    Propagate the dynamics of the system via the leapfrog algorithm one step
+    Find a suitable starting step size for the simulation
 
     Parameters
     -----------
-    atoms: ase.Atoms ase.Atoms
-        The atomic configuration for the system
-    step: float
-        The step size for the simulation, the new momentum/velocity is step *
-        the force
+    input_atoms: ase.Atoms object
+        The starting atoms for the simulation
+    thermal_nrg:
+        The thermal energy for the simulation
 
     Returns
     -------
-    ase.Atoms
-        The new atomic positions and velocities
+    float:
+        The step size
     """
-    atoms.set_momenta(atoms.get_momenta() + 0.5 * step * atoms.get_forces())
+    atoms = dc(input_atoms)
+    step_size = .5
+    MaxwellBoltzmannDistribution(atoms, temp=thermal_nrg, force_temp=True)
 
+    atoms_prime = leapfrog(atoms, step_size)
 
-    # atoms.set_positions(atoms.get_positions() + step * atoms.get_velocities())
+    a = 2 * (np.exp(
+        -1 * atoms_prime.get_total_energy() + atoms.get_total_energy()
+    ) > 0.5) - 1
 
-    atoms.positions += step * atoms.get_velocities()
-
-    atoms.set_momenta(atoms.get_momenta() + 0.5 * step * atoms.get_forces())
-    return atoms
-
-
-def find_step_size(atoms):
-    step_size = 1.
-    # '''
-    atoms.set_momenta(
-        np.random.normal(0, 1, (len(atoms), 3)))
-    old_atoms = dc(atoms)
-    h_old = old_atoms.get_total_energy()
-    leapfrog(atoms, step_size)
-    a = 2 * (np.exp(-atoms.get_total_energy()+h_old) > 0.5) - 1
-    while (np.exp(-atoms.get_total_energy() + h_old)) ** a > 2 ** -a:
+    while (np.exp(-1 * atoms_prime.get_total_energy() +
+                      atoms.get_total_energy())) ** a > 2 ** -a:
         step_size *= 2 ** a
-        leapfrog(atoms, step_size)
-        # print np.exp(-atoms.get_total_energy() + h_old)
-        # '''
+        print 'trying step size', step_size
+        atoms_prime = leapfrog(atoms, step_size)
+        if step_size < 1e-7 or step_size > 1e7:
+            step_size = 1.
+            break
+    print 'optimal step size', step_size
     return step_size
 
 
-def bern(p):
-    return np.random.uniform() < p
-    # return np.random.random() < p
+def buildtree(input_atoms, u, v, j, e, e0, rs, beta=1):
+    """
+    Build the tree of samples for NUTS, recursively
 
-
-def nuts_da_hmc(atoms, accept_target, iterations, Emax):
-    start_atoms = dc(atoms)
-    traj = [start_atoms]
-    step_size = find_step_size(atoms)
-    atoms = dc(start_atoms)
-    m = 0
-    t0 = 10
-    Hbar = 0
-    gamma = 0.05
-    mu = np.log(10*step_size)
-
-    try:
-        while m <= iterations:
-            e = step_size
-
-            u = np.random.uniform(0, np.exp(atoms.get_total_energy()))
-            # u = np.random.random()
-            n, s, j = 1, 1, 0
-            atoms0 = dc(atoms)
-            atomsn = dc(atoms)
-            atomsp = dc(atoms)
-            while s == 1:
-                v = bern(.5) * 2 - 1
-
-                if v == -1:
-                    atomsn, _, atoms1, n1, s1, a, na = \
-                        buildtree(atomsn, u, v, j, e, Emax, atoms0)
-                else:
-                    _, atomsp, atoms1, n1, s1, a, na = \
-                        buildtree(atomsp, u, v, j, e, Emax, atoms0)
-
-                if s1 == 1 and bern(min(1, n1 * 1. / n)):
-                    print 'accepted', atoms1.get_potential_energy()
-                    atoms = atoms1
-                    traj += [atoms]
-
-                # if atoms1.get_potential_energy() < atoms.get_potential_energy():
-                #     atoms = atoms1
-
-                n = n + n1
-
-                span = atomsp.positions - atomsn.positions
-                span = span.flatten()
-                # print 'emax criteria', s1
-                # print 'negative u turn', span.dot(atomsn.get_velocities().flatten()) >= 0
-                # print 'positive u turn', span.dot( atomsp.get_velocities().flatten()) >= 0
-                # print 'mh critera', min(1, n1 * 1. / n)
-                # print 'n prime', n1, 'n', n
-
-                s = s1 * \
-                    (span.dot(atomsn.get_velocities().flatten()) >= 0) * \
-                    (span.dot(atomsp.get_velocities().flatten()) >= 0)
-                j += 1
-
-            print 'm', m, 'j', j, 'e', e, 'nrg', atoms1.get_potential_energy()
-
-            w = 1. / (m + t0)
-            Hbar = (1 - w) * Hbar + w * (accept_target - a * 1. / na)
-
-            step_size = np.exp(mu - (m ** .5 / gamma) * Hbar)
-
-            m += 1
-            if atoms != traj[-1]:
-            #     traj += [atoms]
-                print 'accepted', atoms.get_potential_energy()
-            print '-------------'
-    except KeyboardInterrupt:
-        pass
-    return traj
-
-@autojit(target='cpu')
-def buildtree(atoms, u, v, j, e, Emax, atoms0):
+    Parameters
+    -----------
+    input_atoms: ase.Atoms object
+        The atoms for the tree
+    u: float
+        slice parameter, the baseline energy to compare against
+    v: -1 or 1
+        The direction of the tree leaves, negative means that we simulate
+        backwards in time
+    j: int
+        The tree depth
+    e: float
+        The stepsize
+    e0: float
+        Current energy
+    rs: numpy.random.RandomState object
+        The random state object used to generate the random numbers.  Use of a
+        unified random number generator with a known seed should help us to
+        generate reproducible simulations
+    beta: float
+        Thermodynamic beta, a proxy for thermal energy
+    Returns
+    -------
+    Many things
+    """
     if j == 0:
-        atoms1 = leapfrog(atoms, v*e)
-        E = atoms1.get_total_energy()
-        E0 = atoms0.get_total_energy()
-        # E = atoms1.get_potential_energy()
-        # E0 = atoms0.get_potential_energy()
-
-        dE = E - E0
-
-        n1 = int(np.log(u) + dE <= 0)
-        s1 = int(np.log(u) + dE < Emax)
-        # print dE
-        return atoms1, atoms1, atoms1, n1, s1, min(1, np.exp(-dE)), 1
+        atoms_prime = leapfrog(input_atoms, v * e)
+        neg_delta_energy = e0 - atoms_prime.get_total_energy()
+        try:
+            exp1 = np.exp(neg_delta_energy)
+            exp2 = np.exp(Emax + neg_delta_energy)
+        except:
+            exp1 = 0
+            exp2 = 0
+        # print exp1, exp2
+        # n_prime = int(u <= np.exp(-atoms_prime.get_total_energy()))
+        # s_prime = int(u <= np.exp(Emax-atoms_prime.get_total_energy()))
+        n_prime = int(u <= exp1)
+        s_prime = int(u < exp2)
+        return (atoms_prime, atoms_prime, atoms_prime, n_prime, s_prime,
+                min(1, np.exp(-atoms_prime.get_total_energy() +
+                              input_atoms.get_total_energy())), 1)
     else:
-        atomsn, atomsp, atoms1, n1, s1, a1, na1 = \
-            buildtree(atoms, u, v, j - 1, e, Emax, atoms0)
-        if s1 == 1:
+        (neg_atoms, pos_atoms, atoms_prime, n_prime, s_prime, a_prime,
+         na_prime) = buildtree(input_atoms, u, v, j - 1, e, e0, rs, beta)
+        if s_prime == 1:
             if v == -1:
-                atomsn, _, atoms11, n11, s11, a11, na11 = \
-                    buildtree(atomsn, u, v, j - 1, e, Emax, atoms0)
+                (neg_atoms, _, atoms_prime_prime, n_prime_prime, s_prime_prime,
+                 app, napp) = buildtree(neg_atoms, u, v, j - 1, e, e0, rs,
+                                        beta)
             else:
-                _, atomsp, atoms11, n11, s11, a11, na11 = \
-                    buildtree(atomsp, u, v, j - 1, e, Emax, atoms0)
+                (_, pos_atoms, atoms_prime_prime, n_prime_prime, s_prime_prime,
+                 app, napp) = buildtree(pos_atoms, u, v, j - 1, e, e0, rs,
+                                        beta)
 
-            if bern(n11 * 1. / (max(n1 + n11, 1))):
-                atoms1 = atoms11
+            if rs.uniform() < float(n_prime_prime / (
+                    max(n_prime + n_prime_prime, 1))):
+                atoms_prime = atoms_prime_prime
 
-            a1 = a1 + a11
-            na1 = na1 + na11
+            a_prime = a_prime + app
+            na_prime = na_prime + napp
 
-            span = atomsp.positions - atomsn.positions
+            datoms = pos_atoms.positions - neg_atoms.positions
+            span = datoms.flatten()
+            s_prime = s_prime_prime * (
+                span.dot(neg_atoms.get_velocities().flatten()) >= 0) * (
+                          span.dot(pos_atoms.get_velocities().flatten()) >= 0)
+            n_prime = n_prime + n_prime_prime
+        return (neg_atoms, pos_atoms, atoms_prime, n_prime, s_prime, a_prime,
+                na_prime)
+
+
+class NUTSCanonicalEnsemble(Ensemble):
+    def __init__(self, atoms, restart=None, logfile=None, trajectory=None,
+                 temperature=100, escape_level=13, accept_target=.65,
+                 momentum=None,
+                 seed=None, verbose=False):
+        Ensemble.__init__(self, atoms, restart, logfile, trajectory, seed,
+                          verbose)
+        self.accept_target = accept_target
+        self.temp = temperature
+        self.thermal_nrg = self.temp * kB
+        self.step_size = find_step_size(atoms, self.thermal_nrg)
+        self.mu = np.log(10 * self.step_size)
+        # self.ebar = 1
+        self.sim_hbar = 0
+        self.gamma = 0.05
+        self.t0 = 10
+        # self.k = .75
+        self.metadata['samples_total'] = 0
+        self.metadata['accepted_samples'] = 0
+        self.escape_level = escape_level
+        self.m = 0
+        self.momentum = momentum
+
+    def step(self):
+        new_configurations = []
+        if self.verbose:
+            print '\ttime step size', self.step_size / fs, 'fs'
+        # sample r0
+        if self.momentum is None:
+            MaxwellBoltzmannDistribution(self.traj[-1], self.thermal_nrg,
+                                         force_temp=True)
+        else:
+            self.traj[-1].set_momenta(self.random_state.normal(0, 1, (
+                len(self.traj[-1]), 3)))
+        # re-sample u, note we work in post exponential units:
+        # [0, exp(-H(atoms0)] <= exp(-H(atoms1) >>> [0, 1] <= exp(-deltaH)
+        u = self.random_state.uniform(0, 1)
+
+        # Note that because we need to calculate the difference between the
+        # proposed energy and the current energy we declare it here,
+        # preventing the need for multiple calls to the energy function
+        e0 = self.traj[-1].get_total_energy()
+
+        e = self.step_size
+        n, s, j = 1, 1, 0
+        neg_atoms = dc(self.traj[-1])
+        pos_atoms = dc(self.traj[-1])
+        while s == 1:
+            v = self.random_state.choice([-1, 1])
+            if v == -1:
+                (neg_atoms, _, atoms_prime, n_prime, s_prime, a,
+                 na) = buildtree(neg_atoms, u, v, j, e, e0, self.random_state,
+                                 1 / self.thermal_nrg)
+            else:
+                (_, pos_atoms, atoms_prime, n_prime, s_prime, a,
+                 na) = buildtree(pos_atoms, u, v, j, e, e0, self.random_state,
+                                 1 / self.thermal_nrg)
+
+            if s_prime == 1 and self.random_state.uniform() < min(
+                    1, n_prime * 1. / n):
+                self.traj += [atoms_prime]
+                self.metadata['accepted_samples'] += 1
+                new_configurations.extend([atoms_prime])
+                atoms_prime.get_forces()
+                atoms_prime.get_potential_energy()
+                self.call_observers()
+            n = n + n_prime
+            span = pos_atoms.positions - neg_atoms.positions
             span = span.flatten()
-            s1 = s11 * (span.dot(atomsn.get_velocities().flatten()) >= 0) * (
-                span.dot(atomsp.get_velocities().flatten()) >= 0)
-            n1 = n1 + n11
-        return atomsn, atomsp, atoms1, n1, s1, a1, na1
-    return
+            s = s_prime * (
+                span.dot(neg_atoms.get_velocities().flatten()) >= 0) * (
+                    span.dot(pos_atoms.get_velocities().flatten()) >= 0)
+            j += 1
+            if self.verbose:
+                print '\t \tdepth', j, 'samples', 2 ** j
+            self.metadata['samples_total'] += 2 ** j
+            # Prevent run away sampling, EXPERIMENTAL
+            # If we have generated s**self.escape_level samples,
+            # then we are moving too slowly and should start a new iter
+            # hopefully with a larger step size
+            if j >= self.escape_level:
+                if self.verbose:
+                    print '\t \t \tjmax emergency escape at {}'.format(j)
+                s = 0
+        w = 1. / (self.m + self.t0)
+        self.sim_hbar = (1 - w) * self.sim_hbar + w * \
+                                                  (self.accept_target - a / na)
 
+        self.step_size = np.exp(self.mu - (self.m ** .5 / self.gamma) *
+                                self.sim_hbar)
 
-if __name__ == '__main__':
-    import numpy as np
-    import matplotlib.pyplot as plt
+        self.m += 1
+        if len(new_configurations) > 0:
+            return new_configurations
+        else:
+            return None
 
-    import os
-    from copy import deepcopy as dc
+    def estimate_simulation_duration(self, atoms, iterations):
+        t0 = time()
+        f = atoms.get_forces() * 2
+        tf = time() - t0
+        t2 = time()
+        e = atoms.get_potential_energy() * 2
+        te = time() - t2
 
-    from ase.visualize import view
-    from ase.io.trajectory import PickleTrajectory
-    import ase.io as aseio
-
-    from pyiid.wrappers.gpu_wrap import wrap_pdf
-    from pyiid.calc.pdfcalc_gpu import PDFCalc
-    from pyiid.wrappers.kernel_wrap import wrap_atoms
-
-
-    atoms_file = '/mnt/bulk-data/Dropbox/BNL_Project/Simulations/Models.d/2-AuNP-DFT.d/SizeVariation.d/Au55.xyz'
-    atoms_file_no_ext = os.path.splitext(atoms_file)[0]
-    atomsio = aseio.read(atoms_file)
-    # images = PickleTrajectory('/mnt/bulk-data/Dropbox/BNL_Project/Simulations/Models.d/2-AuNP-DFT.d/SizeVariation.d/Au55_gpu_neb_contract.traj', 'r')[:]
-    # atomsio = images[-27]
-    wrap_atoms(atomsio)
-
-
-
-    qmax = 25
-    qbin = .1
-    n = len(atomsio)
-
-    qmax_bin = int(qmax / qbin)
-    # atomsio.set_array('scatter', scatter_array)
-
-    atoms = dc(atomsio)
-    pdf, fq = wrap_pdf(atoms, qmin=2.5, qbin=.1)
-    # view(atoms)
-    # atoms.positions *= 1.05
-    atoms.positions *= .95
-    atoms = dc(atomsio)
-
-    calc = PDFCalc(gobs=pdf, qmin=2.5, conv=1, qbin=.1)
-    atoms.set_calculator(calc)
-    rwi = atoms.get_potential_energy()
-    print rwi
-    atoms.set_momenta(np.random.normal(0, 1, (len(atoms), 3)))
-
-    traj = nuts_da_hmc(atoms, .65, 500, 0.0)
-
-    pe_list = []
-    chi_list = []
-    for a in traj:
-        pe_list.append(a.get_potential_energy())
-        # chi_list.append(np.sum((pdf-wrap_pdf(a, qmin= 2.5)[0])**2))
-        f = a.get_forces()
-        f2 = f*2
-    min = np.argmin(pe_list)
-    print 'start rw', rwi, 'end rw', pe_list[min], 'rw change', pe_list[min]-rwi
-    view(traj)
-
-    r = np.arange(0, 40, .01)
-    # plt.plot(chi_list), plt.show()
-    plt.plot(r, pdf, label='ideal')
-    # for num, a in enumerate(traj):
-    #     plt.plot(wrap_pdf(a, qmin= 2.5)[0], label=str(num))
-    plt.plot(r, wrap_pdf(traj[min], qmin= 2.5)[0], label='best: '+str(min)+' out of '+str(len(traj)))
-    plt.plot(r, wrap_pdf(traj[0], qmin= 2.5)[0], 'k', label='start')
-    plt.legend()
-    plt.show()
+        time_one_step = tf * 2 + te
+        total_time = 0.
+        # for i in xrange(iterations):
+        #     j = np.random.randint(1, self.escape_level)
+        #     total_time += time_one_step * 2 ** j
+        total_time = iterations * time_one_step * 2 ** self.escape_level
+        return total_time

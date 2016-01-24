@@ -2,14 +2,22 @@ from distutils.core import setup
 
 setup(
     name='pyIID',
-    version='1',
-    packages=['extra', 'pyiid', 'pyiid.sim', 'pyiid.calc', 'pyiid.tests',
-              'pyiid.old_hmc', 'pyiid.scripts', 'pyiid.scripts.benchmarking',
-              'pyiid.tests.test_kernels', 'pyiid.tests.test_wrappers'],
+    version='',
+    packages=['pyiid', 'pyiid.sim', 'pyiid.calc', 'pyiid.tests',
+              'pyiid.tests.test_sim', 'pyiid.tests.test_calc',
+              'pyiid.tests.test_master', 'pyiid.testing', 'pyiid.experiments',
+              'pyiid.experiments.rixs', 'pyiid.experiments.saxs',
+              'pyiid.experiments.exafs', 'pyiid.experiments.shared',
+              'pyiid.experiments.shared.kernels',
+              'pyiid.experiments.elasticscatter',
+              'pyiid.experiments.elasticscatter.atomics',
+              'pyiid.experiments.elasticscatter.kernels',
+              'pyiid.experiments.elasticscatter.cpu_wrappers',
+              'pyiid.experiments.elasticscatter.gpu_wrappers',
+              'pyiid.experiments.elasticscatter.mpi_wrappers'],
     url='',
     license='',
     author='christopher',
-    author_email='wright1@email.sc.edu',
-    description='Hamiltonion Monte Carlo based Diffraction Simulation',
-    requires=['numpy', 'ase', 'numba', 'nose', 'matplotlib']
+    author_email='',
+    description='', requires=['scipy']
 )

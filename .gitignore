@@ -74,3 +74,15 @@ docs/_build/
 .idea
 pyiid/grad_test.txt
 *.coverage
+
+old_files
+old_files/*
+benchmarks/*
+extra/*
+
+cover
+scripts/*
+benchmarks
+extra
+scripts
+

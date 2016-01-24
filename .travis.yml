@@ -1,3 +1,4 @@
+sudo: false
 language: python
 
 python:
@@ -9,21 +10,27 @@ before_install:
   - ./miniconda.sh -b -p /home/travis/mc
   - export PATH=/home/travis/mc/bin:$PATH
   - wget https://gist.githubusercontent.com/tacaswell/128bb482f845feb024eb/raw/5cf21dc03a354fc87140d4a75e17cb5c076a0517/.condarc -O /home/travis/.condarc
+env:
+  - NUMBA_DISABLE_JIT=0
+  - NUMBA_DISABLE_JIT=1
 
 install:
   - export GIT_FULL_HASH=`git rev-parse HEAD`
   - conda update conda --yes
-  - conda create -n testenv --yes pip nose python=$TRAVIS_PYTHON_VERSION xraylib numpy scipy six numba mkl matplotlib
+  - conda create -n testenv --yes pip nose python=$TRAVIS_PYTHON_VERSION xraylib numpy scipy six numba mkl matplotlib numbapro mpi4py psutil
   - source activate testenv
-  - conda install numbapro --yes
-  - pip install python-ase
+  - pip install python-ase pympler
+  - pip install nose-exclude
+  - wget http://dcwww.camp.dtu.dk/campos/download/Asap-3.8.4.tar.gz
+  - tar xf Asap-3.8.4.tar.gz
+  - cd Asap-3.8.4
   - python setup.py install
-  - pip install coveralls
+  - cd ..
+  - python setup.py install
+  - pip install python-coveralls
 
 script:
-  - python run_tests.py
+  - python run_tests.py -d #--processes=2 --process-timeout=599
 
-#after_success:
-#  coveralls
 after_script:
   coveralls
