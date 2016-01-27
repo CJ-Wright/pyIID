@@ -100,7 +100,6 @@ def wrap_atoms(atoms, exp_dict=None):
     atoms.info['scatter_atoms'] = n
 
 
-# TODO: maybe add gradients as saved data?
 class ElasticScatter(object):
     """
     Scatter contains all the methods associated with producing theoretical
@@ -544,3 +543,9 @@ class ElasticScatter(object):
             The r range for this experiment
         """
         return np.arange(self.exp['rmin'], self.exp['rmax'], self.exp['rstep'])
+
+    def get_rpdf(self, atoms):
+        return self.get_pdf(atoms) * self.get_r()
+
+    def get_grad_rpdf(self, atoms):
+        return self.get_grad_pdf(atoms) * self.get_r()

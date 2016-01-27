@@ -5,6 +5,8 @@ from ase.atom import Atom
 from ase.units import *
 from pyiid.sim import Ensemble
 from ase.calculators.calculator import Calculator
+from ase.constraints import FixAtoms
+from ase.optimize import BFGS, FIRE
 
 __author__ = 'christopher'
 
@@ -68,11 +70,18 @@ def add_atom(atoms, chem_potentials, beta, random_state, resolution=None,
                                                                prop_atom,
                                                                resolution)
             prob = np.exp(np.float64(-beta * (voxel_nrg - vw_e0)))
-            prob -= np.min(prob)
-            prob /= np.sum(prob)
-            qvr = np.random.choice(prob.size, p=prob.ravel())
-            prob_i = prob.ravel()[qvr]
-            vi = np.product(resolution)
+            if np.sum(prob) == np.zeros(1):
+                print 'Error in voxel weighting falling back on unweighted ' \
+                      'voxels'
+                qvr = np.random.choice(np.product(c))
+                prob_i = 1. / np.product(c)
+                vi = np.product(resolution)
+            else:
+                prob -= np.min(prob)
+                prob /= np.sum(prob)
+                qvr = np.random.choice(prob.size, p=prob.ravel())
+                prob_i = prob.ravel()[qvr]
+                vi = np.product(resolution)
         else:
             # Use voxels for resolution
             qvr = np.random.choice(np.product(c))
@@ -85,13 +94,28 @@ def add_atom(atoms, chem_potentials, beta, random_state, resolution=None,
     # append new atom to system
     atoms_prime.append(new_atom)
 
+    # optimize new atom position
+    '''
+    print 'pre minimization position', new_position
+    print 'Pre minimization energy', atoms_prime.get_potential_energy()
+    fixed = FixAtoms(range(0, len(atoms_prime) - 1))
+    atoms_prime.set_constraint(fixed)
+    dyn = BFGS(atoms_prime)
+    # dyn = FIRE(atoms_prime)
+    dyn.run(steps=30, fmax=1e-2)
+    atoms_prime.set_constraint()
+    print 'post minimization position', atoms_prime[-1].position
+    print 'Post minimization energy', atoms_prime.get_potential_energy()
+    print 'Existing energy', e0
+    # '''
+
     # get new energy
     delta_energy = atoms_prime.get_potential_energy() - e0
     # get chemical potential
     mu = chem_potentials[new_symbol]
     # calculate acceptance
     # TODO: need to write the proper correction to the MH criteria
-    # print '\t\taddition delta energy', delta_energy
+    print '\t\taddition delta energy', delta_energy
     # print '\t\taddition exp', np.exp(-1. * beta * delta_energy + beta * mu)
     if vi is None or True:
         if np.random.random() < np.exp(
@@ -146,7 +170,7 @@ def del_atom(atoms, chem_potentials, beta, random_state):
     delta_energy = atoms_prime.get_potential_energy() - e0
     # get chemical potential
     mu = chem_potentials[del_symbol]
-    # print '\t\tremoval delta energy', delta_energy
+    print '\t\tremoval delta energy', delta_energy
     # print '\t\tremoval exp', np.exp(-1. * beta * delta_energy - beta * mu)
     # calculate acceptance
     if np.random.random() < np.exp(
@@ -197,7 +221,8 @@ class GrandCanonicalEnsemble(Ensemble):
                                  )
         if new_atoms is not None:
             if self.verbose:
-                print '\t' + mv + ' atom accepted', len(new_atoms)
+                print '\t' + mv + ' atom accepted'
+                print '\tCurrent atom count', len(new_atoms)
 
             if mv == 'add':
                 self.metadata['accepted_additions'] += 1
@@ -208,7 +233,8 @@ class GrandCanonicalEnsemble(Ensemble):
             return [new_atoms]
         else:
             if self.verbose:
-                print '\t' + mv + ' atom rejected', len(self.traj[-1])
+                print '\t' + mv + ' atom rejected'
+                print '\tCurrent atom count', len(self.traj[-1])
 
             if mv == 'add':
                 self.metadata['rejected_additions'] += 1

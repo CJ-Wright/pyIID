@@ -113,6 +113,7 @@ def lj_energy(atoms, param_dict):
 
 
 def lj_voxel_energy(atoms, new_atom, param_dict, resolution):
+    # TODO: need to have this work for more than mono-elemental systems
     v = np.int32(np.ceil(np.diagonal(atoms.get_cell()) / resolution))
     q = atoms.get_positions().astype(np.float32)
     n = len(atoms)

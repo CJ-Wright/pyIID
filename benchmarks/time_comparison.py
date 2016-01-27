@@ -27,7 +27,7 @@ benchmarks = [
     ('Multi-GPU', 'flat')
 ]
 colors=['b', 'r']
-sizes = range(10, 80, 5)
+sizes = range(10, 45, 5)
 print sizes
 for proc, alg in benchmarks:
     print proc, alg
@@ -53,7 +53,7 @@ for proc, alg in benchmarks:
             nrg_l.append(f-s)
 
             s = time.time()
-            # force = atoms.get_forces()
+            force = atoms.get_forces()
             # scat.get_grad_fq(atoms)
             f = time.time()
             f_l.append(f-s)
@@ -62,23 +62,13 @@ for proc, alg in benchmarks:
         break
     time_list.append((nrg_l, f_l))
 
-# for i in range(len(benchmarks)):
-#     for j, calc_type in enumerate(['energy', 'force']):
-#         f_str = benchmarks[i][0]+'_'+benchmarks[i][0]+'_'+calc_type+'.pkl'
-#         with open(f_str, 'w') as f:
-#             pickle.dump(time_list[i][j], f)
-'''
 for i in range(len(benchmarks)):
-    for j, (calc_type, line) in enumerate(zip(['energy', 'force'], ['o', 's'])):
-        plt.plot(sizes,time_list[i][j], color=colors[i], marker=line, label= '{0} {1}'.format(benchmarks[i][0], calc_type))
-plt.legend(loc='best')
-plt.xlabel('NP diameter in Angstrom')
-plt.ylabel('time (s) [lower is better]')
-plt.savefig('speed3.eps', bbox_inches='tight', transparent=True)
-plt.savefig('speed3.png', bbox_inches='tight', transparent=True)
-plt.show()
-'''
-names = ['GPU', 'CPU']
+    for j, calc_type in enumerate(['energy', 'force']):
+        f_str = benchmarks[i][0]+'_'+benchmarks[i][0]+'_'+calc_type+'.pkl'
+        with open(f_str, 'w') as f:
+            pickle.dump(time_list[i][j], f)
+
+names = [b[0] for b in benchmarks]
 fig = plt.figure()
 ax1 = fig.add_subplot(111)
 ax2 = ax1.twiny()
@@ -94,6 +84,6 @@ ax2.set_xlim(ax1.get_xlim())
 ax2.set_xticks(ax1.get_xticks())
 ax2.set_xticklabels(number_of_atoms)
 ax2.set_xlabel('Number of Atoms')
-# plt.savefig('/mnt/bulk-data/Dropbox/BNL_Project/HMC_paper/figures/speed_log.eps', bbox_inches='tight', transparent=True)
-# plt.savefig('/mnt/bulk-data/Dropbox/BNL_Project/HMC_paper/figures/speed_log.png', bbox_inches='tight', transparent=True)
+plt.savefig('/mnt/work-data/dev/pyIID/extra/speed_log.eps', bbox_inches='tight', transparent=True)
+plt.savefig('/mnt/work-data/dev/pyIID/extra/speed_log.png', bbox_inches='tight', transparent=True)
 plt.show()
