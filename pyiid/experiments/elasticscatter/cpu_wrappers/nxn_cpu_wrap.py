@@ -42,7 +42,6 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
     # Get pair distance array
     r = np.zeros((n, n), np.float32)
     get_r_array(r, d)
-    print r
 
     # Get normalization array
     norm = np.zeros((n, n, qmax_bin), np.float32)
@@ -191,21 +190,17 @@ def wrap_pbc_fq(atoms, qbin=.1, sum_type='fq', pbc_iterations=2):
     _, idx = np.unique(b, return_index=True)
     us = a[idx]
 
-    print us
     # Loop through all the possible extra boxes
     for u in us:
         d_u = d + u
         r_u = np.zeros((n, n), np.float32)
         get_r_array(r_u, d_u)
-        print r_u
         # Get omega
         omega = np.zeros((n, n, qmax_bin), np.float32)
-        print u
         if np.all(u == np.zeros(3, dtype=np.float32)):
             get_omega(omega, r_u, qbin)
         else:
             get_periodic_omega(omega, r_u, qbin)
-        print omega[0, 0, 1]
         get_fq_inplace(omega, norm)
         fq += omega
     # Normalize fq
