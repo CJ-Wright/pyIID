@@ -2,6 +2,7 @@ import numpy as np
 from pyiid.experiments.elasticscatter.kernels.cpu_nxn import *
 from ..kernels.cpu_flat import get_normalization_array as flat_norm
 from pyiid.experiments.elasticscatter.atomics import pad_pdf
+from itertools import product
 
 __author__ = 'christopher'
 
@@ -135,3 +136,102 @@ def wrap_fq_grad(atoms, qbin=.1, sum_type='fq'):
     np.seterr(**old_settings)
     del d, r, scatter_array, norm, omega, grad_omega
     return grad_fq
+
+
+def wrap_pbc_fq(atoms, qbin=.1, sum_type='fq', pbc_iterations=2):
+    """
+    Generate the reduced structure function
+
+    Parameters
+    ----------
+    atoms: ase.Atoms
+        The atomic configuration
+    qbin: float
+        The size of the scatter vector increment
+    sum_type: {'fq', 'pdf'}
+        Which scatter array should be used for the calculation
+
+    Returns
+    -------
+    fq:1darray
+        The reduced structure function
+    """
+    q = atoms.get_positions().astype(np.float32)
+    pbc = atoms.pbc
+    cell = atoms.cell
+
+    # get scatter array
+    if sum_type == 'fq':
+        scatter_array = atoms.get_array('F(Q) scatter')
+    else:
+        scatter_array = atoms.get_array('PDF scatter')
+    # define scatter_q information and initialize constants
+
+    n, qmax_bin = scatter_array.shape
+    # Get pair coordinate distance array
+    d = np.zeros((n, n, 3), np.float32)
+    get_d_array(d, q)
+
+    # Get pair distance array
+    r = np.zeros((n, n), np.float32)
+    get_r_array(r, d)
+
+    # Get normalization array
+    norm = np.zeros((n, n, qmax_bin), np.float32)
+    get_normalization_array(norm, scatter_array)
+
+    fq = np.zeros((n, n, qmax_bin), np.float32)
+
+    diag = np.diagonal(atoms.cell).astype(np.float32)
+    a = np.asarray([np.asarray(u, dtype=np.float32) * diag for u in
+          product(range(pbc_iterations), repeat=3)])
+    a *= pbc
+    b = np.ascontiguousarray(a).view(np.dtype((np.void, a.dtype.itemsize * a.shape[1])))
+    _, idx = np.unique(b, return_index=True)
+    us = a[idx]
+
+    print us
+    print len(us)
+    print len(us) * len(atoms)
+    # Loop through all the possible extra boxes
+    for u in us:
+        # for nu in [-1, 1]:
+        #     if np.all(u == np.zeros(3, dtype=np.float32)) and nu == 1:
+        #         break
+            nu = 1
+            u_vec = nu * u
+            d_u = d + u_vec
+            r_u = np.zeros((n, n), np.float32)
+            get_r_array(r_u, d_u)
+            # print r_u
+            # Get omega
+            omega = np.zeros((n, n, qmax_bin), np.float32)
+            get_omega(omega, r_u, qbin)
+
+            get_fq_inplace(omega, norm)
+            if np.all(u == np.zeros(3, dtype=np.float32)):
+                z = len(us) * 2
+            else:
+                z = 1
+            fq += omega \
+                  # * z
+    # Normalize fq
+    fq = np.sum(fq, axis=(0, 1), dtype=np.float64)
+    print scatter_array.shape
+    for i, u in zip(range(n), us):
+        norm_u = np.sqrt(u[0]*u[0] + u[1]*u[1] + u[2]*u[2])
+        for qx in xrange(i4(qmax_bin)):
+            sv = f4(qx) * qbin
+            fq[qx] += scatter_array[i, qx] * scatter_array[i, qx] * math.sin(sv * norm_u)
+    fq = fq.astype(np.float32)
+    # fq = np.sum(fq, axis=0, dtype=np.float32)
+    # fq = np.sum(fq, axis=0, dtype=np.float32)
+    norm2 = np.zeros((n * (n - 1) / 2., qmax_bin), np.float32)
+    flat_norm(norm2, scatter_array, 0)
+    na = np.mean(norm2, axis=0, dtype=np.float32) * np.float32(n)
+    # na = np.mean(norm2, axis=0, dtype=np.float64) * n
+    old_settings = np.seterr(all='ignore')
+    fq = np.nan_to_num(fq / na)
+    np.seterr(**old_settings)
+    del q, d, r, norm, omega, na
+    return fq

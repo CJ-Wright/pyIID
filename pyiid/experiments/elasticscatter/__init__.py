@@ -7,9 +7,8 @@ import math
 import numpy as np
 from numba import cuda
 from pyiid.experiments.elasticscatter.cpu_wrappers.nxn_cpu_wrap import \
-    wrap_fq_grad as cpu_wrap_fq_grad
-from pyiid.experiments.elasticscatter.cpu_wrappers.nxn_cpu_wrap import \
-    wrap_fq as cpu_wrap_fq
+    wrap_fq_grad as cpu_wrap_fq_grad, wrap_fq as cpu_wrap_fq, \
+    wrap_pbc_fq as cpu_wrap_pbc_fq
 from pyiid.experiments.elasticscatter.kernels.master_kernel import \
     grad_pdf as cpu_grad_pdf, get_pdf_at_qmin, get_scatter_array
 from ase.calculators.calculator import equal
@@ -143,6 +142,7 @@ class ElasticScatter(object):
         # Just in case something blows up down the line set to the most base
         # processor
         self.fq = cpu_wrap_fq
+        self.pbc_fq = cpu_wrap_pbc_fq
         self.grad = cpu_wrap_fq_grad
         self.grad_pdf = cpu_grad_pdf
         self.processor = 'CPU'
@@ -296,7 +296,10 @@ class ElasticScatter(object):
                 print 'calculating new scatter factors'
             wrap_atoms(atoms, self.exp)
             self.wrap_atoms_state = atoms
-        fq = self.fq(atoms, self.exp['qbin'])
+        if np.any(atoms.pbc == True):
+            fq = self.pbc_fq(atoms, self.exp['qbin'])
+        else:
+            fq = self.fq(atoms, self.exp['qbin'])
         return fq
 
     def get_pdf(self, atoms):
@@ -317,14 +320,17 @@ class ElasticScatter(object):
                 print 'calculating new scatter factors'
             wrap_atoms(atoms, self.exp)
             self.wrap_atoms_state = atoms
-        fq = self.fq(atoms, self.pdf_qbin, 'PDF')
+        if np.any(atoms.pbc == True):
+            fq = self.pbc_fq(atoms, self.pdf_qbin, 'PDF')
+        else:
+            fq = self.fq(atoms, self.pdf_qbin, 'PDF')
         r = self.get_r()
         pdf0 = get_pdf_at_qmin(
-            fq,
-            self.exp['rstep'],
-            self.pdf_qbin,
-            r,
-            self.exp['qmin']
+                fq,
+                self.exp['rstep'],
+                self.pdf_qbin,
+                r,
+                self.exp['qmin']
         )
         return pdf0
 
@@ -363,7 +369,7 @@ class ElasticScatter(object):
             The scattering intensity
         """
         return self.get_sq(atoms) * np.average(
-            atoms.get_array('F(Q) scatter')) ** 2
+                atoms.get_array('F(Q) scatter')) ** 2
 
     def get_2d_scatter(self, atoms, pixel_array):
         """
@@ -464,3 +470,34 @@ class ElasticScatter(object):
             The r range for this experiment
         """
         return np.arange(self.exp['rmin'], self.exp['rmax'], self.exp['rstep'])
+
+
+if __name__ == '__main__':
+    from ase import Atoms
+    from ase.lattice.surface import fcc100
+    import matplotlib.pyplot as plt
+    from ase.visualize import view
+    atoms = fcc100('Al', size=(2, 2, 3), vacuum=10.0)
+
+    # atoms = Atoms('Au4', [[0, 0, 0], [3, 0, 0], [0, 3, 0], [3, 3, 0]])
+    # atoms.center(0)
+    # print atoms.cell
+    # print atoms.pbc
+    scat = ElasticScatter()
+    # fq = scat.get_fq(atoms)
+    pdf = scat.get_pdf(atoms)
+    # plt.plot(scat.get_scatter_vector(), fq, label='pbc')
+    plt.plot(scat.get_r(), pdf, label='pbc')
+    # atoms.set_pbc(True)
+    atoms2 = atoms.repeat((2, 2, 1))
+    print len(atoms2)
+    print len(atoms2) / len(atoms)
+    print atoms2.pbc
+    atoms2.set_pbc(False)
+    # fq = scat.get_fq(atoms2)
+    pdf2 = scat.get_pdf(atoms2)
+    # plt.plot(scat.get_scatter_vector(), fq, label='no pbc')
+    plt.plot(scat.get_r(), pdf2, label='no pbc')
+    plt.plot(scat.get_r(), pdf2-pdf-6, label='diff')
+    plt.legend()
+    plt.show()
