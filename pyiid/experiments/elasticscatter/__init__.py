@@ -477,27 +477,25 @@ if __name__ == '__main__':
     from ase.lattice.surface import fcc100
     import matplotlib.pyplot as plt
     from ase.visualize import view
-    atoms = fcc100('Al', size=(2, 2, 3), vacuum=10.0)
 
-    # atoms = Atoms('Au4', [[0, 0, 0], [3, 0, 0], [0, 3, 0], [3, 3, 0]])
-    # atoms.center(0)
-    # print atoms.cell
-    # print atoms.pbc
+    atoms = fcc100('Al', size=(2, 2, 3), vacuum=10.0)
+    # atoms = Atoms('Au2', [[0, 0, 0], [3, 0, 0]], cell=(6, 3, 3))
     scat = ElasticScatter()
+    scat.set_processor('CPU', 'nxn')
     # fq = scat.get_fq(atoms)
+    atoms.set_pbc([True, False, False])
+    print 'pbc'
     pdf = scat.get_pdf(atoms)
     # plt.plot(scat.get_scatter_vector(), fq, label='pbc')
     plt.plot(scat.get_r(), pdf, label='pbc')
-    # atoms.set_pbc(True)
-    atoms2 = atoms.repeat((2, 2, 1))
-    print len(atoms2)
-    print len(atoms2) / len(atoms)
+    atoms2 = atoms.repeat((2, 1, 1))
     print atoms2.pbc
     atoms2.set_pbc(False)
     # fq = scat.get_fq(atoms2)
+    print 'no pbc'
     pdf2 = scat.get_pdf(atoms2)
     # plt.plot(scat.get_scatter_vector(), fq, label='no pbc')
     plt.plot(scat.get_r(), pdf2, label='no pbc')
-    plt.plot(scat.get_r(), pdf2-pdf-6, label='diff')
+    plt.plot(scat.get_r(), pdf2 - pdf - 2, label='diff')
     plt.legend()
     plt.show()

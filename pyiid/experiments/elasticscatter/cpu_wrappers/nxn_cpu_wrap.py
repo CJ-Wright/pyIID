@@ -42,6 +42,7 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
     # Get pair distance array
     r = np.zeros((n, n), np.float32)
     get_r_array(r, d)
+    print r
 
     # Get normalization array
     norm = np.zeros((n, n, qmax_bin), np.float32)
@@ -178,7 +179,7 @@ def wrap_pbc_fq(atoms, qbin=.1, sum_type='fq', pbc_iterations=2):
 
     # Get normalization array
     norm = np.zeros((n, n, qmax_bin), np.float32)
-    get_normalization_array(norm, scatter_array)
+    get_periodic_normalization_array(norm, scatter_array)
 
     fq = np.zeros((n, n, qmax_bin), np.float32)
 
@@ -191,38 +192,24 @@ def wrap_pbc_fq(atoms, qbin=.1, sum_type='fq', pbc_iterations=2):
     us = a[idx]
 
     print us
-    print len(us)
-    print len(us) * len(atoms)
     # Loop through all the possible extra boxes
     for u in us:
-        # for nu in [-1, 1]:
-        #     if np.all(u == np.zeros(3, dtype=np.float32)) and nu == 1:
-        #         break
-            nu = 1
-            u_vec = nu * u
-            d_u = d + u_vec
-            r_u = np.zeros((n, n), np.float32)
-            get_r_array(r_u, d_u)
-            # print r_u
-            # Get omega
-            omega = np.zeros((n, n, qmax_bin), np.float32)
+        d_u = d + u
+        r_u = np.zeros((n, n), np.float32)
+        get_r_array(r_u, d_u)
+        print r_u
+        # Get omega
+        omega = np.zeros((n, n, qmax_bin), np.float32)
+        print u
+        if np.all(u == np.zeros(3, dtype=np.float32)):
             get_omega(omega, r_u, qbin)
-
-            get_fq_inplace(omega, norm)
-            if np.all(u == np.zeros(3, dtype=np.float32)):
-                z = len(us) * 2
-            else:
-                z = 1
-            fq += omega \
-                  # * z
+        else:
+            get_periodic_omega(omega, r_u, qbin)
+        print omega[0, 0, 1]
+        get_fq_inplace(omega, norm)
+        fq += omega
     # Normalize fq
     fq = np.sum(fq, axis=(0, 1), dtype=np.float64)
-    print scatter_array.shape
-    for i, u in zip(range(n), us):
-        norm_u = np.sqrt(u[0]*u[0] + u[1]*u[1] + u[2]*u[2])
-        for qx in xrange(i4(qmax_bin)):
-            sv = f4(qx) * qbin
-            fq[qx] += scatter_array[i, qx] * scatter_array[i, qx] * math.sin(sv * norm_u)
     fq = fq.astype(np.float32)
     # fq = np.sum(fq, axis=0, dtype=np.float32)
     # fq = np.sum(fq, axis=0, dtype=np.float32)

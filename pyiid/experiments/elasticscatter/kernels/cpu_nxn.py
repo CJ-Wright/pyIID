@@ -194,3 +194,45 @@ def get_grad_fq_inplace(grad_omega, norm):
                 if i != j:
                     for qx in xrange(i4(qmax_bin)):
                         grad_omega[i, j, w, qx] *= norm[i, j, qx]
+
+@jit(void(f4[:, :, :], f4[:, :]), target=processor_target, nopython=True,
+     cache=cache)
+def get_periodic_normalization_array(norm_array, scatter_array):
+    """
+    Generate the sv dependant normalization factors for the F(sv) array
+
+    Parameters
+    -----------
+    norm_array: NxNxQ array
+        Normalization array
+    scatter_array: NxQ array
+        The scatter factor array
+    """
+    n, _, qmax_bin = norm_array.shape
+    for qx in xrange(i4(qmax_bin)):
+        for i in xrange(i4(n)):
+            for j in xrange(i4(n)):
+                norm_array[i, j, qx] = scatter_array[i, qx] * \
+                                       scatter_array[j, qx]
+@jit(void(f4[:, :, :], f4[:, :], f4), target=processor_target, nopython=True,
+     cache=cache)
+def get_periodic_omega(omega, r, qbin):
+    """
+    Generate F(Q), not normalized, via the Debye sum
+
+    Parameters
+    ---------
+    omega: Nd array4
+        The reduced scatter pattern
+    r: NxN array
+        The pair distance array
+    qbin: float
+        The qbin size
+    """
+    n, _, qmax_bin = omega.shape
+    for qx in xrange(i4(qmax_bin)):
+        sv = f4(qx) * qbin
+        for i in xrange(i4(n)):
+            for j in xrange(i4(n)):
+                rij = r[i, j]
+                omega[i, j, qx] = math.sin(sv * rij) / rij
