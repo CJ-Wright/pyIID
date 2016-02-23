@@ -97,7 +97,8 @@ def get_omega(omega, r, qbin):
             for j in xrange(i4(n)):
                 if i != j:
                     rij = r[i, j]
-                    omega[i, j, qx] = math.sin(sv * rij) / rij
+                    if rij != f4(0.0):
+                        omega[i, j, qx] = math.sin(sv * rij) / rij
 
 
 @jit(void(f4[:], f4[:, :, :], f4[:, :, :]), target=processor_target,
@@ -195,6 +196,7 @@ def get_grad_fq_inplace(grad_omega, norm):
                     for qx in xrange(i4(qmax_bin)):
                         grad_omega[i, j, w, qx] *= norm[i, j, qx]
 
+
 @jit(void(f4[:, :, :], f4[:, :]), target=processor_target, nopython=True,
      cache=cache)
 def get_periodic_normalization_array(norm_array, scatter_array):
@@ -214,6 +216,8 @@ def get_periodic_normalization_array(norm_array, scatter_array):
             for j in xrange(i4(n)):
                 norm_array[i, j, qx] = scatter_array[i, qx] * \
                                        scatter_array[j, qx]
+
+
 @jit(void(f4[:, :, :], f4[:, :], f4), target=processor_target, nopython=True,
      cache=cache)
 def get_periodic_omega(omega, r, qbin):

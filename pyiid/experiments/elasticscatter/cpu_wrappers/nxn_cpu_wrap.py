@@ -3,6 +3,7 @@ from pyiid.experiments.elasticscatter.kernels.cpu_nxn import *
 from ..kernels.cpu_flat import get_normalization_array as flat_norm
 from pyiid.experiments.elasticscatter.atomics import pad_pdf
 from itertools import product
+from ase import Atoms
 
 __author__ = 'christopher'
 
@@ -184,9 +185,10 @@ def wrap_pbc_fq(atoms, qbin=.1, sum_type='fq', pbc_iterations=2):
 
     diag = np.diagonal(atoms.cell).astype(np.float32)
     a = np.asarray([np.asarray(u, dtype=np.float32) * diag for u in
-          product(range(pbc_iterations), repeat=3)])
+                    product(range(pbc_iterations), repeat=3)])
     a *= pbc
-    b = np.ascontiguousarray(a).view(np.dtype((np.void, a.dtype.itemsize * a.shape[1])))
+    b = np.ascontiguousarray(a).view(
+        np.dtype((np.void, a.dtype.itemsize * a.shape[1])))
     _, idx = np.unique(b, return_index=True)
     us = a[idx]
 
@@ -217,3 +219,58 @@ def wrap_pbc_fq(atoms, qbin=.1, sum_type='fq', pbc_iterations=2):
     np.seterr(**old_settings)
     del q, d, r, norm, omega, na
     return fq
+
+
+def wrap_2d_fq_slice(atoms, qbin=.1, sum_type='fq', slices=10):
+    q = atoms.get_positions().astype(np.float32)
+
+    # get scatter array
+    if sum_type == 'fq':
+        scatter_array = atoms.get_array('F(Q) scatter')
+    else:
+        scatter_array = atoms.get_array('PDF scatter')
+    # define scatter_q information and initialize constants
+
+    n, qmax_bin = scatter_array.shape
+    s = np.linspace(0, atoms.get_cell()[-1, -1] + 1e-4, slices)
+    for i in range(len(s) - 1):
+        sub_atoms = Atoms([atom for atom in atoms if
+                           s[i + 1] > atom.position[2] >= s[i]])
+        sub_q = sub_atoms.get_positions().astype(np.float32)
+        n = len(sub_q)
+        # Get pair coordinate distance array
+        d = np.zeros((n, n, 3), np.float32)
+        get_d_array(d, sub_q)
+
+        for i in range(2):
+            # Get pair distance array
+            r = d[:, :, i]
+            print r.shape
+
+            # Get normalization array
+            norm = np.zeros((n, n, qmax_bin), np.float32)
+            get_normalization_array(norm, scatter_array)
+
+            # Get omega
+            # FIXME: Problem with the some of the rx values zero off axis
+            omega = np.zeros((n, n, qmax_bin), np.float32)
+            get_omega(omega, r, qbin)
+
+            get_fq_inplace(omega, norm)
+            fq = omega
+
+        # Normalize fq
+        fq = np.sum(fq, axis=(0, 1), dtype=np.float64)
+        fq = fq.astype(np.float32)
+        # fq = np.sum(fq, axis=0, dtype=np.float32)
+        # fq = np.sum(fq, axis=0, dtype=np.float32)
+        norm2 = np.zeros((n * (n - 1) / 2., qmax_bin), np.float32)
+        flat_norm(norm2, scatter_array, 0)
+        na = np.mean(norm2, axis=0, dtype=np.float32) * np.float32(n)
+        # na = np.mean(norm2, axis=0, dtype=np.float64) * n
+        old_settings = np.seterr(all='ignore')
+        fq = np.nan_to_num(fq / na)
+        np.seterr(**old_settings)
+        yield fq
+        # del q, d, r, norm, omega, na
+        # return fq

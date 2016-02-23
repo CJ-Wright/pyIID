@@ -145,6 +145,7 @@ class ElasticScatter(object):
         self.pbc_fq = cpu_wrap_pbc_fq
         self.grad = cpu_wrap_fq_grad
         self.grad_pdf = cpu_grad_pdf
+        # self.pdf_2d = cpu_pdf_2d
         self.processor = 'CPU'
         self.alg = 'nxn'
 
