@@ -53,7 +53,6 @@ def get_pdf_at_qmin(fpad, rstep, qstep, rgrid, qmin):
     qmin: float
         The minimum Q value
 
-
     Returns
     -------
     1d array:

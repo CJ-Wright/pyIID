@@ -97,8 +97,7 @@ def get_omega(omega, r, qbin):
             for j in xrange(i4(n)):
                 if i != j:
                     rij = r[i, j]
-                    if rij != f4(0.0):
-                        omega[i, j, qx] = math.sin(sv * rij) / rij
+                    omega[i, j, qx] = math.sin(sv * rij) / rij
 
 
 @jit(void(f4[:], f4[:, :, :], f4[:, :, :]), target=processor_target,
@@ -240,3 +239,30 @@ def get_periodic_omega(omega, r, qbin):
             for j in xrange(i4(n)):
                 rij = r[i, j]
                 omega[i, j, qx] = math.sin(sv * rij) / rij
+
+@jit(void(f4[:, :, :], f4[:, :], f4, f4), target=processor_target, nopython=True,
+     cache=cache)
+def get_slice_omega(omega, r, qbin, rtol):
+    """
+    Generate F(Q), not normalized, via the Debye sum
+
+    Parameters
+    ---------
+    omega: Nd array4
+        The reduced scatter pattern
+    r: NxN array
+        The pair distance array
+    qbin: float
+        The qbin size
+    """
+    n, _, qmax_bin = omega.shape
+    for qx in xrange(i4(qmax_bin)):
+        sv = f4(qx) * qbin
+        for i in xrange(i4(n)):
+            for j in xrange(i4(n)):
+                if i != j:
+                    rij = r[i, j]
+                    if rij >= rtol:
+                    # if rij > 0.0:
+                        omega[i, j, qx] = math.sin(sv * rij) / rij
+

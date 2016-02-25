@@ -233,6 +233,14 @@ def wrap_2d_fq_slice(atoms, qbin=.1, sum_type='fq', slices=10):
 
     n, qmax_bin = scatter_array.shape
     s = np.linspace(0, atoms.get_cell()[-1, -1] + 1e-4, slices)
+    q = atoms.get_positions().astype(np.float32)
+    d = np.zeros((n, n, 3), np.float32)
+    get_d_array(d, q)
+
+    # Get pair distance array
+    r = np.zeros((n, n), np.float32)
+    get_r_array(r, d)
+    rtol = np.float32(np.min(r[r != 0]))
     for i in range(len(s) - 1):
         sub_atoms = Atoms([atom for atom in atoms if
                            s[i + 1] > atom.position[2] >= s[i]])
@@ -241,36 +249,34 @@ def wrap_2d_fq_slice(atoms, qbin=.1, sum_type='fq', slices=10):
         # Get pair coordinate distance array
         d = np.zeros((n, n, 3), np.float32)
         get_d_array(d, sub_q)
-
+        fqxy = []
         for i in range(2):
             # Get pair distance array
-            r = d[:, :, i]
-            print r.shape
+            r = np.abs(d[:, :, i])
+            print np.min(r[r>=rtol])
 
             # Get normalization array
             norm = np.zeros((n, n, qmax_bin), np.float32)
             get_normalization_array(norm, scatter_array)
 
             # Get omega
-            # FIXME: Problem with the some of the rx values zero off axis
             omega = np.zeros((n, n, qmax_bin), np.float32)
-            get_omega(omega, r, qbin)
+            get_slice_omega(omega, r, qbin, rtol)
 
             get_fq_inplace(omega, norm)
             fq = omega
 
-        # Normalize fq
-        fq = np.sum(fq, axis=(0, 1), dtype=np.float64)
-        fq = fq.astype(np.float32)
-        # fq = np.sum(fq, axis=0, dtype=np.float32)
-        # fq = np.sum(fq, axis=0, dtype=np.float32)
-        norm2 = np.zeros((n * (n - 1) / 2., qmax_bin), np.float32)
-        flat_norm(norm2, scatter_array, 0)
-        na = np.mean(norm2, axis=0, dtype=np.float32) * np.float32(n)
-        # na = np.mean(norm2, axis=0, dtype=np.float64) * n
-        old_settings = np.seterr(all='ignore')
-        fq = np.nan_to_num(fq / na)
-        np.seterr(**old_settings)
-        yield fq
-        # del q, d, r, norm, omega, na
-        # return fq
+            # Normalize fq
+            fq = np.sum(fq, axis=(0, 1), dtype=np.float64)
+            fq = fq.astype(np.float32)
+            # fq = np.sum(fq, axis=0, dtype=np.float32)
+            # fq = np.sum(fq, axis=0, dtype=np.float32)
+            norm2 = np.zeros((n * (n - 1) / 2., qmax_bin), np.float32)
+            flat_norm(norm2, scatter_array, 0)
+            na = np.mean(norm2, axis=0, dtype=np.float32) * np.float32(n)
+            # na = np.mean(norm2, axis=0, dtype=np.float64) * n
+            old_settings = np.seterr(all='ignore')
+            fq = np.nan_to_num(fq / na)
+            np.seterr(**old_settings)
+            fqxy.append(fq)
+        yield fqxy
