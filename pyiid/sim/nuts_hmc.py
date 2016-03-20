@@ -1,7 +1,6 @@
 from copy import deepcopy as dc
 from ase.units import fs
 import numpy as np
-from numpy.random import RandomState
 from ase.md.velocitydistribution import MaxwellBoltzmannDistribution
 from pyiid.sim import leapfrog
 from pyiid.sim import Ensemble

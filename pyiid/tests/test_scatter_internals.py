@@ -1,5 +1,5 @@
 from pyiid.tests import *
-from pyiid.experiments.elasticscatter import ElasticScatter, wrap_atoms
+from pyiid.experiments.elasticscatter import ElasticScatter
 from pyiid.experiments.elasticscatter.kernels import (antisymmetric_reshape,
                                                       symmetric_reshape)
 from pyiid.experiments.elasticscatter.kernels.cpu_nxn import \
@@ -22,7 +22,8 @@ def check_meta(value):
 
 def start(value):
     atoms, exp = value[:2]
-    wrap_atoms(atoms, exp)
+    scat = ElasticScatter(exp)
+    scat._wrap_atoms(atoms)
     q = atoms.get_positions().astype(np.float32)
     if value[2] == 'fq':
         scatter_array = atoms.get_array('F(Q) scatter')
@@ -35,8 +36,8 @@ def start(value):
 
 
 def d_comparison(value):
-    input = start(value)
-    q, scatter_array, n, qmax_bin, k_max, k_cov = input
+    task = start(value)
+    q, scatter_array, n, qmax_bin, k_max, k_cov = task
     d1 = np.zeros((n, n, 3), np.float32)
     nxn_d(d1, q)
     d2 = np.zeros((k_max, 3), np.float32)
@@ -44,12 +45,12 @@ def d_comparison(value):
     stats_check(d1, antisymmetric_reshape(d2))
     assert_allclose(d1, antisymmetric_reshape(d2))
     print np.max(np.abs(d1 - antisymmetric_reshape(d2)))
-    return d1, d2, input
+    return d1, d2, task
 
 
 def r_comparison(value):
-    d1, d2, input = d_comparison(value)
-    q, scatter_array, n, qmax_bin, k_max, k_cov = input
+    d1, d2, task = d_comparison(value)
+    q, scatter_array, n, qmax_bin, k_max, k_cov = task
     r1 = np.zeros((n, n), np.float32)
     nxn_r(r1, d1)
     r2 = np.zeros(k_max, np.float32)
@@ -57,12 +58,12 @@ def r_comparison(value):
     stats_check(r1, symmetric_reshape(r2))
     assert_allclose(r1, symmetric_reshape(r2))
     print np.max(np.abs(r1 - symmetric_reshape(r2)))
-    return r1, r2, input
+    return r1, r2, task
 
 
 def norm_comparison(value):
-    input = start(value)
-    q, scatter_array, n, qmax_bin, k_max, k_cov = input
+    task = start(value)
+    q, scatter_array, n, qmax_bin, k_max, k_cov = task
     norm1 = np.zeros((n, n, qmax_bin), np.float32)
     nxn_norm(norm1, scatter_array)
     norm2 = np.zeros((k_max, qmax_bin), np.float32)
@@ -70,7 +71,7 @@ def norm_comparison(value):
     stats_check(norm1, symmetric_reshape(norm2))
     assert_allclose(norm1, symmetric_reshape(norm2))
     print np.max(np.abs(norm1 - symmetric_reshape(norm2)))
-    return norm1, norm2, input
+    return norm1, norm2, task
 
 
 def omega_comparison(value):
@@ -79,9 +80,9 @@ def omega_comparison(value):
         qbin = s.exp['qbin']
     else:
         qbin = s.pdf_qbin
-    r1, r2, input = r_comparison(value)
-    norm1, norm2, input = norm_comparison(value)
-    q, scatter_array, n, qmax_bin, k_max, k_cov = input
+    r1, r2, task = r_comparison(value)
+    norm1, norm2, task = norm_comparison(value)
+    q, scatter_array, n, qmax_bin, k_max, k_cov = task
     omega1 = np.zeros((n, n, qmax_bin), np.float32)
     nxn_omega(omega1, r1, qbin)
     omega2 = np.zeros((k_max, qmax_bin), np.float32)
@@ -89,7 +90,7 @@ def omega_comparison(value):
     stats_check(omega1, symmetric_reshape(omega2))
     assert_allclose(omega1, symmetric_reshape(omega2))
     print np.max(np.abs(omega1 - symmetric_reshape(omega2)))
-    return omega1, omega2, input
+    return omega1, omega2, task
 
 
 tests = [

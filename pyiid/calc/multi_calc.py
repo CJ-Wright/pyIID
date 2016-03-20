@@ -1,7 +1,6 @@
 from ase.calculators.calculator import Calculator
 import numpy as np
 from copy import deepcopy as dc
-__author__ = 'christopher'
 
 __author__ = 'christopher'
 
@@ -83,3 +82,43 @@ class MultiCalc(Calculator):
             forces[:, :] += atoms.get_forces()
 
         self.results['forces'] = forces
+
+    def calculate_voxel_energy(self, atoms, resolution):
+        c = np.diagonal(atoms.get_cell())
+        voxel_energy = np.zeros(c / resolution)
+        for calc in self.calc_list:
+            try:
+                voxel_energy += calc.calculate_voxel_energy(atoms, resolution)
+            except AttributeError:
+                # for voxel in voxels compute energy
+                # need to know what kind of atom is being added
+                '''
+                im, jm, km = voxel_energy.shape
+                for i in xrange(im):
+                    x = (i + .5) * resolution
+                    for j in xrange(jm):
+                        y = (j + .5) * resolution
+                        for k in xrange(km):
+                            z = (k + .5) * resolution
+                            atoms2 = dc(atoms)
+                            atoms2 += Atom(element, (x, y, z))
+                            voxel_energy[i, j, k] += atoms2.get_potential_energy()
+                '''
+                pass
+        return voxel_energy
+
+    def calculate_atomwise_energy(self, atoms):
+        nrg = np.zeros(len(atoms))
+        for calc in self.calc_list:
+            try:
+                nrg += calc.calculate_atomwise_energy(atoms)
+            except AttributeError:
+                # for every atom remove it and get the energy
+                '''
+                for atom in atoms:
+                    atoms2 = dc(atoms)
+                    del atoms2[atom.index]
+                    nrg[atom.index] += atoms2.get_potential_energy()
+                '''
+                pass
+        return nrg

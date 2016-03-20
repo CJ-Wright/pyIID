@@ -1,5 +1,4 @@
 import numpy as np
-
 from pyiid.experiments.elasticscatter.kernels.cpu_nxn import *
 from ..kernels.cpu_flat import get_normalization_array as flat_norm
 from pyiid.experiments.elasticscatter.atomics import pad_pdf
@@ -55,7 +54,7 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
     fq = omega
 
     # Normalize fq
-    fq = np.sum(fq, axis=(0,1), dtype=np.float64)
+    fq = np.sum(fq, axis=(0, 1), dtype=np.float64)
     fq = fq.astype(np.float32)
     # fq = np.sum(fq, axis=0, dtype=np.float32)
     # fq = np.sum(fq, axis=0, dtype=np.float32)

@@ -2,7 +2,6 @@ from copy import deepcopy as dc
 from ase.optimize.optimize import Optimizer
 import numpy as np
 from numpy.random import RandomState
-from ase.md.velocitydistribution import Stationary, ZeroRotation
 
 __author__ = 'christopher'
 
@@ -13,7 +12,7 @@ def leapfrog(atoms, step, center=True):
 
     Parameters
     -----------
-    atoms: ase.Atoms ase.Atoms
+    atoms: ase.Atoms
         The atomic configuration for the system
     step: float
         The step size for the simulation, the new momentum/velocity is step *

@@ -1,16 +1,11 @@
 import numpy as np
 import math
-import time
-import datetime
 from itertools import combinations
 from copy import deepcopy as dc
 from ase.atoms import Atoms as AAtoms
 import ase.io as aseio
 from asap3.analysis.particle import FullNeighborList, CoordinationNumbers
 from pyiid.asa import calculate_asa
-__author__ = 'christopher'
-
-
 __author__ = 'christopher'
 
 

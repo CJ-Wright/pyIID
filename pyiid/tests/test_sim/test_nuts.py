@@ -1,14 +1,11 @@
-import numpy as np
-
-from itertools import product
 from pyiid.calc.calc_1d import Calc1D
 from pyiid.experiments.elasticscatter import ElasticScatter
 from pyiid.sim.nuts_hmc import NUTSCanonicalEnsemble
-from pyiid.tests import test_atom_squares, test_calcs
+from pyiid.tests import *
 from ase.visualize import view
 __author__ = 'christopher'
 
-test_nuts_data = tuple(product(test_atom_squares, test_calcs))
+test_nuts_data = tuple(product(dc(test_atom_squares), test_calcs))
 
 
 def test_nuts_dynamics():
@@ -49,8 +46,8 @@ def check_nuts(value):
     ideal_atoms.set_calculator(calc)
     start_pe = ideal_atoms.get_potential_energy()
 
-    # traj, _, _, _ = nuts(ideal_atoms, .65, 3, 1., escape_level=4)
-    nuts = NUTSCanonicalEnsemble(ideal_atoms, escape_level=4, verbose=True)
+    nuts = NUTSCanonicalEnsemble(ideal_atoms, escape_level=4, verbose=True,
+                                 seed=seed)
     traj, metadata = nuts.run(5)
 
     pe_list = []

@@ -7,8 +7,6 @@ from multiprocessing import Pool, cpu_count
 
 __author__ = 'christopher'
 
-__author__ = 'christopher'
-
 targ = 'cpu'
 
 

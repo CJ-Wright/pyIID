@@ -27,6 +27,9 @@ def check_dynamics(value):
     ideal_atoms.set_velocities(np.zeros((len(ideal_atoms), 3)))
     if isinstance(value[1], str):
         s = ElasticScatter(verbose=True)
+        target_data = None
+        exp_func = None
+        exp_grad = None
         if value[1] == 'PDF':
             target_data = s.get_pdf(ideal_atoms)
             exp_func = s.get_pdf

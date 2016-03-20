@@ -1,5 +1,4 @@
 from pyiid.tests import *
-from pyiid.sim.dynamics import classical_dynamics
 from pyiid.experiments.elasticscatter import ElasticScatter
 from pyiid.calc.calc_1d import Calc1D
 
@@ -28,6 +27,9 @@ def check_n_forces(value):
     ideal_atoms.set_velocities(np.zeros((len(ideal_atoms), 3)))
     if isinstance(value[1], str):
         s = ElasticScatter(verbose=True)
+        target_data = None
+        exp_func = None
+        exp_grad = None
         if value[1] == 'PDF':
             target_data = s.get_pdf(ideal_atoms)
             exp_func = s.get_pdf
@@ -48,9 +50,9 @@ def check_n_forces(value):
     ans1 = ideal_atoms.get_forces()
     ans2 = calc.calculate_numerical_forces(ideal_atoms, d=5e-5)
     stats_check(ans2, ans1,
-                    rtol=rtol,
-                    atol=atol
-                    )
+                rtol=rtol,
+                atol=atol
+                )
 
 
 if __name__ == '__main__':

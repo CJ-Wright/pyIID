@@ -13,7 +13,7 @@ import os
 from copy import deepcopy as dc
 import random
 from pyiid.testing.decorators import *
-from pyiid.experiments.elasticscatter import wrap_atoms
+from pyiid.experiments.elasticscatter import ElasticScatter
 from pyiid.calc.spring_calc import Spring
 
 srfit = False
@@ -30,7 +30,7 @@ __author__ = 'christopher'
 if os.environ.get('PYIID_TEST_SEED') is not None:
     seed = int(os.environ["PYIID_TEST_SEED"])
 else:
-    seed = int(random.random() * 2 ** 53)
+    seed = int(random.random() * 2 ** 32)
 
 rs = np.random.RandomState(seed)
 
@@ -90,6 +90,7 @@ def setup_atoms(n):
     """
     q = rs.random_sample((n, 3)) * 10
     atoms = Atoms('Au' + str(int(n)), q)
+    atoms.center()
     return atoms
 
 
@@ -107,6 +108,8 @@ def setup_double_atoms(n):
 
     q2 = rs.random_sample((n, 3)) * 10
     atoms2 = Atoms('Au' + str(int(n)), q2)
+    atoms.center()
+    atoms2.center()
     return atoms, atoms2
 
 
@@ -116,8 +119,8 @@ def generate_experiment():
     """
     exp_dict = {}
     exp_keys = ['qmin', 'qmax', 'qbin', 'rmin', 'rmax', 'rstep']
-    exp_ranges = [(0, 1.5), (19., 25.), (.8, .12), (0., 2.5), (30., 50.),
-                  (.005, .015)]
+    exp_ranges = [(0, 1.5), (19., 25.), (.1, .8),
+                  (0., 2.5), (30., 50.), (.005, .015)]
     for n, k in enumerate(exp_keys):
         exp_dict[k] = rs.uniform(exp_ranges[n][0], exp_ranges[n][1])
     exp_dict['sampling'] = rs.choice(['full', 'ns'])
@@ -130,6 +133,7 @@ def setup_atomic_square():
     :return:
     """
     atoms1 = Atoms('Au4', [[0, 0, 0], [3, 0, 0], [0, 3, 0], [3, 3, 0]])
+    atoms1.center()
     atoms2 = atoms1.copy()
     scale = .75
     atoms2.positions *= scale
@@ -175,7 +179,8 @@ def stats_check(ans1, ans2, rtol=1e-7, atol=0):
             if ans1[fails].size <= 251:
                 print a
 
-            a = (np.abs(ans1[fails] - ans2[fails]) - atol) / np.abs(ans2[fails])
+            a = (np.abs(ans1[fails] - ans2[fails]) - atol) / np.abs(
+                ans2[fails])
             print '\n', 'with current atol rtol = ', np.nanmax(a), '\n'
             if ans1[fails].size <= 251:
                 print a
@@ -212,7 +217,7 @@ test_spring_kwargs = [{'k': 100, 'rt': 5., 'sp_type': 'rep'},
                       {'k': 100, 'rt': 1., 'sp_type': 'att'}]
 
 test_calcs = [Spring(**t_kwargs) for t_kwargs in test_spring_kwargs]
-test_calcs.extend(['FQ', 'PDF'])
+# test_calcs.extend(['FQ', 'PDF'])
 
 ns = [10]
 travis = False

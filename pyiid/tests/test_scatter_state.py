@@ -13,18 +13,18 @@ def check_add_atom(value):
     scat = ElasticScatter(exp_dict=exp, verbose=True)
     scat.set_processor(proc, alg)
 
-    assert scat.check_state(atoms) != []
+    assert scat._check_wrap_atoms_state(atoms) == False
     # Test a set of different sized ensembles
     ans1 = scat.get_fq(atoms)
-    assert scat.check_state(atoms) == []
+    assert scat._check_wrap_atoms_state(atoms) == True
     # Check that Scatter gave back something
     assert ans1 is not None
     assert np.any(ans1)
 
     atoms2 = atoms + Atom('Au', [0, 0, 0])
-    assert scat.check_state(atoms2) != []
+    assert scat._check_wrap_atoms_state(atoms2) == False
     ans2 = scat.get_fq(atoms2)
-    assert scat.check_state(atoms2) == []
+    assert scat._check_wrap_atoms_state(atoms2) == True
     # Check that Scatter gave back something
     assert ans2 is not None
     assert np.any(ans2)
@@ -43,19 +43,19 @@ def check_del_atom(value):
     scat = ElasticScatter(exp_dict=exp, verbose=True)
     scat.set_processor(proc, alg)
 
-    assert scat.check_state(atoms) != []
+    assert scat._check_wrap_atoms_state(atoms) == False
     # Test a set of different sized ensembles
     ans1 = scat.get_fq(atoms)
-    assert scat.check_state(atoms) == []
+    assert scat._check_wrap_atoms_state(atoms) == True
     # Check that Scatter gave back something
     assert ans1 is not None
     assert np.any(ans1)
 
     atoms2 = dc(atoms)
     del atoms2[np.random.choice(len(atoms2))]
-    assert scat.check_state(atoms2) != []
+    assert scat._check_wrap_atoms_state(atoms2) == False
     ans2 = scat.get_fq(atoms2)
-    assert scat.check_state(atoms2) == []
+    assert scat._check_wrap_atoms_state(atoms2) == True
     # Check that Scatter gave back something
     assert ans2 is not None
     assert np.any(ans2)
