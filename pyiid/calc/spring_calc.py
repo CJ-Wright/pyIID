@@ -1,8 +1,9 @@
+from __future__ import print_function
 from ase.calculators.calculator import Calculator
 import numpy as np
 from pyiid.experiments.elasticscatter.kernels.cpu_nxn import get_d_array, \
     get_r_array
-
+from six.moves import xrange
 __author__ = 'christopher'
 
 
@@ -174,7 +175,7 @@ def atomwise_spring_nrg(atoms, k, rt):
     get_r_array(r, d)
 
     nrg = .5 * k * (r - rt) ** 2
-    print nrg
+    print(nrg)
     nrg[np.where(r > rt)] = 0.0
     for i in xrange(len(nrg)):
         nrg[i, i] = 0.0

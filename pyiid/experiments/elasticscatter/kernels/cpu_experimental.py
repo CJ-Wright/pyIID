@@ -1,5 +1,5 @@
 from numba import jit, i4
-
+from six.moves import xrange
 from pyiid.experiments.elasticscatter.kernels import k_to_ij
 
 __author__ = 'christopher'

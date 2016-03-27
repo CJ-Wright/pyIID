@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import print_function
 from pyiid.tests import *
 from pyiid.experiments.elasticscatter import ElasticScatter
 
@@ -36,7 +38,7 @@ def check_scatter_fq(value):
 
     # test
     if not stats_check(ans1, ans2, rtol, atol):
-        print value
+        print(value)
     assert_allclose(ans1, ans2, rtol=rtol, atol=atol)
     # make certain we did not give back the same pointer
     assert ans1 is not ans2
@@ -66,7 +68,7 @@ def check_scatter_grad_fq(value):
 
     # test
     if not stats_check(ans1, ans2, rtol, atol):
-        print value
+        print(value)
     assert_allclose(ans1, ans2, rtol=rtol, atol=atol)
     # make certain we did not give back the same pointer
     assert ans1 is not ans2

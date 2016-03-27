@@ -1,7 +1,7 @@
 from pyiid.experiments.elasticscatter.kernels import *
 import math
 import os
-
+from six.moves import xrange
 __author__ = 'christopher'
 cache = True
 if bool(os.getenv('NUMBA_DISABLE_JIT')):

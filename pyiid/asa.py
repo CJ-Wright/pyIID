@@ -3,7 +3,7 @@ import math
 from ase.data import *
 import numpy as np
 from asap3.analysis.particle import FullNeighborList
-
+from six.moves import xrange
 __doc__ = """
 
 Calculate the accessible-surface area of atoms.

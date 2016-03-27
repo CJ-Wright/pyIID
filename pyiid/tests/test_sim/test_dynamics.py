@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import print_function
 from pyiid.tests import *
 from pyiid.sim.dynamics import classical_dynamics
 from pyiid.experiments.elasticscatter import ElasticScatter
@@ -55,8 +57,8 @@ def check_dynamics(value):
     for atoms in traj:
         pe_list.append(atoms.get_potential_energy())
     min_pe = np.min(pe_list)
-    print min_pe, start_pe, len(traj)
-    print pe_list
+    print(min_pe, start_pe, len(traj))
+    print(pe_list)
     if start_pe != 0.0:
         assert min_pe < start_pe
 

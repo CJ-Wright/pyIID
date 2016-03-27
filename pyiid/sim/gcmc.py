@@ -1,10 +1,13 @@
+from __future__ import print_function
+from __future__ import print_function
+from __future__ import print_function
 from copy import deepcopy as dc
 from time import time
 import numpy as np
 from ase.atom import Atom
 from ase.units import *
 from pyiid.sim import Ensemble
-
+from six.moves import xrange
 __author__ = 'christopher'
 
 
@@ -88,7 +91,7 @@ def del_atom(atoms, chem_potentials, beta, random_state):
     """
     if len(atoms) <= 1:
         return None
-    print len(atoms)
+    print(len(atoms))
     # make the proposed system
     atoms_prime = dc(atoms)
     e0 = atoms.get_potential_energy()
@@ -150,7 +153,7 @@ class GrandCanonicalEnsemble(Ensemble):
                                  )
         if new_atoms is not None:
             if self.verbose:
-                print '\t' + mv + ' atom accepted', len(new_atoms)
+                print('\t' + mv + ' atom accepted', len(new_atoms))
 
             if mv == 'add':
                 self.metadata['accepted_additions'] += 1
@@ -161,7 +164,7 @@ class GrandCanonicalEnsemble(Ensemble):
             return [new_atoms]
         else:
             if self.verbose:
-                print '\t' + mv + ' atom rejected', len(self.traj[-1])
+                print('\t' + mv + ' atom rejected', len(self.traj[-1]))
 
             if mv == 'add':
                 self.metadata['rejected_additions'] += 1

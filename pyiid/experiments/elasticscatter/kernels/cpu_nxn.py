@@ -2,7 +2,7 @@ import math
 from numba import *
 import mkl
 import os
-
+from six.moves import xrange
 __author__ = 'christopher'
 
 cache = True

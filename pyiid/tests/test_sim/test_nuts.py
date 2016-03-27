@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import print_function
 from pyiid.calc.calc_1d import Calc1D
 from pyiid.experiments.elasticscatter import ElasticScatter
 from pyiid.sim.nuts_hmc import NUTSCanonicalEnsemble
@@ -54,8 +56,8 @@ def check_nuts(value):
     for atoms in traj:
         pe_list.append(atoms.get_potential_energy())
     min_pe = np.min(pe_list)
-    print len(traj)
-    print min_pe, start_pe
+    print(len(traj))
+    print(min_pe, start_pe)
     del traj
     if start_pe != 0.0:
         if not min_pe < start_pe:

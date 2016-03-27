@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 """
 The main class in this module `ElasticScatter` holds the experimental details,
 and processor information needed to calculate the elastic powder scattering
@@ -12,6 +14,7 @@ from pyiid.experiments.elasticscatter.kernels.master_kernel import \
     grad_pdf as cpu_grad_pdf, get_pdf_at_qmin, get_scatter_array
 
 from scipy.interpolate import griddata
+
 __author__ = 'christopher'
 
 all_changes = ['positions', 'numbers', 'cell', 'pbc', 'charges', 'magmoms',
@@ -42,7 +45,7 @@ def check_cudafft():
         tf = True
     except ImportError:
         tf = False
-        print 'no cudafft'
+        print('no cudafft')
         cufft = None
     return tf
 
@@ -158,12 +161,12 @@ class ElasticScatter(object):
             t_value = False
         elif 'F(Q) scatter' not in atoms.arrays.keys():
             t_value = False
-        elif atoms.info['exp'] != self.exp or atoms.info[
-            'scatter_atoms'] != len(atoms):
+        elif atoms.info['exp'] != self.exp or \
+                        atoms.info['scatter_atoms'] != len(atoms):
             t_value = False
         if not t_value:
             if self.verbose:
-                print 'calculating new scatter factors'
+                print('calculating new scatter factors')
             self._wrap_atoms(atoms)
             self.wrap_atoms_state = atoms
         return t_value
@@ -310,7 +313,8 @@ class ElasticScatter(object):
         fq = fq[int(np.floor(self.exp['qmin'] / self.exp['qbin'])):]
         if noise is not None:
             fq_noise = noise * np.abs(self.get_scatter_vector()) / np.abs(
-                np.average(atoms.get_array('F(Q) scatter'), axis=0) ** 2)[int(np.floor(self.exp['qmin'] / self.exp['qbin'])):]
+                np.average(atoms.get_array('F(Q) scatter'), axis=0) ** 2)[int(
+                np.floor(self.exp['qmin'] / self.exp['qbin'])):]
             if fq_noise[0] == 0.0:
                 fq_noise[0] += 1e-9  # added because we can't have zero noise
             exp_noise = noise_distribution(fq, fq_noise)
@@ -370,6 +374,14 @@ class ElasticScatter(object):
         ----------
         atoms: ase.Atoms
             The atomic configuration for which to calculate S(Q)
+        noise: {None, float, ndarray}, optional
+            Add noise to the data, if `noise` is a float then assume flat
+            gaussian noise with a standard deviation of noise, if an array
+            then assume that each point has a gaussian distribution of noise
+            with a standard deviation given by noise. Note that this noise is
+            noise in I(Q) which is propagated to F(Q)
+        noise_distribution: distribution function
+            The distribution function to take the scattering pattern
         Returns
         -------
         1darray:
@@ -391,6 +403,14 @@ class ElasticScatter(object):
         ----------
         atoms: ase.Atoms
             The atomic configuration for which to calculate I(Q)
+        noise: {None, float, ndarray}, optional
+            Add noise to the data, if `noise` is a float then assume flat
+            gaussian noise with a standard deviation of noise, if an array
+            then assume that each point has a gaussian distribution of noise
+            with a standard deviation given by noise. Note that this noise is
+            noise in I(Q) which is propagated to F(Q)
+        noise_distribution: distribution function
+            The distribution function to take the scattering pattern
         Returns
         -------
         1darray:
@@ -401,7 +421,8 @@ class ElasticScatter(object):
         iq = sq * f2[int(np.floor(self.exp['qmin'] / self.exp['qbin'])):]
         return iq
 
-    def get_2d_scatter(self, atoms, pixel_array):
+    def get_2d_scatter(self, atoms, pixel_array, noise=None,
+                       noise_distribution=np.random.normal):
         """
         Calculate the scattering intensity as projected onto a detector
 
@@ -412,13 +433,21 @@ class ElasticScatter(object):
         pixel_array: 2darray
             A map from Q to the xy coordinates of the detector, each element
             has a Q value
+        noise: {None, float, ndarray}, optional
+            Add noise to the data, if `noise` is a float then assume flat
+            gaussian noise with a standard deviation of noise, if an array
+            then assume that each point has a gaussian distribution of noise
+            with a standard deviation given by noise. Note that this noise is
+            noise in I(Q) which is propagated to F(Q)
+        noise_distribution: distribution function
+            The distribution function to take the scattering pattern
         Returns
         -------
         2darray:
             The scattering intensity on the detector
         """
 
-        iq = self.get_iq(atoms)
+        iq = self.get_iq(atoms, noise, noise_distribution)
         s = self.get_scatter_vector()
         qb = self.exp['qbin']
         final_shape = pixel_array.shape

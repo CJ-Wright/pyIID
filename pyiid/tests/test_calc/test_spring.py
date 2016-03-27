@@ -1,9 +1,11 @@
+from __future__ import print_function
+from __future__ import print_function
 from pyiid.tests import *
 import numpy as np
 from pyiid.calc.spring_calc import Spring
 from ase import Atom
 from unittest import SkipTest
-
+from six.moves import xrange
 __author__ = 'christopher'
 
 
@@ -50,7 +52,7 @@ def check_atomwise_nrg(value):
     calc = Spring(**value[1])
     atoms.set_calculator(calc)
     e0 = atoms.get_potential_energy()
-    print e0, e0 / 2.
+    print(e0, e0 / 2.)
     voxel_nrg = atoms.calc.calculate_atomwise_energy(atoms)
 
     nrg2 = np.zeros(len(atoms))
@@ -82,7 +84,7 @@ def test_meta():
 if __name__ == '__main__':
     import nose
 
-    print len(test_data)
+    print(len(test_data))
     nose.runmodule(argv=[
         # '-s',
         '--with-doctest',

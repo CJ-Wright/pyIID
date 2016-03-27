@@ -1,9 +1,12 @@
+from __future__ import print_function
+from __future__ import print_function
+from __future__ import print_function
 import numpy as np
 from copy import deepcopy as dc
 from pyiid.sim import leapfrog
 
 __author__ = 'christopher'
-print 'No longer supported'
+print('No longer supported')
 
 delta_max = 500
 
@@ -30,7 +33,7 @@ def nuts(atoms, e, iterations, wtraj=None):
             c = [dc(traj[-1])]
             j, s = 0, 1
             while s == 1:
-                print 'depth', j, 'samples', 2 ** j
+                print('depth', j, 'samples', 2 ** j)
                 v = np.random.choice([-1, 1])
                 if v == -1:
                     # build tree in negative direction
@@ -47,7 +50,7 @@ def nuts(atoms, e, iterations, wtraj=None):
                     (np.dot(datoms.flatten(),
                             pos_atoms.get_momenta().flatten()) >= 0)
                 j += 1
-            print m, len(c)
+            print(m, len(c))
             configuration_list.append(c)
             energies = np.asarray([atoms.get_total_energy() for atoms in c])
             sample_pos = np.random.choice(range(len(c)),

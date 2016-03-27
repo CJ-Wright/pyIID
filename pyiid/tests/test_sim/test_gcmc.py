@@ -1,3 +1,6 @@
+from __future__ import print_function
+from __future__ import print_function
+from __future__ import print_function
 from pyiid.calc.calc_1d import Calc1D
 from pyiid.experiments.elasticscatter import ElasticScatter
 from pyiid.sim.gcmc import GrandCanonicalEnsemble
@@ -40,9 +43,9 @@ def check_nuts(value):
     for atoms in traj:
         pe_list.append(atoms.get_potential_energy())
         n.append(len(traj))
-    print len(traj)
-    print 'n max', np.max(n)
-    print 'n0', n0
+    print(len(traj))
+    print('n max', np.max(n))
+    print('n0', n0)
     del traj
     assert np.max(n) > n0
 

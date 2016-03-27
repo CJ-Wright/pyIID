@@ -1,3 +1,7 @@
+from __future__ import print_function
+from __future__ import print_function
+from __future__ import print_function
+from __future__ import print_function
 from pyiid.tests import *
 from pyiid.experiments.elasticscatter import ElasticScatter
 from pyiid.experiments.elasticscatter.kernels import (antisymmetric_reshape,
@@ -44,7 +48,7 @@ def d_comparison(value):
     k_d(d2, q, k_cov)
     stats_check(d1, antisymmetric_reshape(d2))
     assert_allclose(d1, antisymmetric_reshape(d2))
-    print np.max(np.abs(d1 - antisymmetric_reshape(d2)))
+    print(np.max(np.abs(d1 - antisymmetric_reshape(d2))))
     return d1, d2, task
 
 
@@ -57,7 +61,7 @@ def r_comparison(value):
     k_r(r2, d2)
     stats_check(r1, symmetric_reshape(r2))
     assert_allclose(r1, symmetric_reshape(r2))
-    print np.max(np.abs(r1 - symmetric_reshape(r2)))
+    print(np.max(np.abs(r1 - symmetric_reshape(r2))))
     return r1, r2, task
 
 
@@ -70,7 +74,7 @@ def norm_comparison(value):
     k_norm(norm2, scatter_array, k_cov)
     stats_check(norm1, symmetric_reshape(norm2))
     assert_allclose(norm1, symmetric_reshape(norm2))
-    print np.max(np.abs(norm1 - symmetric_reshape(norm2)))
+    print(np.max(np.abs(norm1 - symmetric_reshape(norm2))))
     return norm1, norm2, task
 
 
@@ -89,7 +93,7 @@ def omega_comparison(value):
     k_omega(omega2, r2, qbin)
     stats_check(omega1, symmetric_reshape(omega2))
     assert_allclose(omega1, symmetric_reshape(omega2))
-    print np.max(np.abs(omega1 - symmetric_reshape(omega2)))
+    print(np.max(np.abs(omega1 - symmetric_reshape(omega2))))
     return omega1, omega2, task
 
 

@@ -2,7 +2,8 @@ import math
 from numba import *
 from numba import cuda, f4, i4, int32
 import numpy as np
-
+from six.moves import xrange
+from six.moves import xrange
 __author__ = 'christopher'
 
 

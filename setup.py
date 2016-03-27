@@ -20,5 +20,6 @@ setup(
     license='',
     author='christopher',
     author_email='',
-    description='', requires=['scipy']
+    description='', requires=['matplotlib', 'mpi4py', 'nose', 'numba',
+                              'psutil', 'scipy', 'six']
 )

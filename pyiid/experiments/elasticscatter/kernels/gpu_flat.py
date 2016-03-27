@@ -4,7 +4,7 @@ from numba import *
 from numba import cuda, f4, i4
 
 from pyiid.experiments.elasticscatter.kernels import cuda_k_to_ij, cuda_ij_to_k
-
+from six.moves import xrange
 __author__ = 'christopher'
 
 

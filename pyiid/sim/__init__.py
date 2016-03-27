@@ -1,8 +1,9 @@
+from __future__ import print_function
 from copy import deepcopy as dc
 from ase.optimize.optimize import Optimizer
 import numpy as np
 from numpy.random import RandomState
-
+from six.moves import xrange
 __author__ = 'christopher'
 
 
@@ -65,7 +66,7 @@ class Ensemble(Optimizer):
                 if self.check_eq(eq_steps, eq_tol):
                     break
             if self.verbose:
-                print 'iteration number', i
+                print('iteration number', i)
             self.step()
         return self.traj, self.metadata
 

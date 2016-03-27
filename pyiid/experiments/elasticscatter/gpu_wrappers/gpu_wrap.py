@@ -4,7 +4,7 @@ from pyiid.experiments.elasticscatter.atomics.gpu_atomics import *
 from pyiid.experiments import *
 from pyiid.experiments.elasticscatter.kernels.cpu_flat import \
     get_normalization_array
-
+from six.moves import xrange
 __author__ = 'christopher'
 
 
