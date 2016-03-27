@@ -24,6 +24,9 @@ install:
   - pip install nose-exclude
   - git clone --recursive https://gitlab.com/asap/asap.git
   - cd asap
+  - make depend
+  - make serial
+  - make install
   - python setup.py install
   - cd ..
   - python setup.py install
