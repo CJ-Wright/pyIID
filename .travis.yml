@@ -22,9 +22,8 @@ install:
   - source activate testenv
   - pip install ase pympler
   - pip install nose-exclude
-  - wget http://dcwww.camp.dtu.dk/campos/download/Asap-3.8.4.tar.gz
-  - tar xf Asap-3.8.4.tar.gz
-  - cd Asap-3.8.4
+  - git clone https://gitlab.com/asap/asap.git
+  - cd asap
   - python setup.py install
   - cd ..
   - python setup.py install
