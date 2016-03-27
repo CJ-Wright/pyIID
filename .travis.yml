@@ -22,7 +22,7 @@ install:
   - source activate testenv
   - pip install ase pympler
   - pip install nose-exclude
-  - git clone https://gitlab.com/asap/asap.git
+  - git clone --recursive https://gitlab.com/asap/asap.git
   - cd asap
   - python setup.py install
   - cd ..
