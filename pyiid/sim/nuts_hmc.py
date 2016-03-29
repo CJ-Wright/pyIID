@@ -11,44 +11,6 @@ __author__ = 'christopher'
 Emax = 200
 
 
-def find_step_size(input_atoms, thermal_nrg):
-    """
-    Find a suitable starting step size for the simulation
-
-    Parameters
-    -----------
-    input_atoms: ase.Atoms object
-        The starting atoms for the simulation
-    thermal_nrg:
-        The thermal energy for the simulation
-
-    Returns
-    -------
-    float:
-        The step size
-    """
-    atoms = dc(input_atoms)
-    step_size = .5
-    MaxwellBoltzmannDistribution(atoms, temp=thermal_nrg, force_temp=True)
-
-    atoms_prime = leapfrog(atoms, step_size)
-
-    a = 2 * (np.exp(
-        -1 * atoms_prime.get_total_energy() + atoms.get_total_energy()
-    ) > 0.5) - 1
-
-    while (np.exp(-1 * atoms_prime.get_total_energy() +
-                      atoms.get_total_energy())) ** a > 2 ** -a:
-        step_size *= 2 ** a
-        print 'trying step size', step_size
-        atoms_prime = leapfrog(atoms, step_size)
-        if step_size < 1e-7 or step_size > 1e7:
-            step_size = 1.
-            break
-    print 'optimal step size', step_size
-    return step_size
-
-
 def buildtree(input_atoms, u, v, j, e, e0, rs, beta=1):
     """
     Build the tree of samples for NUTS, recursively
@@ -135,18 +97,64 @@ class NUTSCanonicalEnsemble(Ensemble):
         self.accept_target = accept_target
         self.temp = temperature
         self.thermal_nrg = self.temp * kB
-        self.step_size = find_step_size(atoms, self.thermal_nrg)
+        self.step_size = self._find_step_size(atoms, self.thermal_nrg)
         self.mu = np.log(10 * self.step_size)
         # self.ebar = 1
         self.sim_hbar = 0
         self.gamma = 0.05
         self.t0 = 10
         # self.k = .75
-        self.metadata['samples_total'] = 0
-        self.metadata['accepted_samples'] = 0
+        self.metadata.update({
+            'samples_total': 0,
+            'accepted_samples': 0
+        })
         self.escape_level = escape_level
         self.m = 0
         self.momentum = momentum
+
+    def _find_step_size(self, input_atoms, thermal_nrg=None, momentum=None):
+        """
+        Find a suitable starting step size for the simulation
+
+        Parameters
+        -----------
+        input_atoms: ase.Atoms object
+            The starting atoms for the simulation
+        thermal_nrg:
+            The thermal energy for the simulation
+
+        Returns
+        -------
+        float:
+            The step size
+        """
+        atoms = dc(input_atoms)
+        step_size = .5
+        if thermal_nrg:
+            MaxwellBoltzmannDistribution(atoms, temp=thermal_nrg,
+                                         force_temp=True)
+        elif momentum:
+            atoms.set_momenta(self.random_state.normal(0, 1, (
+                len(atoms), 3)))
+        else:
+            print('Some thermal energy needed')
+
+        atoms_prime = leapfrog(atoms, step_size)
+
+        a = 2 * (np.exp(
+            -1 * atoms_prime.get_total_energy() + atoms.get_total_energy()
+        ) > 0.5) - 1
+
+        while (np.exp(-1 * atoms_prime.get_total_energy() +
+                          atoms.get_total_energy())) ** a > 2 ** -a:
+            step_size *= 2 ** a
+            print 'trying step size', step_size
+            atoms_prime = leapfrog(atoms, step_size)
+            if step_size < 1e-7 or step_size > 1e7:
+                step_size = 1.
+                break
+        print 'optimal step size', step_size
+        return step_size
 
     def step(self):
         new_configurations = []

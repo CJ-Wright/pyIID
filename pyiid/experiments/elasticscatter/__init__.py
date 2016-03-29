@@ -38,7 +38,7 @@ def check_gpu():
 
 def check_cudafft():
     try:
-        from numbapro.cudalib import cufft
+        from accelerate.cudalib import cufft
         tf = True
     except ImportError:
         tf = False

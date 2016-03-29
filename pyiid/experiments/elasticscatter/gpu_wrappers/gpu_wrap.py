@@ -1,5 +1,5 @@
 from threading import Thread
-from numbapro.cudalib import cufft
+from accelerate.cuda import fft
 from pyiid.experiments.elasticscatter.atomics.gpu_atomics import *
 from pyiid.experiments import *
 from pyiid.experiments.elasticscatter.kernels.cpu_flat import \
@@ -97,7 +97,7 @@ def sub_grad_pdf(gpu, gpadc, gpadcfft, atoms_per_thread, n_cov):
     input_shape = [gpadcfft.shape[-1]]
     with gpu:
         batch_operations = atoms_per_thread
-        plan = cufft.FFTPlan(input_shape, np.complex64, np.complex64,
+        plan = fft.FFTPlan(input_shape, np.complex64, np.complex64,
                              batch_operations)
         for i in xrange(3):
             batch_input = np.ravel(

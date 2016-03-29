@@ -51,7 +51,7 @@ class Ensemble(Optimizer):
         self.starting_atoms = dc(atoms)
         self.traj = [dc(atoms)]
         self.pe = []
-        self.metadata = {}
+        self.metadata = {'seed': seed}
 
     def check_eq(self, eq_steps, tol):
         ret = np.cumsum(self.pe, dtype=float)
@@ -60,14 +60,19 @@ class Ensemble(Optimizer):
         return np.sum(np.gradient(ret[eq_steps:])) < tol
 
     def run(self, steps=100000000, eq_steps=None, eq_tol=None, **kwargs):
-        for i in xrange(steps):
-            if eq_steps is not None:
-                if self.check_eq(eq_steps, eq_tol):
-                    break
-            if self.verbose:
-                print 'iteration number', i
-            self.step()
-        return self.traj, self.metadata
+        self.metadata['planned iterations'] = steps
+        try:
+            for i in xrange(steps):
+                if eq_steps is not None:
+                    if self.check_eq(eq_steps, eq_tol):
+                        break
+                if self.verbose:
+                    print 'iteration number', i
+                self.step()
+        except KeyboardInterrupt:
+            print('Interupted, returning data')
+        finally:
+            return self.traj, self.metadata
 
     def step(self):
         pass
