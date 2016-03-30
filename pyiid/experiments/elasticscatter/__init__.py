@@ -10,8 +10,8 @@ from pyiid.experiments.elasticscatter.cpu_wrappers.nxn_cpu_wrap import \
     wrap_fq_grad as cpu_wrap_fq_grad, wrap_fq as cpu_wrap_fq
 from pyiid.experiments.elasticscatter.kernels.master_kernel import \
     grad_pdf as cpu_grad_pdf, get_pdf_at_qmin, get_scatter_array
-
 from scipy.interpolate import griddata
+
 __author__ = 'christopher'
 
 all_changes = ['positions', 'numbers', 'cell', 'pbc', 'charges', 'magmoms',
@@ -65,9 +65,18 @@ class ElasticScatter(object):
 
     """
 
-    def __init__(self, exp_dict=None, verbose=False):
+    def __init__(self, exp_dict=None, verbose=False, seed=None):
         self.verbose = verbose
         self.wrap_atoms_state = None
+        if seed is None:
+            self.seed = int(np.random.random() * 2 ** 32)
+        elif isinstance(seed, int):
+            self.seed = seed
+        else:
+            raise
+        self.rs = np.random.RandomState(self.seed)
+
+
 
         # Currently supported processor architectures, in order of most
         # advanced to least
@@ -283,7 +292,7 @@ class ElasticScatter(object):
             self.processor = processor
             return True
 
-    def get_fq(self, atoms, noise=None, noise_distribution=np.random.normal):
+    def get_fq(self, atoms, iq_std=None, noise_distribution=None):
         """
         Calculate the reduced structure factor F(Q)
 
@@ -291,7 +300,7 @@ class ElasticScatter(object):
         ----------
         atoms: ase.Atoms
             The atomic configuration for which to calculate F(Q)
-        noise: {None, float, ndarray}, optional
+        iq_std: {None, float, ndarray}, optional
             Add noise to the data, if `noise` is a float then assume flat
             gaussian noise with a standard deviation of noise, if an array
             then assume that each point has a gaussian distribution of noise
@@ -308,16 +317,16 @@ class ElasticScatter(object):
         self._check_wrap_atoms_state(atoms)
         fq = self.fq(atoms, self.exp['qbin'])
         fq = fq[int(np.floor(self.exp['qmin'] / self.exp['qbin'])):]
-        if noise is not None:
-            fq_noise = noise * np.abs(self.get_scatter_vector()) / np.abs(
+        if iq_std is not None:
+            fq_std = iq_std * np.abs(self.get_scatter_vector()) / np.abs(
                 np.average(atoms.get_array('F(Q) scatter'), axis=0) ** 2)[int(np.floor(self.exp['qmin'] / self.exp['qbin'])):]
-            if fq_noise[0] == 0.0:
-                fq_noise[0] += 1e-9  # added because we can't have zero noise
-            exp_noise = noise_distribution(fq, fq_noise)
+            if fq_std[0] == 0.0:
+                fq_std[0] += 1e-9  # added because we can't have zero noise
+            exp_noise = self.rs.normal(0, fq_std)
             fq += exp_noise
         return fq
 
-    def get_pdf(self, atoms, noise=None, noise_distribution=np.random.normal):
+    def get_pdf(self, atoms, iq_std=None, noise_distribution=np.random.normal):
         """
         Calculate the atomic pair distribution factor, PDF, G(r)
 
@@ -325,7 +334,7 @@ class ElasticScatter(object):
         ----------
         atoms: ase.Atoms
             The atomic configuration for which to calculate the PDF
-        noise: {None, float, ndarray}, optional
+        iq_std: {None, float, ndarray}, optional
             Add noise to the data, if `noise` is a float then assume flat
             gaussian noise with a standard deviation of noise, if an array
             then assume that each point has a gaussian distribution of noise
@@ -341,16 +350,16 @@ class ElasticScatter(object):
         """
         self._check_wrap_atoms_state(atoms)
         fq = self.fq(atoms, self.pdf_qbin, 'PDF')
-        if noise is not None:
+        if iq_std is not None:
             a = np.abs(self.get_scatter_vector(pdf=True))
             b = np.abs(np.average(atoms.get_array('PDF scatter') ** 2, axis=0))
-            if noise.shape != a.shape:
-                noise = griddata(np.arange(0, noise.shape), noise, np.arange(
+            if hasattr(iq_std, 'shape') and iq_std.shape != a.shape:
+                iq_std = griddata(np.arange(0, iq_std.shape), iq_std, np.arange(
                     a.shape))
-            fq_noise = noise * a / b
+            fq_noise = iq_std * a / b
             if fq_noise[0] == 0.0:
                 fq_noise[0] += 1e-9  # added because we can't have zero noise
-            exp_noise = noise_distribution(fq, fq_noise)
+            exp_noise = self.rs.normal(0, fq_noise)
             fq += exp_noise
         r = self.get_r()
         pdf0 = get_pdf_at_qmin(
