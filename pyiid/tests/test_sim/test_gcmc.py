@@ -26,7 +26,6 @@ def check_nuts(value):
     """
     ideal_atoms, _ = value[0]
     ideal_atoms.set_velocities(np.zeros((len(ideal_atoms), 3)))
-    s = ElasticScatter(verbose=True)
     calc = value[1]
     del ideal_atoms[-2:]
     n0 = len(ideal_atoms)

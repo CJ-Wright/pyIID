@@ -102,7 +102,8 @@ class MultiCalc(Calculator):
                             z = (k + .5) * resolution
                             atoms2 = dc(atoms)
                             atoms2 += Atom(element, (x, y, z))
-                            voxel_energy[i, j, k] += atoms2.get_potential_energy()
+                            voxel_energy[i, j, k] +=
+                            atoms2.get_potential_energy()
                 '''
                 pass
         return voxel_energy

@@ -7,7 +7,8 @@ from pyiid.experiments.elasticscatter.kernels import cuda_k_to_ij, cuda_ij_to_k
 
 __author__ = 'christopher'
 
-# F(sv) kernels ---------------------------------------------------------------
+
+# F(Q) kernels ---------------------------------------------------------------
 @cuda.jit(argtypes=[f4[:, :], f4[:, :], i4])
 def get_d_array(d, q, offset):
     """
@@ -52,7 +53,7 @@ def get_r_array(r, d):
 @cuda.jit(argtypes=[f4[:, :], f4[:, :], i4])
 def get_normalization_array(norm_array, scat, offset):
     """
-    Generate the sv dependant normalization factors for the F(sv) array
+    Generate the Q dependant normalization factors for the F(Q) array
 
     Parameters
     -----------
@@ -95,7 +96,7 @@ def get_omega(omega, r, qbin):
 @cuda.jit(argtypes=[f4[:, :], f4[:, :], f4[:, :]])
 def get_fq(fq, omega, norm):
     """
-    Get the reduced structure factor F(sv) via the Debye Sum
+    Get the reduced structure factor F(Q) via the Debye Sum
 
     Parameters
     ----------
@@ -146,7 +147,7 @@ def get_grad_omega(grad_omega, omega, r, d, qbin):
 @cuda.jit(argtypes=[f4[:, :, :], f4[:, :, :], f4[:, :]])
 def get_grad_fq(grad, grad_omega, norm):
     """
-    Generate the gradient F(sv) for an atomic configuration
+    Generate the gradient F(Q) for an atomic configuration
 
     Parameters
     ------------
@@ -298,10 +299,11 @@ def experimental_sum_grad_fq1(new_grad, grad, k_cov):
         cuda.atomic.add(new_grad, (j, tz, qx), a)
         cuda.atomic.add(new_grad, (i, tz, qx), f4(-1.) * a)
 
+
 @cuda.jit(argtypes=[f4[:, :, :], f4[:, :]])
 def get_grad_fq_inplace(grad_omega, norm):
     """
-    Generate the gradient F(sv) for an atomic configuration
+    Generate the gradient F(Q) for an atomic configuration
 
     Parameters
     ------------

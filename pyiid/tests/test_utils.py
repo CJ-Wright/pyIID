@@ -1,6 +1,7 @@
 from pyiid.tests import *
 from ase.cluster import FaceCenteredCubic
 from pyiid.utils import *
+
 tf = False
 try:
     from scipy.special import comb
@@ -14,6 +15,7 @@ atoms = FaceCenteredCubic('Au', [[1, 0, 0], [1, 1, 0], [1, 1, 1]], (2, 4, 2))
 def test_tag_surface_atoms():
     tag_surface_atoms(atoms)
     assert np.sum(atoms.get_tags()) == 42
+
 
 @known_fail_if(tf)
 def test_get_angle_list():

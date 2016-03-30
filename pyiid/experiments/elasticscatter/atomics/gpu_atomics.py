@@ -86,7 +86,7 @@ def gpu_k_space_grad_fq_adp_allocation(n, sv, mem):
         float(.8 * mem - 16 * sv * n - 24 * n) / (4 * (12 * sv + 5))))
 
 
-def atomic_fq(q, adps, scatter_array, qbin, k_cov, k_per_thread):
+def atomic_fq(q, scatter_array, qbin, k_cov, k_per_thread):
     """
     Calculate a portion of F(sv).  This is the smallest division of the F(sv)
     function.
@@ -189,7 +189,7 @@ def atomic_fq(q, adps, scatter_array, qbin, k_cov, k_per_thread):
     return final
 
 
-def atomic_grad_fq(q, adps, scatter_array, qbin, k_cov, k_per_thread):
+def atomic_grad_fq(q, scatter_array, qbin, k_cov, k_per_thread):
     """
     Calculate a portion of the gradient of F(Q).  This is the smallest division
     of the grad F(Q) function.

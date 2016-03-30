@@ -152,27 +152,6 @@ def get_grad_fq(grad, grad_omega, norm):
                 grad[k, w, qx] = norm[k, qx] * grad_omega[k, w, qx]
 
 
-@jit(void(f4[:, :, :], f4[:, :], f4[:, :], f4[:, :, :], f4[:, :, :],
-          f4[:, :]),
-     target=processor_target, nopython=True, cache=cache)
-def get_adp_grad_fq(grad, omega, tau, grad_omega, grad_tau, norm):
-    """
-    Generate the gradient F(sv) for an atomic configuration
-
-    Parameters
-    ------------
-    grad: Nx3xQ numpy array
-        The array which will store the FQ gradient
-    """
-    kmax, _, qmax_bin = grad.shape
-    for k in xrange(kmax):
-        for w in xrange(i4(3)):
-            for qx in xrange(i4(qmax_bin)):
-                grad[k, w, qx] = norm[k, qx] * \
-                                 (tau[k, qx] * grad_omega[k, w, qx] +
-                                  omega[k, qx] * grad_tau[k, w, qx])
-
-
 @jit(void(f4[:, :, :], f4[:, :]), target=processor_target, nopython=True,
      cache=cache)
 def get_grad_fq_inplace(grad_omega, norm):

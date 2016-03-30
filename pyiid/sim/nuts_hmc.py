@@ -231,9 +231,5 @@ class NUTSCanonicalEnsemble(Ensemble):
         te = time() - t2
 
         time_one_step = tf * 2 + te
-        total_time = 0.
-        # for i in xrange(iterations):
-        #     j = np.random.randint(1, self.escape_level)
-        #     total_time += time_one_step * 2 ** j
         total_time = iterations * time_one_step * 2 ** self.escape_level
         return total_time

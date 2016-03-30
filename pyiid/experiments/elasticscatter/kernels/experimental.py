@@ -100,6 +100,7 @@ def experimental_sum_grad_fq2(new_grad, grad, k_cov):
         # new_grad[i, tz, qx] = j
         # cuda.atomic.add(new_grad, (i, tz, qx), j)
 
+
 @cuda.jit(argtypes=[f4[:, :, :], f4[:, :, :], i4])
 def experimental_sum_grad_fq3(new_grad, grad, k_cov):
     k, qx = cuda.grid(2)

@@ -23,7 +23,7 @@ try:
     from diffpy.srreal.pdfcalculator import DebyePDFCalculator
 
     srfit = True
-except:
+except ImportError:
     pass
 __author__ = 'christopher'
 
