@@ -1,3 +1,4 @@
+from __future__ import print_function
 from copy import deepcopy as dc
 from ase.units import fs
 import numpy as np
@@ -111,6 +112,20 @@ class NUTSCanonicalEnsemble(Ensemble):
         self.escape_level = escape_level
         self.m = 0
         self.momentum = momentum
+        if self.thermal_nrg:
+            if self.verbose:
+                print('thermal_nrg', self.thermal_nrg)
+            MaxwellBoltzmannDistribution(atoms, temp=self.thermal_nrg,
+                                         force_temp=True)
+            if self.verbose:
+                print('kinetic energy', atoms.get_kinetic_energy())
+        elif self.momentum:
+            atoms.set_momenta(self.random_state.normal(0, momentum, (
+                len(atoms), 3)))
+            if self.verbose:
+                print('kinetic energy', atoms.get_kinetic_energy())
+        else:
+            print('Some thermal energy needed')
 
     def _find_step_size(self, input_atoms, thermal_nrg=None, momentum=None):
         """
@@ -134,7 +149,7 @@ class NUTSCanonicalEnsemble(Ensemble):
             MaxwellBoltzmannDistribution(atoms, temp=thermal_nrg,
                                          force_temp=True)
         elif momentum:
-            atoms.set_momenta(self.random_state.normal(0, 1, (
+            atoms.set_momenta(self.random_state.normal(0, momentum, (
                 len(atoms), 3)))
         else:
             print('Some thermal energy needed')
@@ -148,18 +163,18 @@ class NUTSCanonicalEnsemble(Ensemble):
         while (np.exp(-1 * atoms_prime.get_total_energy() +
                           atoms.get_total_energy())) ** a > 2 ** -a:
             step_size *= 2 ** a
-            print 'trying step size', step_size
+            print('trying step size', step_size)
             atoms_prime = leapfrog(atoms, step_size)
             if step_size < 1e-7 or step_size > 1e7:
                 step_size = 1.
                 break
-        print 'optimal step size', step_size
+        print('optimal step size', step_size)
         return step_size
 
     def step(self):
         new_configurations = []
         if self.verbose:
-            print '\ttime step size', self.step_size / fs, 'fs'
+            print('\ttime step size', self.step_size / fs, 'fs')
         # sample r0
         if self.momentum is None:
             MaxwellBoltzmannDistribution(self.traj[-1], self.thermal_nrg,
@@ -195,6 +210,9 @@ class NUTSCanonicalEnsemble(Ensemble):
                     1, n_prime * 1. / n):
                 self.traj += [atoms_prime]
                 self.metadata['accepted_samples'] += 1
+                if self.verbose:
+                    print('accepted configuration at ',
+                          atoms_prime.get_potential_energy())
                 new_configurations.extend([atoms_prime])
                 atoms_prime.get_forces()
                 atoms_prime.get_potential_energy()
@@ -207,7 +225,7 @@ class NUTSCanonicalEnsemble(Ensemble):
                     span.dot(pos_atoms.get_velocities().flatten()) >= 0)
             j += 1
             if self.verbose:
-                print '\t \tdepth', j, 'samples', 2 ** j
+                print('\t \tdepth', j, 'samples', 2 ** j)
             self.metadata['samples_total'] += 2 ** j
             # Prevent run away sampling, EXPERIMENTAL
             # If we have generated s**self.escape_level samples,
@@ -215,7 +233,7 @@ class NUTSCanonicalEnsemble(Ensemble):
             # hopefully with a larger step size
             if j >= self.escape_level:
                 if self.verbose:
-                    print '\t \t \tjmax emergency escape at {}'.format(j)
+                    print('\t \t \tjmax emergency escape at {}'.format(j))
                 s = 0
         w = 1. / (self.m + self.t0)
         self.sim_hbar = (1 - w) * self.sim_hbar + w * \

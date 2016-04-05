@@ -59,19 +59,29 @@ class Ensemble(Optimizer):
         ret = ret[eq_steps - 1:] / eq_steps
         return np.sum(np.gradient(ret[eq_steps:])) < tol
 
-    def run(self, steps=100000000, eq_steps=None, eq_tol=None, **kwargs):
+    def run(self, steps=100000000, eq_steps=None, eq_tol=None,
+            acceptances=None, **kwargs):
         self.metadata['planned iterations'] = steps
+        print('start total energy', self.atoms.get_total_energy())
+        print('start potential energy', self.atoms.get_potential_energy())
+        print('start kinetic energy', self.atoms.get_kinetic_energy())
         try:
             for i in xrange(steps):
                 if eq_steps is not None:
                     if self.check_eq(eq_steps, eq_tol):
                         break
+                if acceptances is not None and len(self.traj) >= acceptances:
+                    break
                 if self.verbose:
                     print 'iteration number', i
                 self.step()
         except KeyboardInterrupt:
             print('Interupted, returning data')
         finally:
+            print('finish total energy', self.traj[-1].get_total_energy())
+            print(
+            'finish potential energy', self.traj[-1].get_potential_energy())
+            print('finish kinetic energy', self.traj[-1].get_kinetic_energy())
             return self.traj, self.metadata
 
     def step(self):

@@ -76,8 +76,6 @@ class ElasticScatter(object):
             raise
         self.rs = np.random.RandomState(self.seed)
 
-
-
         # Currently supported processor architectures, in order of most
         # advanced to least
         self.avail_pro = ['MPI-GPU', 'Multi-GPU', 'CPU']
@@ -146,6 +144,8 @@ class ElasticScatter(object):
             if name in atoms.arrays.keys():
                 del atoms.arrays[name]
             atoms.set_array(name, scatter_array)
+        if self.verbose:
+            print(atoms.arrays.keys())
 
         atoms.info['exp'] = self.exp
         atoms.info['scatter_atoms'] = n
@@ -164,15 +164,22 @@ class ElasticScatter(object):
         """
         t_value = True
         if self.wrap_atoms_state is None:
+            if self.verbose:
+                print('wrap atoms state')
             t_value = False
-        elif 'F(Q) scatter' not in atoms.arrays.keys():
+        elif 'F(Q) scatter' not in atoms.arrays.keys() or \
+                        'PDF scatter' not in atoms.arrays.keys():
+            if self.verbose:
+                print('no FQ/PDF scatter factors')
             t_value = False
         elif atoms.info['exp'] != self.exp or atoms.info[
             'scatter_atoms'] != len(atoms):
+            if self.verbose:
+                print('experiment does not match or number of atoms changed')
             t_value = False
         if not t_value:
             if self.verbose:
-                print 'calculating new scatter factors'
+                print('calculating new scatter factors')
             self._wrap_atoms(atoms)
             self.wrap_atoms_state = atoms
         return t_value
@@ -319,7 +326,8 @@ class ElasticScatter(object):
         fq = fq[int(np.floor(self.exp['qmin'] / self.exp['qbin'])):]
         if iq_std is not None:
             fq_std = iq_std * np.abs(self.get_scatter_vector()) / np.abs(
-                np.average(atoms.get_array('F(Q) scatter'), axis=0) ** 2)[int(np.floor(self.exp['qmin'] / self.exp['qbin'])):]
+                np.average(atoms.get_array('F(Q) scatter'), axis=0) ** 2)[int(
+                np.floor(self.exp['qmin'] / self.exp['qbin'])):]
             if fq_std[0] == 0.0:
                 fq_std[0] += 1e-9  # added because we can't have zero noise
             exp_noise = self.rs.normal(0, fq_std)
@@ -354,8 +362,9 @@ class ElasticScatter(object):
             a = np.abs(self.get_scatter_vector(pdf=True))
             b = np.abs(np.average(atoms.get_array('PDF scatter') ** 2, axis=0))
             if hasattr(iq_std, 'shape') and iq_std.shape != a.shape:
-                iq_std = griddata(np.arange(0, iq_std.shape), iq_std, np.arange(
-                    a.shape))
+                iq_std = griddata(np.arange(0, iq_std.shape), iq_std,
+                                  np.arange(
+                                      a.shape))
             fq_noise = iq_std * a / b
             if fq_noise[0] == 0.0:
                 fq_noise[0] += 1e-9  # added because we can't have zero noise
