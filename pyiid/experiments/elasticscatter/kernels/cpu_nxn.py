@@ -100,6 +100,18 @@ def get_omega(omega, r, qbin):
                     omega[i, j, qx] = math.sin(sv * rij) / rij
 
 
+@jit(void(f4[:, :, :], f4[:, :], f4), target=processor_target, nopython=True,
+     cache=cache)
+def get_tau(dw_factor, sigma, qbin):
+    n, _, qmax_bin = dw_factor.shape
+    for qx in xrange(i4(qmax_bin)):
+        sv = f4(qx) * qbin
+        for i in xrange(i4(n)):
+            for j in xrange(i4(n)):
+                dw_factor[i, j, qx] = math.exp(
+                    f4(-.5) * sigma[i, j] * sigma[i, j] * sv * sv)
+
+
 @jit(void(f4[:], f4[:, :, :], f4[:, :, :]), target=processor_target,
      nopython=True, cache=cache)
 def get_fq(fq, omega, norm):
@@ -149,6 +161,23 @@ def get_grad_omega(grad_omega, omega, r, d, qbin):
                         grad_omega[i, j, w, qx] = a * d[i, j, w]
 
 
+@jit(void(f4[:, :, :, :], f4[:, :, :], f4[:, :], f4[:, :, :], f4[:, :],
+          f4[:, :, ], f4), target=processor_target, nopython=True, cache=cache)
+def get_grad_tau(grad_tau, tau, r, d, sigma, adps, qbin):
+    n, _, _, qmax_bin = grad_tau.shape
+    for qx in xrange(i4(qmax_bin)):
+        sv = qx * qbin
+        for i in xrange(i4(n)):
+            for j in xrange(i4(n)):
+                if i != j:
+                    tmp = sigma[i, j] * sv ** 2 * tau[i, j, qx] / r[i, j] ** 3
+                    for w in xrange(i4(3)):
+                        grad_tau[i, j, w, qx] = tmp * (
+                            d[i, j, w] * sigma[i, j] -
+                            (adps[i, w] - adps[j, w]) *
+                            r[i, j] ** 2)
+
+
 @jit(void(f4[:, :, :, :], f4[:, :, :, :], f4[:, :, :]),
      target=processor_target, nopython=True, cache=cache)
 def get_grad_fq(grad, grad_omega, norm):
@@ -174,6 +203,38 @@ def get_grad_fq(grad, grad_omega, norm):
                             i, j, w, qx]
 
 
+@jit(void(f4[:, :, :, :], f4[:, :, :], f4[:, :, :], f4[:, :, :, :],
+          f4[:, :, :, :], f4[:, :, :]),
+     target=processor_target, nopython=True, cache=cache)
+def get_adp_grad_fq(grad, omega, tau, grad_omega, grad_tau, norm):
+    """
+    Generate the gradient F(sv) for an atomic configuration
+    Parameters
+    ------------
+    grad_p: Nx3xQ numpy array
+        The array which will store the FQ gradient
+    d: NxNx3 array
+        The distance array for the configuration
+    r: NxN array
+        The inter-atomic distances
+    scatter_array: NxQ array
+        The scatter factor array
+    qbin: float
+        The size of the sv bins
+    """
+    n, _, _, qmax_bin = grad.shape
+    for i in xrange(i4(n)):
+        for w in xrange(i4(3)):
+            for j in xrange(i4(n)):
+                if i != j:
+                    for qx in xrange(i4(qmax_bin)):
+                        grad[i, j, w, qx] = norm[i, j, qx] * \
+                                            (tau[i, j, qx] *
+                                             grad_omega[i, j, w, qx] +
+                                             omega[i, j, qx] *
+                                             grad_tau[i, j, w, qx])
+
+
 @jit(void(f4[:, :, :, :], f4[:, :, :]), target=processor_target, nopython=True,
      cache=cache)
 def get_grad_fq_inplace(grad_omega, norm):
@@ -194,3 +255,29 @@ def get_grad_fq_inplace(grad_omega, norm):
                 if i != j:
                     for qx in xrange(i4(qmax_bin)):
                         grad_omega[i, j, w, qx] *= norm[i, j, qx]
+
+
+@jit(void(f4[:, :, :, :], f4[:, :, :], f4[:, :], f4[:, :], f4[:, :, :], f4),
+     target=processor_target, nopython=True, cache=cache)
+def get_dtau_dadp(dtau_dadp, tau, sigma, r, d, qbin):
+    n, _, _, qmax_bin = dtau_dadp.shape
+    for qx in xrange(i4(qmax_bin)):
+        sv = qx * qbin
+        for i in xrange(i4(n)):
+            for j in xrange(i4(n)):
+                if i != j:
+                    tmp = f4(-1.) * sigma[i, j] * sv * sv * tau[i, j, qx] / r[
+                        i, j]
+                    for w in xrange(i4(3)):
+                        dtau_dadp[i, j, w, qx] = tmp * d[i, j, w]
+
+
+@jit(void(f4[:, :, :, :], f4[:, :, :], f4[:, :, :]),
+     target=processor_target, nopython=True, cache=cache)
+def get_dfq_dadp_inplace(dtau_dadp, omega, norm):
+    n, _, _, qmax_bin = dtau_dadp.shape
+    for qx in xrange(i4(qmax_bin)):
+        for i in xrange(i4(n)):
+            for j in xrange(i4(n)):
+                for w in xrange(i4(3)):
+                    dtau_dadp[i, j, w, qx] *= norm[i, j, qx] * omega[i, j, qx]
