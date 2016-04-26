@@ -75,6 +75,18 @@ def get_normalization_array(norm_array, scatter_array):
                                            scatter_array[j, qx]
 
 
+@jit(void(f4[:, :], f4[:, :], f4[:, :], f4[:, :, :]),
+     target=processor_target, nopython=True, cache=cache)
+def get_sigma_from_adp(sigma, adps, r, d):
+    for i in xrange(i4(len(sigma))):
+        for j in xrange(i4(len(sigma))):
+            if i != j:
+                tmp = f4(0.)
+                for w in xrange(i4(3)):
+                    tmp += (adps[i, w] - adps[j, w]) * d[i, j, w] / r[i, j]
+                sigma[i, j] = tmp
+
+
 @jit(void(f4[:, :, :], f4[:, :], f4), target=processor_target, nopython=True,
      cache=cache)
 def get_omega(omega, r, qbin):
