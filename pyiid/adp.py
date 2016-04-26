@@ -7,6 +7,26 @@ class ADP:
     def __init__(self, atoms, adps=None, adp_momenta=None,
                  adp_equivalency=None,
                  fixed_adps=None):
+        """
+        Set up the atomic anisotropic displacement parameters.
+        Parameters
+        ----------
+        atoms: ASE.atoms
+            The atomic configuration
+        adps: 2d array
+            The array of ADP values for the atomic configuration
+        adp_momenta: 2d array
+            The "momentum" for each ADP, note that this is not real momentum
+            just a mathematical construct for the Hamiltonian dynamics
+        adp_equivalency: 2d array
+            An array which describes which ADPS are forced to be equivalent
+        fixed_adps: 2d array
+            An array which describes which adps are fixed
+
+        Returns
+        -------
+
+        """
         if adps is None:
             adps = np.ones(atoms.positions.shape) * .005
         if adp_momenta is None:
@@ -23,9 +43,27 @@ class ADP:
         self.calc = None
 
     def get_position(self):
+        """
+        Get the ADP values
+        Returns
+        -------
+        2darray:
+            The current ADPs
+        """
         return self.adps
 
     def set_position(self, new_adps):
+        """
+        Set the ADP positions in a manner consistent with the constraints
+        Parameters
+        ----------
+        new_adps: 2darray
+            The new adp values
+
+        Returns
+        -------
+
+        """
         delta_adps = new_adps - self.adps
         # Make all the equivalent adps the same
         unique_adps = np.unique(self.adp_equivalency)
@@ -37,24 +75,101 @@ class ADP:
         self.adps += delta_adps
 
     def get_momenta(self):
+        """
+        Get the current ADP momenta
+        Returns
+        -------
+        2darray:
+            The current momentum
+        """
         return self.adp_momenta
 
     def set_momenta(self, new_momenta):
+        """
+        Set the ADP momentum
+        Parameters
+        ----------
+        new_momenta: 2darray
+            The new momentum values
+
+        Returns
+        -------
+
+        """
         self.adp_momenta = new_momenta
 
     def get_forces(self, atoms):
+        """
+        Get the forces on the ADPs from the APD calculator
+        ..note:: It may seem a bit odd to have forces working on the ADPs
+        since they aren't particle positions but a better way to think of it as
+        a description of how the ADPs should change, in both magnitude and
+        direction to best minimize the potential energy of the system (however
+        that is calculated).
+        Parameters
+        ----------
+        atoms: ase.atoms
+            The atomic configuration
+
+        Returns
+        -------
+        2darray:
+            The forces on each of the adps
+
+        """
         return self.calc.calculate_forces(atoms)
 
     def set_calc(self, calc):
+        """
+        Set the calculator for the ADPS, this will calculate the potential
+        energy and forces associated with the ADPS
+        Parameters
+        ----------
+        calc
+
+        Returns
+        -------
+
+        """
         self.calc = calc
 
     def del_adp(self, index):
+        """
+        Delete an ADP from the system, usually this accompanies the deletion
+        of an atom.
+        Parameters
+        ----------
+        index: int
+            The index of the ADP to be deleted
+
+        Returns
+        -------
+
+        """
         for a in [self.adps, self.adp_momenta, self.adp_equivalency,
                   self.fixed_adps]:
             a = np.delete(a, index, 0)
 
     def add_adp(self, adp=None, adp_momentum=None, adp_equivalency=None,
                 fixed_adp=None):
+        """
+        Add an ADP to the system, usually this accompanies the addition of an
+        atom.
+        Parameters
+        ----------
+        adp: 1darray
+            The new adp values
+        adp_momentum: 1darray
+            The momentum of the new adp
+        adp_equivalency: int
+            Which adps this adp is equivalent to
+        fixed_adp: int
+            The fixed values for the adps.
+
+        Returns
+        -------
+
+        """
         if adp is None:
             adp = np.ones((1, 3)) * .005
         if adp_momentum is None:
