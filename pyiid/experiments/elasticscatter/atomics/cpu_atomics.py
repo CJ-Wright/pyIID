@@ -72,8 +72,19 @@ def atomic_fq(task):
 
     omega = np.zeros((k_max, qmax_bin), np.float32)
     get_omega(omega, r, qbin)
-    fq = np.zeros((k_max, qmax_bin), np.float32)
-    get_fq(fq, omega, norm)
+    if adps is None:
+        fq = np.zeros((k_max, qmax_bin), np.float32)
+        get_fq(fq, omega, norm)
+    else:
+        sigma = np.zeros(k_max, np.float32)
+        get_sigma_from_adp(sigma, adps, r, d, k_cov)
+
+        tau = np.zeros((k_max, qmax_bin), np.float32)
+        get_tau(tau, sigma, qbin)
+
+        fq = np.zeros((k_max, qmax_bin), np.float32)
+        get_adp_fq(fq, omega, tau, norm)
+        del tau, sigma, adps
     del q, d, scatter_array, norm, r, omega
     return fq.sum(axis=0, dtype=np.float64)
 
@@ -92,8 +103,57 @@ def atomic_grad_fq(task):
     grad_omega = np.zeros((k_max, 3, qmax_bin), np.float32)
     get_grad_omega(grad_omega, omega, r, d, qbin)
 
-    grad = np.empty((k_max, 3, qmax_bin), np.float32)
-    get_grad_fq(grad, grad_omega, norm)
+    if adps is None:
+        grad = np.empty((k_max, 3, qmax_bin), np.float32)
+        get_grad_fq(grad, grad_omega, norm)
+
+    else:
+        sigma = np.zeros(k_max, np.float32)
+        get_sigma_from_adp(sigma, adps, r, d, k_cov)
+
+        tau = np.zeros((k_max, qmax_bin), np.float32)
+        get_tau(tau, sigma, qbin)
+
+        grad_tau = np.zeros((k_max, 3, qmax_bin), np.float32)
+        get_grad_tau(grad_tau, tau, r, d, sigma, adps, qbin, k_cov)
+
+        grad = np.empty((k_max, 3, qmax_bin), np.float32)
+        get_adp_grad_fq(grad, omega, tau, grad_omega, grad_tau, norm)
+
+    rtn = np.zeros((n, 3, qmax_bin), np.float32)
+    experimental_sum_grad_cpu(rtn, grad, k_cov)
+
+    del grad, q, scatter_array, omega, r, d, norm
+    return rtn
+
+
+def atomic_dfq_dadp(task):
+    q, adps, scatter_array, qbin, k_max, k_cov = task
+    n, qmax_bin = scatter_array.shape
+
+    if adps is None:
+        return np.zeros((n, 3, qmax_bin), np.float32)
+
+    d = np.empty((k_max, 3), np.float32)
+    get_d_array(d, q, k_cov)
+    r = np.empty(k_max, np.float32)
+    get_r_array(r, d)
+    norm = np.empty((k_max, qmax_bin), np.float32)
+    get_normalization_array(norm, scatter_array, k_cov)
+    omega = np.zeros((k_max, qmax_bin), np.float32)
+    get_omega(omega, r, qbin)
+
+    sigma = np.zeros(k_max, np.float32)
+    get_sigma_from_adp(sigma, adps, r, d, k_cov)
+
+    tau = np.zeros((k_max, qmax_bin), np.float32)
+    get_tau(tau, sigma, qbin)
+
+    dtau_dadp= np.zeros((k_max, 3, qmax_bin), np.float32)
+    get_dtau_dadp(dtau_dadp, tau, sigma, r, d, qbin)
+
+    get_dfq_dadp_inplace(dtau_dadp, omega, norm)
+    grad = dtau_dadp
 
     rtn = np.zeros((n, 3, qmax_bin), np.float32)
     experimental_sum_grad_cpu(rtn, grad, k_cov)
