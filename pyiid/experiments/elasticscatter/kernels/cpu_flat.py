@@ -176,6 +176,7 @@ def get_grad_tau(grad_tau, tau, r, d, sigma, adps, qbin, offset):
                     d[k, w] * sigma[k] - f4(adps[i, w] - adps[j, w]) * f4(
                         rk * rk))
 
+
 @jit(void(f4[:, :, :], f4[:, :, :], f4[:, :]),
      target=processor_target, nopython=True, cache=cache)
 def get_grad_fq(grad, grad_omega, norm):
@@ -196,7 +197,6 @@ def get_grad_fq(grad, grad_omega, norm):
         for w in xrange(i4(3)):
             for qx in xrange(i4(qmax_bin)):
                 grad[k, w, qx] = norm[k, qx] * grad_omega[k, w, qx]
-
 
 
 @jit(void(f4[:, :, :], f4[:, :], f4[:, :], f4[:, :, :], f4[:, :, :],
@@ -225,6 +225,7 @@ def get_adp_grad_fq(grad, omega, tau, grad_omega, grad_tau, norm):
                 grad[k, w, qx] = norm[k, qx] * \
                                  (tau[k, qx] * grad_omega[k, w, qx] +
                                   omega[k, qx] * grad_tau[k, w, qx])
+
 
 @jit(void(f4[:, :, :], f4[:, :]), target=processor_target, nopython=True,
      cache=cache)
