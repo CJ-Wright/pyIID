@@ -15,6 +15,7 @@ import random
 from pyiid.testing.decorators import *
 from pyiid.experiments.elasticscatter import ElasticScatter
 from pyiid.calc.spring_calc import Spring
+from pyiid.adp import ADP
 
 srfit = False
 try:
@@ -92,6 +93,12 @@ def setup_atoms(n):
     atoms = Atoms('Au' + str(int(n)), q)
     atoms.center()
     return atoms
+
+
+def setup_adps(atoms):
+    adp_tensor = rs.random_sample((n, 3)) * .01
+    adps = ADP(atoms, adp_tensor)
+    return adps
 
 
 def setup_double_atoms(n):
@@ -277,4 +284,9 @@ else:
 
 test_exp.extend([generate_experiment() for i in range(num_exp)])
 test_atoms = [setup_atoms(int(n)) for n in ns]
+test_adp_atoms = []
+for atoms in test_atoms:
+    atoms2 = dc(atoms)
+    atoms2.adps = setup_adps(atoms2)
+    test_adp_atoms.append(atoms2)
 test_double_atoms = [setup_double_atoms(int(n)) for n in ns]
