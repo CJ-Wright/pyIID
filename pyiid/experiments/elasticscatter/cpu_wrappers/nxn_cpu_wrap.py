@@ -162,10 +162,6 @@ def wrap_fq_grad(atoms, qbin=.1, sum_type='fq'):
         get_adp_grad_fq(grad_fq, omega, tau, grad_omega, grad_tau, norm)
         del tau, sigma, adps
 
-    # Get grad FQ
-    get_grad_fq_inplace(grad_omega, norm)
-    grad_fq = grad_omega
-
     # Normalize FQ
     grad_fq = grad_fq.sum(1)
     # '''

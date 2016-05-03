@@ -182,10 +182,10 @@ def check_scatter_grad_pdf(value):
 
 
 tests = [
-    check_scatter_fq,
-    check_scatter_sq,
-    check_scatter_iq,
-    check_scatter_pdf,
+    # check_scatter_fq,
+    # check_scatter_sq,
+    # check_scatter_iq,
+    # check_scatter_pdf,
     check_scatter_grad_fq,
     check_scatter_grad_pdf
 ]
