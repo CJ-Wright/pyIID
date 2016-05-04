@@ -28,9 +28,10 @@ def check_method(value):
     ans2 = exp_method(adp_atoms)
 
     # test
-    # assert np.any(ans1 != ans2)
+    ans1 = np.nan_to_num(ans1)
+    ans2 = np.nan_to_num(ans2)
     print(ans1 - ans2)
-    assert np.all(ans1 == ans2)
+    assert np.any(ans1 != ans2)
     # make certain we did not give back the same pointer
     assert ans1 is not ans2
     # assert False
@@ -40,7 +41,7 @@ test_data = list(product(
     ['get_fq',
      # 'get_sq', 'get_iq', 'get_pdf', 'get_grad_fq', 'get_grad_pdf'
      ],
-    zip(test_atoms, test_atoms),
+    zip(test_atoms, test_adp_atoms),
     # test_adp_atoms,
     test_exp,
     proc_alg_pairs,

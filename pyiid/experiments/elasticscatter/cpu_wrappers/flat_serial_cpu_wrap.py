@@ -53,8 +53,26 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
     omega = np.zeros((k_max, qmax_bin), np.float32)
     get_omega(omega, r, qbin)
 
-    get_fq_inplace(omega, norm)
-    fq = omega
+    adps = None
+    if hasattr(atoms, 'adp'):
+        adps = atoms.adp.get_position().astype(np.float32)
+    elif hasattr(atoms, 'adps'):
+        adps = atoms.adps.get_position().astype(np.float32)
+    # get non-normalized fq
+    if adps is None:
+        get_fq_inplace(omega, norm)
+        fq = omega
+    else:
+        sigma = np.zeros(k_max, np.float32)
+        get_sigma_from_adp(sigma, adps, r, d, k_cov)
+
+        tau = np.zeros((k_max, qmax_bin), np.float32)
+        get_tau(tau, sigma, qbin)
+
+        fq = np.zeros((k_max, qmax_bin), np.float32)
+        get_adp_fq(fq, omega, tau, norm)
+        del tau, sigma, adps
+
     # Normalize fq
     # '''
     # fq = np.sum(fq, axis=0, dtype=np.float32)
@@ -118,8 +136,26 @@ def wrap_fq_grad(atoms, qbin=.1, sum_type='fq'):
     grad_omega = np.zeros((k_max, 3, qmax_bin), np.float32)
     get_grad_omega(grad_omega, omega, r, d, qbin)
 
-    get_grad_fq_inplace(grad_omega, norm)
-    grad = grad_omega
+    adps = None
+    if hasattr(atoms, 'adp'):
+        adps = atoms.adp.get_position().astype(np.float32)
+    elif hasattr(atoms, 'adps'):
+        adps = atoms.adps.get_position().astype(np.float32)
+    if adps is None:
+        get_grad_fq_inplace(grad_omega, norm)
+        grad = grad_omega
+    else:
+        sigma = np.zeros(k_max, np.float32)
+        get_sigma_from_adp(sigma, adps, r, d, k_cov)
+
+        tau = np.zeros((k_max, qmax_bin), np.float32)
+        get_tau(tau, sigma, qbin)
+
+        grad_tau = np.zeros((k_max, 3, qmax_bin), np.float32)
+        get_grad_tau(grad_tau, tau, r, d, sigma, adps, qbin, k_cov)
+
+        grad = np.empty((k_max, 3, qmax_bin), np.float32)
+        get_adp_grad_fq(grad, omega, tau, grad_omega, grad_tau, norm)
 
     rtn = np.zeros((n, 3, qmax_bin), np.float32)
     experimental_sum_grad_cpu(rtn, grad, k_cov)
