@@ -96,7 +96,7 @@ def setup_atoms(n):
 
 
 def setup_adps(atoms):
-    adp_tensor = rs.random_sample((n, 3)) * .01
+    adp_tensor = rs.randint(10, 100, (n, 3)) * .001
     adps = ADP(atoms, adp_tensor)
     return adps
 
@@ -271,13 +271,13 @@ else:
     proc_alg_pairs = [('CPU', 'nxn'),
                       ('CPU', 'flat-serial'),
                       ('CPU', 'flat'),
-                      ('Multi-GPU', 'flat'),
+                      # ('Multi-GPU', 'flat'),
                       ]
     comparison_pro_alg_pairs = [
         (('CPU', 'nxn'), ('CPU', 'flat-serial')),
         (('CPU', 'flat-serial'), ('CPU', 'flat')),
         # (('CPU', 'nxn'), ('CPU', 'flat')),
-        (('CPU', 'flat'), ('Multi-GPU', 'flat')),
+        # (('CPU', 'flat'), ('Multi-GPU', 'flat')),
         # (('CPU', 'nxn'), ('Multi-GPU', 'flat'))
 
     ]

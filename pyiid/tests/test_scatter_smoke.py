@@ -234,7 +234,7 @@ tests = [
 ]
 test_data = tuple(product(
         tests,
-        test_atoms,
+        test_atoms+test_adp_atoms,
         test_exp,
         proc_alg_pairs,
 ))
