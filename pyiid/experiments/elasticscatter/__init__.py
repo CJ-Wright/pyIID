@@ -344,7 +344,7 @@ class ElasticScatter(object):
         if noise is not None:
             a = np.abs(self.get_scatter_vector(pdf=True))
             b = np.abs(np.average(atoms.get_array('PDF scatter') ** 2, axis=0))
-            if noise.shape != a.shape:
+            if isinstance(noise, np.ndarray) and noise.shape != a.shape:
                 noise = griddata(np.arange(0, noise.shape), noise, np.arange(
                     a.shape))
             fq_noise = noise * a / b
