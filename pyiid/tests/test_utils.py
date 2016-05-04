@@ -1,3 +1,6 @@
+"""
+Test pyIID's utilities
+"""
 from pyiid.tests import *
 from ase.cluster import FaceCenteredCubic
 from pyiid.utils import *

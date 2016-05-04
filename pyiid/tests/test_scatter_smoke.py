@@ -1,3 +1,6 @@
+"""
+Smoke test all the major ElasticScatter methods
+"""
 from pyiid.tests import *
 from pyiid.experiments.elasticscatter import ElasticScatter
 import inspect
@@ -64,7 +67,6 @@ def check_scatter_consistancy(value):
 
 
 test_data = tuple(product(
-    # tests,
     elastic_scatter_methods + ['get_scatter_vector', 'get_r'],
     test_atoms + test_adp_atoms,
     test_exp,

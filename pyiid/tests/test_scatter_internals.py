@@ -1,3 +1,6 @@
+"""
+Rigorously test the flattened CPU kernel against the NXN kernel, step by step.
+"""
 from pyiid.tests import *
 from pyiid.experiments.elasticscatter import ElasticScatter
 from pyiid.experiments.elasticscatter.kernels import (antisymmetric_reshape,

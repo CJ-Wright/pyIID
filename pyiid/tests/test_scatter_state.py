@@ -1,3 +1,8 @@
+"""
+Test that the elastic scatter system updates it's state when the number of
+atoms change.
+"""
+# TODO: We should also check that the state updates if whe transmute elements
 from pyiid.tests import *
 from pyiid.experiments.elasticscatter import ElasticScatter
 

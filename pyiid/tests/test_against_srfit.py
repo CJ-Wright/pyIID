@@ -1,3 +1,6 @@
+"""
+Test our F(Q) calculation against SrFit's
+"""
 from pyiid.tests import *
 from pyiid.experiments.elasticscatter import ElasticScatter
 

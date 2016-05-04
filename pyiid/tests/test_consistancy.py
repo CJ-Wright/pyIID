@@ -1,3 +1,6 @@
+"""
+Test the consistency of the system. Also test our PDF against SrFit
+"""
 from pyiid.tests import *
 from pyiid.experiments.elasticscatter import ElasticScatter
 __author__ = 'christopher'

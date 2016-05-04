@@ -1,4 +1,5 @@
 """
+This module provides some utilities and lists of test values for the test suite
 Note there is only one CPU nxn comparison test, the CPU nxn code is
 rather slow, thus we test it against the flattened Multi core CPU code,
 which is much faster.
@@ -224,7 +225,7 @@ test_spring_kwargs = [{'k': 100, 'rt': 5., 'sp_type': 'rep'},
                       {'k': 100, 'rt': 1., 'sp_type': 'att'}]
 
 test_calcs = [Spring(**t_kwargs) for t_kwargs in test_spring_kwargs]
-# test_calcs.extend(['FQ', 'PDF'])
+test_calcs.extend(['FQ', 'PDF'])
 
 ns = [10]
 travis = False
@@ -265,7 +266,7 @@ else:
         10,
         100,
         # 400,
-        # 1000
+        1000
     ]
     num_exp = 3
     proc_alg_pairs = [
