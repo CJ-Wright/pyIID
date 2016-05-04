@@ -268,11 +268,12 @@ else:
         # 1000
     ]
     num_exp = 3
-    proc_alg_pairs = [('CPU', 'nxn'),
-                      ('CPU', 'flat-serial'),
-                      ('CPU', 'flat'),
-                      ('Multi-GPU', 'flat'),
-                      ]
+    proc_alg_pairs = [
+        ('CPU', 'nxn'),
+        ('CPU', 'flat-serial'),
+        ('CPU', 'flat'),
+        ('Multi-GPU', 'flat'),
+    ]
     comparison_pro_alg_pairs = [
         (('CPU', 'nxn'), ('CPU', 'flat-serial')),
         (('CPU', 'flat-serial'), ('CPU', 'flat')),

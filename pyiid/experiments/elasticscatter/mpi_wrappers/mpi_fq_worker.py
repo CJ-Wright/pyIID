@@ -10,9 +10,9 @@ if __name__ == '__main__':
     final_data = None
     for task in iter(lambda: comm.sendrecv(dest=0), StopIteration):
         if final_data is None:
-            final_data = atomic_fq(*task)
+            final_data = atomic_fq(*task, )
         else:
-            final_data += atomic_fq(*task)
+            final_data += atomic_fq(*task, )
     comm.gather(sendobj=final_data, root=0)
 
     # Shutdown process

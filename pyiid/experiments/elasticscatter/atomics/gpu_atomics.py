@@ -86,13 +86,14 @@ def gpu_k_space_grad_fq_adp_allocation(n, sv, mem):
         float(.8 * mem - 16 * sv * n - 24 * n) / (4 * (12 * sv + 5))))
 
 
-def atomic_fq(q, scatter_array, qbin, k_cov, k_per_thread):
+def atomic_fq(q, adps, scatter_array, qbin, k_cov, k_per_thread):
     """
     Calculate a portion of F(sv).  This is the smallest division of the F(sv)
     function.
 
     Parameters
     ----------
+    adps
     q: Nx3 array
         The atomic positions
     scatter_array: NxQ array
@@ -115,6 +116,11 @@ def atomic_fq(q, scatter_array, qbin, k_cov, k_per_thread):
     from pyiid.experiments.elasticscatter.kernels.gpu_flat import \
         (get_d_array, get_r_array, get_normalization_array, get_omega,
          get_fq_inplace, d2_zero, d2_to_d1_cleanup_kernel, experimental_sum_fq)
+    if adps is not None:
+        from pyiid.experiments.elasticscatter.kernels.gpu_flat import (
+            get_sigma_from_adp,
+            get_tau,
+            get_adp_fq_inplace)
     # generate grids for the GPU
     elements_per_dim_1 = [k_per_thread]
     tpb_k = [32]
@@ -150,7 +156,19 @@ def atomic_fq(q, scatter_array, qbin, k_cov, k_per_thread):
                                stream=stream2)
     get_omega[bpg_kq, tpb_kq, stream2](domega, dr, qbin)
 
-    get_fq_inplace[bpg_kq, tpb_kq, stream2](dnorm, domega)
+    if adps is None:
+        get_fq_inplace[bpg_kq, tpb_kq, stream2](dnorm, domega)
+    else:
+        dadps = cuda.to_device(adps.astype(np.float32), stream=stream)
+        dsigma = cuda.device_array(k_per_thread, dtype=np.float32,
+                                   stream=stream)
+        get_sigma_from_adp[bpg_k, tpb_k, stream](dsigma, dadps, dr, dd, k_cov)
+
+        dtau = cuda.device_array((k_per_thread, qmax_bin), dtype=np.float32,
+                                 stream=stream)
+        get_tau[bpg_kq, tpb_kq, stream2](dtau, dsigma, qbin)
+        get_adp_fq_inplace[bpg_kq, tpb_kq, stream2](dnorm, domega, dtau)
+        del domega, dtau, dadps
 
     dfq = dnorm
 
@@ -189,13 +207,14 @@ def atomic_fq(q, scatter_array, qbin, k_cov, k_per_thread):
     return final
 
 
-def atomic_grad_fq(q, scatter_array, qbin, k_cov, k_per_thread):
+def atomic_grad_fq(q, adps, scatter_array, qbin, k_cov, k_per_thread):
     """
     Calculate a portion of the gradient of F(Q).  This is the smallest division
     of the grad F(Q) function.
 
     Parameters
     ----------
+    adps
     q: Nx3 array
         The atomic positions
     scatter_array: NxQ array
@@ -223,7 +242,17 @@ def atomic_grad_fq(q, scatter_array, qbin, k_cov, k_per_thread):
          get_omega,
          get_grad_omega,
          zero3d,
-         experimental_sum_grad_fq1, get_grad_fq)
+         experimental_sum_grad_fq1)
+
+    if adps is None:
+        from pyiid.experiments.elasticscatter.kernels.gpu_flat import \
+            get_grad_fq
+    else:
+        from pyiid.experiments.elasticscatter.kernels.gpu_flat import \
+            (get_sigma_from_adp,
+             get_tau,
+             get_grad_tau,
+             get_adp_grad_fq)
 
     n = len(q)
     # generate GPU grids
@@ -270,8 +299,28 @@ def atomic_grad_fq(q, scatter_array, qbin, k_cov, k_per_thread):
 
     get_grad_omega[bpg_kq, tpb_kq, stream](dgrad_omega, domega, dr, dd, qbin)
 
-    cuda.synchronize()
-    get_grad_fq[bpg_kq, tpb_kq, stream2](dgrad, dgrad_omega, dnorm)
+    if adps is None:
+        cuda.synchronize()
+        get_grad_fq[bpg_kq, tpb_kq, stream2](dgrad, dgrad_omega, dnorm)
+    else:
+        dadps = cuda.to_device(adps.astype(np.float32), stream=stream)
+        dsigma = cuda.device_array(k_per_thread, dtype=np.float32,
+                                   stream=stream)
+        dtau = cuda.device_array((k_per_thread, qmax_bin), dtype=np.float32,
+                                 stream=stream)
+        dgrad_tau = cuda.device_array((k_per_thread, 3, qmax_bin),
+                                      dtype=np.float32, stream=stream)
+
+        get_sigma_from_adp[bpg_k, tpb_k, stream](dsigma, dadps, dr, dd, k_cov)
+
+        get_tau[bpg_kq, tpb_kq, stream](dtau, dsigma, qbin)
+
+        get_grad_tau[bpg_kq, tpb_kq, stream](dgrad_tau, dtau, dr, dd, dsigma,
+                                             dadps, qbin, k_cov)
+        cuda.synchronize()
+        get_adp_grad_fq[bpg_kq, tpb_kq, stream2](dgrad, domega, dtau,
+                                                 dgrad_omega, dgrad_tau, dnorm)
+        del dtau, dgrad_tau, dadps, dsigma
 
     experimental_sum_grad_fq1[bpg_kq, tpb_kq, stream2](dnew_grad, dgrad, k_cov)
     rtn = dnew_grad.copy_to_host(stream=stream2)

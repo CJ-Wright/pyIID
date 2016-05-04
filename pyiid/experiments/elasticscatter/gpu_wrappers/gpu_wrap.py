@@ -20,10 +20,17 @@ def setup_gpu_calc(atoms, sum_type):
     qmax_bin = scatter_array.shape[1]
     sort_gpus, sort_gmem = get_gpus_mem()
 
+    for a in ['adp', 'adps']:
+        if hasattr(atoms, a):
+            return q.astype(np.float32), \
+                   getattr(atoms, a).get_position().astype(np.float32),\
+                   n, qmax_bin, scatter_array.astype(np.float32), \
+                   sort_gpus, sort_gmem
+
     return q, None, n, qmax_bin, scatter_array, sort_gpus, sort_gmem
 
 
-def subs_fq(fq, q, scatter_array, qbin, gpu, k_cov, k_per_thread):
+def subs_fq(fq, q, adps, scatter_array, qbin, gpu, k_cov, k_per_thread):
     """
     Thread function to calculate a chunk of F(Q)
 
@@ -47,10 +54,10 @@ def subs_fq(fq, q, scatter_array, qbin, gpu, k_cov, k_per_thread):
     """
     # set up GPU
     with gpu:
-        fq += atomic_fq(q, scatter_array, qbin, k_cov, k_per_thread)
+        fq += atomic_fq(q, adps, scatter_array, qbin, k_cov, k_per_thread)
 
 
-def subs_grad_fq(grad_p, q, scatter_array, qbin, gpu, k_cov, k_per_thread):
+def subs_grad_fq(grad_p, q, adps, scatter_array, qbin, gpu, k_cov, k_per_thread):
     """
     Thread function to calculate a chunk of F(Q)
 
@@ -74,7 +81,8 @@ def subs_grad_fq(grad_p, q, scatter_array, qbin, gpu, k_cov, k_per_thread):
     """
     # set up GPU
     with gpu:
-        grad_p += atomic_grad_fq(q, scatter_array, qbin, k_cov, k_per_thread)
+        grad_p += atomic_grad_fq(q, adps, scatter_array, qbin, k_cov,
+                                 k_per_thread)
 
 
 def sub_grad_pdf(gpu, gpadc, gpadcfft, atoms_per_thread, n_cov):
