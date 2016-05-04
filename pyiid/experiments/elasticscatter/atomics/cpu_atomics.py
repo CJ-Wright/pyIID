@@ -7,7 +7,7 @@ from pyiid.experiments.elasticscatter.kernels.cpu_experimental import \
 __author__ = 'christopher'
 
 
-def cpu_k_space_fq_allocation(n, sv, mem):
+def cpu_k_space_fq_allocation(n, qmax_bin, mem):
     """
     Determine the maximum amount of atoms which can be placed on a gpu for a
     computation of F(Q).  This depends on how exactly the F(Q) function makes
@@ -17,7 +17,7 @@ def cpu_k_space_fq_allocation(n, sv, mem):
     ----------
     n: int
         Number of atoms
-    sv:
+    qmax_bin:
         Size of the scatter vector
     mem: int
         Size of the GPU memory
@@ -28,7 +28,30 @@ def cpu_k_space_fq_allocation(n, sv, mem):
         The number of atom pairs which can go on the GPU
     """
     return int(math.floor(
-        float(.8 * mem - 4 * sv * n - 12 * n) / (4 * (3 * sv + 4))
+        float(.8 * mem - 4 * qmax_bin * n - 12 * n) / (4 * (3 * qmax_bin + 4))
+    ))
+
+
+def cpu_k_space_fq_adp_allocation(n, sv, mem):
+    """
+    Determine the maximum amount of atoms which can be placed on a gpu for a
+    computation of F(Q).  This depends on how exactly the F(Q) function makes
+    arrays on the GPU.
+    Parameters
+    ----------
+    n: int
+        Number of atoms
+    Q: int
+        Size of the scatter vector
+    mem: int
+        Size of the GPU memory
+    Returns
+    -------
+    int:
+        The number of atom pairs which can go on the GPU
+    """
+    return int(math.floor(
+        float(.8 * mem - 4 * sv * n - 24 * n) / (4 * (3 * sv + 5))
     ))
 
 
@@ -56,6 +79,34 @@ def k_space_grad_fq_allocation(n, qmax_bin, mem):
         float(.8 * mem - 16 * qmax_bin * n - 12 * n) / (
             16 * (2 * qmax_bin + 1))))
 
+
+def k_space_grad_adp_fq_allocation(n, qmax_bin, mem):
+    """
+    Determine the maximum amount of atoms which can be placed on a gpu for a
+    computation of grad F(Q).  This depends on how exactly the grad F(Q)
+    function makes arrays on the GPU.
+    Parameters
+    ----------
+    n: int
+        Number of atoms
+    Q: int
+        Size of the scatter vector
+    mem: int
+        Size of the GPU memory
+    Returns
+    -------
+    int:
+        The number of atom pairs which can go on the
+    """
+    return int(math.floor(
+        float(.8 * mem - 16 * qmax_bin * n - 24 * n) / (
+            4 * (12 * qmax_bin + 5))))
+
+
+def k_space_dfq_dadp_allocation(n, qmax_bin, mem):
+    return int(math.floor(
+        float(.8 * mem - 16 * qmax_bin * n - 24 * n) / (
+            4 * (6 * qmax_bin + 5))))
 
 def atomic_fq(task):
     q, adps, scatter_array, qbin, k_max, k_cov = task

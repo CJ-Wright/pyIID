@@ -12,12 +12,14 @@ atol = 5e-5
 # Actual Tests
 def check_method(value):
     # set everything up
+    method_string = value[0]
     atoms, adp_atoms = value[1]
-    exp = value[2]
+    # Make certain we are using an ADP and static system
     assert np.all(atoms.get_positions() == adp_atoms.get_positions())
+
+    exp = value[2]
     scat = ElasticScatter(exp_dict=exp, verbose=True)
     proc1, alg1 = value[3]
-    method_string = value[0]
 
     exp_method = getattr(scat, method_string)
     # run algorithm 1
@@ -39,7 +41,7 @@ def check_method(value):
 test_data = list(product(
     # tests,
     ['get_fq',
-     # 'get_sq', 'get_iq', 'get_pdf', 'get_grad_fq', 'get_grad_pdf'
+     'get_sq', 'get_iq', 'get_pdf', 'get_grad_fq', 'get_grad_pdf'
      ],
     zip(test_atoms, test_adp_atoms),
     # test_adp_atoms,

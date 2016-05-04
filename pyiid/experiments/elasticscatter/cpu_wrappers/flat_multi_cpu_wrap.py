@@ -13,7 +13,16 @@ def setup_cpu_calc(atoms, sum_type):
         scatter_array = atoms.get_array('F(Q) scatter').astype(np.float32)
     else:
         scatter_array = atoms.get_array('PDF scatter').astype(np.float32)
+
     n, qmax_bin = scatter_array.shape
+
+    for a in ['adp', 'adps']:
+        if hasattr(atoms, a):
+            return q.astype(np.float32), \
+                   getattr(atoms, a).get_position().astype(np.float32),\
+                   n, qmax_bin, scatter_array.astype(np.float32)
+
+    # Else we don't have any adps
     return q.astype(np.float32), None, n, qmax_bin, scatter_array.astype(
         np.float32)
 
@@ -38,7 +47,10 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
     """
     q, adps, n, qmax_bin, scatter_array = setup_cpu_calc(atoms, sum_type)
     k_max = int((n ** 2 - n) / 2.)
-    allocation = cpu_k_space_fq_allocation
+    if adps is None:
+        allocation = cpu_k_space_fq_allocation
+    else:
+        allocation = cpu_k_space_fq_adp_allocation
 
     master_task = [q, adps, scatter_array, qbin]
 
@@ -83,7 +95,11 @@ def wrap_fq_grad(atoms, qbin=.1, sum_type='fq'):
     k_max = int((n ** 2 - n) / 2.)
     if k_max == 0:
         return np.zeros((n, 3, qmax_bin)).astype(np.float32)
-    allocation = k_space_grad_fq_allocation
+
+    if adps is None:
+        allocation = k_space_grad_fq_allocation
+    else:
+        allocation = k_space_grad_adp_fq_allocation
     master_task = [q, adps, scatter_array, qbin]
     ans = cpu_multiprocessing(atomic_grad_fq, allocation, master_task,
                               (n, qmax_bin))
@@ -100,6 +116,25 @@ def wrap_fq_grad(atoms, qbin=.1, sum_type='fq'):
     del q, n, qmax_bin, scatter_array, k_max, ans
     return grad_p
 
+
+def wrap_fq_dadp(atoms, qbin=.1, sum_type='fq'):
+    # setup variables of interest
+    q, adps, n, qmax_bin, scatter_array = setup_cpu_calc(atoms, sum_type)
+    k_max = int((n ** 2 - n) / 2.)
+    allocation = k_space_dfq_dadp_allocation
+    master_task = [q, adps, scatter_array, qbin]
+    ans = cpu_multiprocessing(atomic_dfq_dadp, allocation, master_task,
+                              (n, qmax_bin))
+    # sum the answers
+    grad_p = np.sum(ans, axis=0)
+    norm = np.empty((k_max, qmax_bin), np.float32)
+    get_normalization_array(norm, scatter_array, 0)
+    na = np.mean(norm, axis=0) * n
+    old_settings = np.seterr(all='ignore')
+    grad_p = np.nan_to_num(grad_p / na)
+    np.seterr(**old_settings)
+    del q, n, qmax_bin, scatter_array, k_max, ans
+    return grad_p
 
 def cpu_multiprocessing(atomic_function, allocation,
                         master_task, constants):
