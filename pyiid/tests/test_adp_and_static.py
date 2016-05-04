@@ -1,3 +1,6 @@
+"""
+The results of atoms with ADPs should be different from those without ADPs.
+"""
 from pyiid.tests import *
 from pyiid.experiments.elasticscatter import ElasticScatter
 
@@ -13,36 +16,31 @@ atol = 5e-5
 def check_method(value):
     # set everything up
     method_string = value[0]
-    atoms, adp_atoms = value[1]
     # Make certain we are using an ADP and static system
-    assert np.all(atoms.get_positions() == adp_atoms.get_positions())
+    assert np.all(value[1][0].get_positions() == value[1][0].get_positions())
 
     exp = value[2]
     scat = ElasticScatter(exp_dict=exp, verbose=True)
-    proc1, alg1 = value[3]
+    proc, alg = value[3]
 
-    exp_method = getattr(scat, method_string)
-    # run algorithm 1
-    scat.set_processor(proc1, alg1)
-    ans1 = exp_method(atoms)
-
-    # run algorithm 2
-    ans2 = exp_method(adp_atoms)
-
+    ans = []
+    scat.set_processor(proc, alg)
+    for atoms in value[1]:
+        exp_method = getattr(scat, method_string)
+        ans.append(np.nan_to_num(exp_method(atoms)))
+        assert scat.processor == proc
+        assert scat.alg == alg
+        
     # test
-    ans1 = np.nan_to_num(ans1)
-    ans2 = np.nan_to_num(ans2)
-    print(ans1 - ans2)
-    assert np.any(ans1 != ans2)
+    print(ans[0] - ans[1])
+    assert np.any(ans[0] != ans[1])
     # make certain we did not give back the same pointer
-    assert ans1 is not ans2
+    assert ans[0] is not ans[1]
     # assert False
 
 test_data = list(product(
     # tests,
-    ['get_fq',
-     'get_sq', 'get_iq', 'get_pdf', 'get_grad_fq', 'get_grad_pdf'
-     ],
+    elastic_scatter_methods,
     zip(test_atoms, test_adp_atoms),
     # test_adp_atoms,
     test_exp,

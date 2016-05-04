@@ -1,3 +1,7 @@
+"""
+The results of an ElasticScatter experiment should be the same regardless of
+the processor/algorithm used to obtain the results.
+"""
 from pyiid.tests import *
 from pyiid.experiments.elasticscatter import ElasticScatter
 
@@ -10,194 +14,43 @@ atol = 5e-5
 
 
 # Actual Tests
-def check_meta(value):
-    value[0](value[1:])
-
-
-def check_scatter_fq(value):
+def check_method(value):
     """
     Check two processor, algorithm pairs against each other for FQ calculation
     :param value:
     :return:
     """
     # set everything up
-    atoms, exp = value[:2]
+    method_string = value[0]
+    atoms, exp = value[1:3]
     scat = ElasticScatter(exp_dict=exp, verbose=True)
-    proc1, alg1 = value[-1][0]
-    proc2, alg2 = value[-1][1]
 
-    # run algorithm 1
-    scat.set_processor(proc1, alg1)
-    ans1 = scat.get_fq(atoms)
-
-    # run algorithm 2
-    scat.set_processor(proc2, alg2)
-    ans2 = scat.get_fq(atoms)
+    ans = []
+    for proc, alg in value[3]:
+        scat.set_processor(proc, alg)
+        exp_method = getattr(scat, method_string)
+        ans.append(exp_method(atoms))
+        assert scat.processor == proc
+        assert scat.alg == alg
 
     # test
-    if not stats_check(ans1, ans2, rtol, atol):
-        print value
-    assert_allclose(ans1, ans2, rtol=rtol, atol=atol)
+    if not stats_check(ans[0], ans[1], rtol, atol):
+        print(value)
+    assert_allclose(ans[0], ans[1], rtol=rtol, atol=atol)
+
     # make certain we did not give back the same pointer
-    assert ans1 is not ans2
+    assert ans[0] is not ans[1]
     # assert False
 
-
-def check_scatter_grad_fq(value):
-    """
-    Check two processor, algorithm pairs against each other for gradient FQ
-    calculation
-    :param value:
-    :return:
-    """
-    # set everything up
-    atoms, exp = value[:2]
-    scat = ElasticScatter(exp_dict=exp, verbose=True)
-    proc1, alg1 = value[-1][0]
-    proc2, alg2 = value[-1][1]
-
-    # run algorithm 1
-    scat.set_processor(proc1, alg1)
-    ans1 = scat.get_grad_fq(atoms)
-
-    # run algorithm 2
-    scat.set_processor(proc2, alg2)
-    ans2 = scat.get_grad_fq(atoms)
-
-    # test
-    if not stats_check(ans1, ans2, rtol, atol):
-        print value
-    assert_allclose(ans1, ans2, rtol=rtol, atol=atol)
-    # make certain we did not give back the same pointer
-    assert ans1 is not ans2
-
-
-def check_scatter_sq(value):
-    """
-    Check two processor, algorithm pairs against each other for SQ calculation
-    :param value:
-    :return:
-    """
-    # set everything up
-    atoms, exp = value[:2]
-    scat = ElasticScatter(exp_dict=exp, verbose=True)
-    proc1, alg1 = value[-1][0]
-    proc2, alg2 = value[-1][1]
-
-    # run algorithm 1
-    scat.set_processor(proc1, alg1)
-    ans1 = scat.get_sq(atoms)
-
-    # run algorithm 2
-    scat.set_processor(proc2, alg2)
-    ans2 = scat.get_sq(atoms)
-
-    # test
-    stats_check(ans1, ans2, rtol, atol)
-    assert_allclose(ans1, ans2, rtol=rtol, atol=atol)
-    # make certain we did not give back the same pointer
-    assert ans1 is not ans2
-
-
-def check_scatter_iq(value):
-    """
-    Check two processor, algorithm pairs against each other for IQ calculation
-    :param value:
-    :return:
-    """
-    # set everything up
-    atoms, exp = value[:2]
-    scat = ElasticScatter(exp_dict=exp, verbose=True)
-    proc1, alg1 = value[-1][0]
-    proc2, alg2 = value[-1][1]
-
-    # run algorithm 1
-    scat.set_processor(proc1, alg1)
-    ans1 = scat.get_iq(atoms)
-
-    # run algorithm 2
-    scat.set_processor(proc2, alg2)
-    ans2 = scat.get_iq(atoms)
-
-    # test
-    stats_check(ans1, ans2, rtol, atol)
-    assert_allclose(ans1, ans2, rtol=rtol, atol=atol)
-    # make certain we did not give back the same pointer
-    assert ans1 is not ans2
-
-
-def check_scatter_pdf(value):
-    """
-    Check two processor, algorithm pairs against each other for PDF calculation
-    :param value:
-    :return:
-    """
-    # set everything up
-    atoms, exp = value[:2]
-    scat = ElasticScatter(exp_dict=exp, verbose=True)
-    proc1, alg1 = value[-1][0]
-    proc2, alg2 = value[-1][1]
-
-    # run algorithm 1
-    scat.set_processor(proc1, alg1)
-    ans1 = scat.get_pdf(atoms)
-
-    # run algorithm 2
-    scat.set_processor(proc2, alg2)
-    ans2 = scat.get_pdf(atoms)
-
-    # test
-    stats_check(ans1, ans2, rtol, atol)
-    assert_allclose(ans1, ans2, rtol=rtol, atol=atol)
-    # make certain we did not give back the same pointer
-    assert ans1 is not ans2
-
-
-def check_scatter_grad_pdf(value):
-    """
-    Check two processor, algorithm pairs against each other for gradient PDF
-    calculation
-    :param value:
-    :return:
-    """
-    # set everything up
-    atoms, exp = value[:2]
-    scat = ElasticScatter(exp_dict=exp, verbose=True)
-    proc1, alg1 = value[-1][0]
-    proc2, alg2 = value[-1][1]
-
-    # run algorithm 1
-    scat.set_processor(proc1, alg1)
-    ans1 = scat.get_grad_pdf(atoms)
-
-    # run algorithm 2
-    scat.set_processor(proc2, alg2)
-    ans2 = scat.get_grad_pdf(atoms)
-
-    # test
-    stats_check(ans1, ans2, rtol, atol)
-    assert_allclose(ans1, ans2, rtol=rtol, atol=atol)
-    # make certain we did not give back the same pointer
-    assert ans1 is not ans2
-
-
-tests = [
-    # check_scatter_fq,
-    # check_scatter_sq,
-    # check_scatter_iq,
-    # check_scatter_pdf,
-    check_scatter_grad_fq,
-    check_scatter_grad_pdf
-]
-
 test_data = list(product(
-    tests,
-    test_atoms, test_exp, comparison_pro_alg_pairs))
+    elastic_scatter_methods,
+    test_atoms + test_adp_atoms,
+    test_exp, comparison_pro_alg_pairs))
 
 
 def test_meta():
     for v in test_data:
-        yield check_meta, v
+        yield check_method, v
 
 
 if __name__ == '__main__':

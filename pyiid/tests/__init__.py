@@ -291,3 +291,6 @@ for atoms in test_atoms:
     atoms2.adps = setup_adps(atoms2)
     test_adp_atoms.append(atoms2)
 test_double_atoms = [setup_double_atoms(int(n)) for n in ns]
+elastic_scatter_methods = [
+    'get_fq', 'get_pdf', 'get_grad_fq', 'get_grad_pdf', 'get_sq', 'get_iq',
+     ]
