@@ -28,7 +28,7 @@ def run():
 if __name__ == '__main__':
     try:
         os.environ["PYIID_TEST_SEED"] = str(int(random.random() * 2 ** 32))
-        print 'seed:', os.environ["PYIID_TEST_SEED"]
+        print('seed:', os.environ["PYIID_TEST_SEED"])
         run()
     finally:
         os.environ["PYIID_TEST_SEED"] = str(0)

@@ -30,8 +30,10 @@ def check_method(value):
         ans.append(np.nan_to_num(exp_method(atoms)))
         assert scat.processor == proc
         assert scat.alg == alg
-        
+
     # test
+    assert np.any(ans[0])
+    assert np.any(ans[1])
     print(ans[0] - ans[1])
     assert np.any(ans[0] != ans[1])
     # make certain we did not give back the same pointer
