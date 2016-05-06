@@ -2,6 +2,11 @@ import numpy as np
 
 __author__ = 'christopher'
 
+def _has_adp(atoms):
+    for a in ['adps', 'adp']:
+        if hasattr(atoms, a):
+            return getattr(atoms, a)
+    return
 
 class ADP:
     def __init__(self, atoms, adps=None, adp_momenta=None,
@@ -97,6 +102,9 @@ class ADP:
 
         """
         self.adp_momenta = new_momenta
+
+    def get_velocities(self):
+        return self.get_momenta()
 
     def get_forces(self, atoms):
         """
