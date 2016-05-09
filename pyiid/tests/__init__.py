@@ -252,13 +252,13 @@ elif os.getenv('SHORT_TEST'):
     proc_alg_pairs = [('CPU', 'nxn'),
                       ('CPU', 'flat'),
                       ('CPU', 'flat-serial'),
-                      ('Multi-GPU', 'flat'),
+                      ('GPU', 'flat'),
                       ]
     comparison_pro_alg_pairs = [
         # (('CPU', 'nxn'), ('CPU', 'flat-serial')),
         # (('CPU', 'flat-serial'), ('CPU', 'flat')),
         (('CPU', 'nxn'), ('CPU', 'flat')),
-        (('CPU', 'flat'), ('Multi-GPU', 'flat')),
+        (('CPU', 'flat'), ('GPU', 'flat')),
 
     ]
 else:
@@ -273,14 +273,14 @@ else:
         ('CPU', 'nxn'),
         ('CPU', 'flat-serial'),
         ('CPU', 'flat'),
-        ('Multi-GPU', 'flat'),
+        ('GPU', 'flat'),
     ]
     comparison_pro_alg_pairs = [
         (('CPU', 'nxn'), ('CPU', 'flat-serial')),
         (('CPU', 'flat-serial'), ('CPU', 'flat')),
         # (('CPU', 'nxn'), ('CPU', 'flat')),
-        (('CPU', 'flat'), ('Multi-GPU', 'flat')),
-        # (('CPU', 'nxn'), ('Multi-GPU', 'flat'))
+        (('CPU', 'flat'), ('GPU', 'flat')),
+        # (('CPU', 'nxn'), ('GPU', 'flat'))
 
     ]
 

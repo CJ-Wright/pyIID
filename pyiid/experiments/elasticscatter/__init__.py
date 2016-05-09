@@ -71,7 +71,7 @@ class ElasticScatter(object):
 
         # Currently supported processor architectures, in order of most
         # advanced to least
-        self.avail_pro = ['MPI-GPU', 'Multi-GPU', 'CPU']
+        self.avail_pro = ['MPI-GPU', 'GPU', 'CPU']
 
         # needed parameters to specify an experiment
         self.exp_dict_keys = ['qmin', 'qmax', 'qbin', 'rmin', 'rmax', 'rstep',

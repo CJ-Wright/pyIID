@@ -322,8 +322,9 @@ def atomic_grad_fq(q, adps, scatter_array, qbin, k_cov, k_per_thread):
                                                  dgrad_omega, dgrad_tau, dnorm)
         del dtau, dgrad_tau, dadps, dsigma
 
+    del dq, dscat, dd, dr, domega, dnorm, dgrad_omega,
     experimental_sum_grad_fq1[bpg_kq, tpb_kq, stream2](dnew_grad, dgrad, k_cov)
     rtn = dnew_grad.copy_to_host(stream=stream2)
-    del dq, dscat, dd, dr, domega, dnorm, dgrad_omega, dgrad, dnew_grad
+    del dgrad, dnew_grad
     cuda.current_context().trashing.clear()
     return rtn
