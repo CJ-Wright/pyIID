@@ -4,6 +4,7 @@ the processor/algorithm used to obtain the results.
 """
 from pyiid.tests import *
 from pyiid.experiments.elasticscatter import ElasticScatter
+from pyiid.adp import _has_adp
 
 __author__ = 'christopher'
 
@@ -29,6 +30,12 @@ def check_method(value):
     for proc, alg in value[3]:
         scat.set_processor(proc, alg)
         exp_method = getattr(scat, method_string)
+        # If we are going to check an ADP only method,
+        # we better have atoms AND ADPS
+        if method_string in elastic_scatter_adp_methods \
+                and _has_adp(atoms) is not None:
+            # If we don't have the adps attached skip the test
+            raise SkipTest()
         ans.append(exp_method(atoms))
         assert scat.processor == proc
         assert scat.alg == alg
@@ -56,6 +63,7 @@ def test_meta():
 if __name__ == '__main__':
     import nose
 
+    print('number of test cases', len(test_data))
     nose.runmodule(argv=[
         '-s',
         '--with-doctest',

@@ -518,9 +518,9 @@ class ElasticScatter(object):
             # Calculate the grad of the adps using the wrappers
             grad_adp_fq = self.adp_grad(atoms, self.exp['qbin'])
         else:
-            print("It seems that the atoms don't have any adps, you need adps"
+            print("It seems that the atoms don't have any adps, you need adps "
                   "to call this method")
-            grad_adp_fq = np.zeros(atoms.get_positions.shape)
+            grad_adp_fq = np.zeros(atoms.get_positions().shape)
         return grad_adp_fq
 
     def get_grad_adp_pdf(self, atoms):

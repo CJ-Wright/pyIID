@@ -1,9 +1,12 @@
+from __future__ import print_function
+
 """
 Smoke test all the major ElasticScatter methods
 """
 from pyiid.tests import *
 from pyiid.experiments.elasticscatter import ElasticScatter
 import inspect
+from pyiid.adp import _has_adp
 
 __author__ = 'christopher'
 
@@ -27,11 +30,20 @@ def check_method(value):
     scat.set_processor(proc, alg)
     exp_method = getattr(scat, method_string)
 
+    print(method_string in elastic_scatter_adp_methods)
+    print(_has_adp(atoms))
     # Test a set of different sized ensembles
     if 'noise' in inspect.getargspec(exp_method)[0]:
         ans = exp_method(atoms, noise)
     elif 'atoms' in inspect.getargspec(exp_method)[0]:
-        ans = exp_method(atoms)
+        if method_string in elastic_scatter_adp_methods \
+                and _has_adp(atoms) is None:
+            # If we are going to check an ADP only method,
+            # we better have atoms AND ADPS
+            # If we don't have the adps attached skip the test
+            raise SkipTest()
+        else:
+            ans = exp_method(atoms)
     else:
         ans = exp_method()
 
@@ -53,12 +65,12 @@ def check_scatter_consistancy(value):
     ans = scat.get_pdf(atoms)
     ans1 = scat.get_fq(atoms)
     anss = scat.get_scatter_vector()
-    print ans1.shape, anss.shape, scat.exp['qmin'], scat.exp['qmax'], \
-        scat.exp['qbin']
-    print int(np.ceil(scat.exp['qmax'] / scat.exp['qbin'])) - int(
-        np.ceil(scat.exp['qmin'] / scat.exp['qbin']))
-    print atoms.get_array('F(Q) scatter').shape
-    print (scat.exp['qmin'] - scat.exp['qmax']) / scat.exp['qbin']
+    print(ans1.shape, anss.shape, scat.exp['qmin'], scat.exp['qmax'], \
+          scat.exp['qbin'])
+    print(int(np.ceil(scat.exp['qmax'] / scat.exp['qbin'])) - int(
+        np.ceil(scat.exp['qmin'] / scat.exp['qbin'])))
+    print(atoms.get_array('F(Q) scatter').shape)
+    print((scat.exp['qmin'] - scat.exp['qmax']) / scat.exp['qbin'])
     assert ans1.shape == anss.shape
     ans2 = scat.get_sq(atoms)
     assert ans2.shape == anss.shape

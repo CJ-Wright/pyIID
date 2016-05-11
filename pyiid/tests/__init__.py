@@ -16,7 +16,8 @@ import random
 from pyiid.testing.decorators import *
 from pyiid.experiments.elasticscatter import ElasticScatter
 from pyiid.calc.spring_calc import Spring
-from pyiid.adp import ADP
+from pyiid.adp import ADP, _has_adp
+from nose.plugins.skip import SkipTest
 
 srfit = False
 try:
@@ -154,60 +155,60 @@ def stats_check(ans1, ans2, rtol=1e-7, atol=0):
         return True
     except:
         old_err_settings = np.seterr(divide='ignore')
-        print 'bulk statistics:'
-        print 'max', np.max(np.abs(ans2 - ans1)),
-        print 'min', np.min(np.abs(ans2 - ans1)),
-        print 'men', np.mean(np.abs(ans2 - ans1)),
-        print 'med', np.median(np.abs(ans2 - ans1)),
-        print 'std', np.std(np.abs(ans2 - ans1))
+        print('bulk statistics:')
+        print('max', np.max(np.abs(ans2 - ans1)),)
+        print('min', np.min(np.abs(ans2 - ans1)),)
+        print('men', np.mean(np.abs(ans2 - ans1)),)
+        print('med', np.median(np.abs(ans2 - ans1)),)
+        print('std', np.std(np.abs(ans2 - ans1)))
 
         if isinstance(ans1, type(np.asarray([1]))):
-            print 'normalized max', np.max(np.abs(ans2 - ans1)) / ans2[
-                np.unravel_index(np.argmax(np.abs(ans2 - ans1)), ans2.shape)]
+            print('normalized max', np.max(np.abs(ans2 - ans1)) / ans2[
+                np.unravel_index(np.argmax(np.abs(ans2 - ans1)), ans2.shape)])
             fails = np.where(np.abs(ans1 - ans2) > atol + rtol * np.abs(ans2))
 
-            print 'percentage of failed tests', ans1[fails].size / float(
-                ans1.size) * 100., '%'
+            print('percentage of failed tests', ans1[fails].size / float(
+                ans1.size) * 100., '%')
             if ans1[fails].size <= 251:
-                print '\n allclose failures'
-                print zip(ans1[fails].tolist(), ans2[fails].tolist())
-                print '\n allclose internals'
-                print zip(np.abs(ans1[fails] - ans2[fails]).tolist(),
-                          (atol + rtol * np.abs(ans2[fails])).tolist())
+                print('\n allclose failures')
+                print(zip(ans1[fails].tolist(), ans2[fails].tolist()))
+                print('\n allclose internals')
+                print(zip(np.abs(ans1[fails] - ans2[fails]).tolist(),
+                          (atol + rtol * np.abs(ans2[fails])).tolist()))
             else:
-                print 'large number of failed tests'
+                print('large number of failed tests')
 
             a = np.abs(ans1[fails] - ans2[fails]) / np.abs(ans2[fails])
-            print '\n', 'without atol rtol = ', np.nanmax(a), '\n'
+            print('\n', 'without atol rtol = ', np.nanmax(a), '\n')
             if ans1[fails].size <= 251:
-                print a
+                print(a)
 
             a = np.abs(ans1[fails] - ans2[fails])
-            print 'without rtol atol = ', np.nanmax(a), '\n'
+            print('without rtol atol = ', np.nanmax(a), '\n')
             if ans1[fails].size <= 251:
-                print a
+                print(a)
 
             a = (np.abs(ans1[fails] - ans2[fails]) - atol) / np.abs(
                 ans2[fails])
-            print '\n', 'with current atol rtol = ', np.nanmax(a), '\n'
+            print('\n', 'with current atol rtol = ', np.nanmax(a), '\n')
             if ans1[fails].size <= 251:
-                print a
+                print(a)
 
             a = np.abs(ans1[fails] - ans2[fails]) - rtol * np.abs(ans2[fails])
-            print 'with current rtol atol = ', np.nanmax(a), '\n'
+            print('with current rtol atol = ', np.nanmax(a), '\n')
             if ans1[fails].size <= 251:
-                print a
+                print(a)
         else:
-            print np.abs(ans1 - ans2)
-            print atol + rtol * np.abs(ans2)
-            print 'without rtol atol = ', rtol * np.abs(ans2)
-            print 'without atol rtol =', np.abs(ans1 - ans2) / np.abs(ans2)
-            print '\n', 'with current atol rtol = ', (np.abs(
-                ans1 - ans2) - atol) / np.abs(ans2), '\n'
-            print np.max((np.abs(ans1 - ans2) - atol) / np.abs(ans2))
-            print 'with current rtol atol = ', np.abs(
-                ans1 - ans2) - rtol * np.abs(ans2), '\n'
-            print np.max(np.abs(ans1 - ans2) - rtol * np.abs(ans2))
+            print(np.abs(ans1 - ans2))
+            print(atol + rtol * np.abs(ans2))
+            print('without rtol atol = ', rtol * np.abs(ans2))
+            print('without atol rtol =', np.abs(ans1 - ans2) / np.abs(ans2))
+            print('\n', 'with current atol rtol = ', (np.abs(
+                ans1 - ans2) - atol) / np.abs(ans2), '\n')
+            print(np.max((np.abs(ans1 - ans2) - atol) / np.abs(ans2)))
+            print('with current rtol atol = ', np.abs(
+                ans1 - ans2) - rtol * np.abs(ans2), '\n')
+            print(np.max(np.abs(ans1 - ans2) - rtol * np.abs(ans2)))
         np.seterr(**old_err_settings)
         return False
 
@@ -266,7 +267,7 @@ else:
         10,
         100,
         # 400,
-        1000
+        # 1000
     ]
     num_exp = 3
     proc_alg_pairs = [
@@ -294,4 +295,6 @@ for atoms in test_atoms:
 test_double_atoms = [setup_double_atoms(int(n)) for n in ns]
 elastic_scatter_methods = [
     'get_fq', 'get_pdf', 'get_grad_fq', 'get_grad_pdf', 'get_sq', 'get_iq',
-     ]
+]
+elastic_scatter_adp_methods = ['get_grad_adp_fq', 'get_grad_adp_pdf', ]
+elastic_scatter_methods += elastic_scatter_adp_methods

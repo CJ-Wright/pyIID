@@ -6,7 +6,7 @@ def _has_adp(atoms):
     for a in ['adps', 'adp']:
         if hasattr(atoms, a):
             return getattr(atoms, a)
-    return
+    return None
 
 class ADP:
     def __init__(self, atoms, adps=None, adp_momenta=None,
