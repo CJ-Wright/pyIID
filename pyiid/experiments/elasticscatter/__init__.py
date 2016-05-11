@@ -6,12 +6,16 @@ from a collection of atoms.
 import math
 import numpy as np
 from numba import cuda
+
 from pyiid.experiments.elasticscatter.cpu_wrappers.nxn_cpu_wrap import \
-    wrap_fq_grad as cpu_wrap_fq_grad, wrap_fq as cpu_wrap_fq
+    wrap_fq_grad as cpu_wrap_fq_grad, wrap_fq as cpu_wrap_fq, \
+    wrap_fq_dadp as cpu_wrap_dadp
 from pyiid.experiments.elasticscatter.kernels.master_kernel import \
     grad_pdf as cpu_grad_pdf, get_pdf_at_qmin, get_scatter_array
 
 from scipy.interpolate import griddata
+from pyiid.adp import _has_adp
+
 __author__ = 'christopher'
 
 all_changes = ['positions', 'numbers', 'cell', 'pbc', 'charges', 'magmoms',
@@ -92,6 +96,7 @@ class ElasticScatter(object):
         self.fq = cpu_wrap_fq
         self.grad = cpu_wrap_fq_grad
         self.grad_pdf = cpu_grad_pdf
+        self.adp_grad = cpu_wrap_dadp
         self.processor = 'CPU'
         self.alg = 'nxn'
 
@@ -259,15 +264,17 @@ class ElasticScatter(object):
             if kernel_type == 'nxn':
                 self.fq = cpu_wrap_fq
                 self.grad = cpu_wrap_fq_grad
+                self.adp_grad = cpu_wrap_dadp
                 self.alg = 'nxn'
 
             elif kernel_type == 'flat':
                 from pyiid.experiments.elasticscatter.cpu_wrappers \
                     .flat_multi_cpu_wrap import \
-                    wrap_fq, wrap_fq_grad
+                    wrap_fq, wrap_fq_grad, wrap_fq_dadp
 
                 self.fq = wrap_fq
                 self.grad = wrap_fq_grad
+                self.adp_grad = wrap_fq_dadp
                 self.alg = 'flat'
 
             elif kernel_type == 'flat-serial':
@@ -504,3 +511,38 @@ class ElasticScatter(object):
             The r range for this experiment
         """
         return np.arange(self.exp['rmin'], self.exp['rmax'], self.exp['rstep'])
+
+    def get_grad_adp_fq(self, atoms):
+        self._check_wrap_atoms_state(atoms)
+        if _has_adp(atoms):
+            # Calculate the grad of the adps using the wrappers
+            grad_adp_fq = self.adp_grad(atoms, self.exp['qbin'])
+        else:
+            print("It seems that the atoms don't have any adps, you need adps"
+                  "to call this method")
+            grad_adp_fq = np.zeros(atoms.get_positions.shape)
+        return grad_adp_fq
+
+    def get_grad_adp_pdf(self, atoms):
+        """
+        Calculate the gradient of the PDF
+
+        Parameters
+        ----------
+        atoms: ase.Atoms
+            The atomic configuration for which to calculate grad PDF
+        Returns
+        -------
+        3darray:
+            The gradient of the PDF
+        """
+        self._check_wrap_atoms_state(atoms)
+        fq_grad = self.adp_grad(atoms, self.pdf_qbin, 'PDF')
+        qmin_bin = int(self.exp['qmin'] / self.pdf_qbin)
+        fq_grad[:, :, :qmin_bin] = 0.
+        rgrid = self.get_r()
+
+        pdf_grad = self.grad_pdf(fq_grad, self.exp['rstep'], self.pdf_qbin,
+                                 rgrid,
+                                 self.exp['qmin'])
+        return pdf_grad
