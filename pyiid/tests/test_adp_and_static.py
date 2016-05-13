@@ -26,6 +26,10 @@ def check_method(value):
     ans = []
     scat.set_processor(proc, alg)
     for atoms in value[1]:
+        if method_string in elastic_scatter_adp_methods \
+                and has_adp(atoms) is not None:
+            # If we don't have the adps attached skip the test
+            raise SkipTest()
         exp_method = getattr(scat, method_string)
         ans.append(np.nan_to_num(exp_method(atoms)))
         assert scat.processor == proc
@@ -41,10 +45,8 @@ def check_method(value):
     # assert False
 
 test_data = list(product(
-    # tests,
     elastic_scatter_methods,
     zip(test_atoms, test_adp_atoms),
-    # test_adp_atoms,
     test_exp,
     proc_alg_pairs,
 

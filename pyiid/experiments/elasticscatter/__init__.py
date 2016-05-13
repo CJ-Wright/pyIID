@@ -14,7 +14,7 @@ from pyiid.experiments.elasticscatter.kernels.master_kernel import \
     grad_pdf as cpu_grad_pdf, get_pdf_at_qmin, get_scatter_array
 
 from scipy.interpolate import griddata
-from pyiid.adp import _has_adp
+from pyiid.adp import has_adp
 
 __author__ = 'christopher'
 
@@ -514,12 +514,12 @@ class ElasticScatter(object):
 
     def get_grad_adp_fq(self, atoms):
         self._check_wrap_atoms_state(atoms)
-        if _has_adp(atoms):
+        if has_adp(atoms):
             # Calculate the grad of the adps using the wrappers
             grad_adp_fq = self.adp_grad(atoms, self.exp['qbin'])
         else:
-            print("It seems that the atoms don't have any adps, you need adps "
-                  "to call this method")
+            print("It seems that the atoms don't have any adps, "
+                  "you need adps to call this method")
             grad_adp_fq = np.zeros(atoms.get_positions().shape)
         return grad_adp_fq
 

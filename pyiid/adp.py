@@ -2,7 +2,7 @@ import numpy as np
 
 __author__ = 'christopher'
 
-def _has_adp(atoms):
+def has_adp(atoms):
     for a in ['adps', 'adp']:
         if hasattr(atoms, a):
             return getattr(atoms, a)
@@ -125,7 +125,7 @@ class ADP:
             The forces on each of the adps
 
         """
-        return self.calc.calculate_forces(atoms)
+        return self.calc.get_forces(atoms)
 
     def set_calc(self, calc):
         """

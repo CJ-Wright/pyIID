@@ -6,7 +6,6 @@ Smoke test all the major ElasticScatter methods
 from pyiid.tests import *
 from pyiid.experiments.elasticscatter import ElasticScatter
 import inspect
-from pyiid.adp import _has_adp
 
 __author__ = 'christopher'
 
@@ -31,13 +30,13 @@ def check_method(value):
     exp_method = getattr(scat, method_string)
 
     print(method_string in elastic_scatter_adp_methods)
-    print(_has_adp(atoms))
+    print(has_adp(atoms))
     # Test a set of different sized ensembles
     if 'noise' in inspect.getargspec(exp_method)[0]:
         ans = exp_method(atoms, noise)
     elif 'atoms' in inspect.getargspec(exp_method)[0]:
         if method_string in elastic_scatter_adp_methods \
-                and _has_adp(atoms) is None:
+                and has_adp(atoms) is None:
             # If we are going to check an ADP only method,
             # we better have atoms AND ADPS
             # If we don't have the adps attached skip the test

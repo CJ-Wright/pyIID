@@ -4,7 +4,6 @@ the processor/algorithm used to obtain the results.
 """
 from pyiid.tests import *
 from pyiid.experiments.elasticscatter import ElasticScatter
-from pyiid.adp import _has_adp
 
 __author__ = 'christopher'
 
@@ -33,7 +32,7 @@ def check_method(value):
         # If we are going to check an ADP only method,
         # we better have atoms AND ADPS
         if method_string in elastic_scatter_adp_methods \
-                and _has_adp(atoms) is not None:
+                and has_adp(atoms) is not None:
             # If we don't have the adps attached skip the test
             raise SkipTest()
         ans.append(exp_method(atoms))

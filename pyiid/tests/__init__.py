@@ -1,3 +1,4 @@
+from __future__ import print_function
 """
 This module provides some utilities and lists of test values for the test suite
 Note there is only one CPU nxn comparison test, the CPU nxn code is
@@ -16,7 +17,7 @@ import random
 from pyiid.testing.decorators import *
 from pyiid.experiments.elasticscatter import ElasticScatter
 from pyiid.calc.spring_calc import Spring
-from pyiid.adp import ADP, _has_adp
+from pyiid.adp import ADP, has_adp
 from nose.plugins.skip import SkipTest
 
 srfit = False

@@ -2,7 +2,7 @@ from copy import deepcopy as dc
 from ase.optimize.optimize import Optimizer
 import numpy as np
 from numpy.random import RandomState
-from adp import _has_adp
+from pyiid.adp import has_adp
 
 __author__ = 'christopher'
 
@@ -29,8 +29,8 @@ def leapfrog(atoms, step, center=True):
     latoms = dc(atoms)
 
     adps = None
-    if _has_adp(atoms): 
-        adps = _has_adp(atoms)
+    if has_adp(atoms):
+        adps = has_adp(atoms)
     
     latoms.set_momenta(latoms.get_momenta() + 0.5 * step * latoms.get_forces())
     if adps:
