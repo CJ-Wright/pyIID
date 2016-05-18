@@ -99,6 +99,7 @@ def setup_atoms(n):
 
 
 def setup_adps(atoms):
+    n = len(atoms)
     adp_tensor = rs.randint(10, 100, (n, 3)) * .001
     adps = ADP(atoms, adp_tensor)
     return adps
@@ -217,6 +218,15 @@ def stats_check(ans1, ans2, rtol=1e-7, atol=0):
 # Setup lists of test variables for combinations
 test_exp = [None]
 test_atom_squares = [setup_atomic_square()]
+test_adp_atom_squares = []
+for a in test_atom_squares:
+    atoms_list = []
+    for atoms in a:
+        atoms1 = dc(atoms)
+        atoms1.info['adps'] = setup_adps(atoms1)
+        atoms_list.append(atoms1)
+    test_adp_atom_squares.append(tuple(atoms_list))
+test_atom_squares += test_adp_atom_squares
 test_potentials = [
     ('rw', .9),
     # ('chi_sq', 1)

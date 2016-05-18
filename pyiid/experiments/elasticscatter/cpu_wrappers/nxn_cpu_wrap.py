@@ -52,7 +52,7 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
 
     adps = has_adp(atoms)
     if adps:
-        adps = adps.get_position().astype(np.float32)
+        adps = adps.get_positions().astype(np.float32)
     # get non-normalized fq
     if adps is None:
         get_fq_inplace(omega, norm)
@@ -137,7 +137,7 @@ def wrap_fq_grad(atoms, qbin=.1, sum_type='fq'):
 
     adps = has_adp(atoms)
     if adps:
-        adps = adps.get_position().astype(np.float32)
+        adps = adps.get_positions().astype(np.float32)
 
     if adps is None:
         # Get grad FQ
@@ -185,7 +185,7 @@ def wrap_fq_dadp(atoms, qbin=.1, sum_type='fq'):
 
     adps = has_adp(atoms)
     if adps:
-        adps = adps.get_position().astype(np.float32)
+        adps = adps.get_positions().astype(np.float32)
     if adps is None:
         return np.zeros((n, 3, qmax_bin), np.float32)
 

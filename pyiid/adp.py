@@ -47,7 +47,7 @@ class ADP:
         self.fixed_adps = fixed_adps
         self.calc = None
 
-    def get_position(self):
+    def get_positions(self):
         """
         Get the ADP values
         Returns
@@ -57,7 +57,7 @@ class ADP:
         """
         return self.adps
 
-    def set_position(self, new_adps):
+    def set_positions(self, new_adps):
         """
         Set the ADP positions in a manner consistent with the constraints
         Parameters
@@ -127,7 +127,7 @@ class ADP:
         """
         return self.calc.get_forces(atoms)
 
-    def set_calc(self, calc):
+    def set_calculator(self, calc):
         """
         Set the calculator for the ADPS, this will calculate the potential
         energy and forces associated with the ADPS

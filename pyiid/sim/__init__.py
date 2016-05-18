@@ -34,16 +34,17 @@ def leapfrog(atoms, step, center=True):
     
     latoms.set_momenta(latoms.get_momenta() + 0.5 * step * latoms.get_forces())
     if adps:
-        adps.set_momenta(adps.get_momenta() + 0.5 * step * adps.get_forces())
+        adps.set_momenta(adps.get_momenta() + 0.5 * step * adps.get_forces(latoms))
 
     latoms.set_positions(latoms.get_positions() + step * latoms.get_velocities())
+
     if adps:
         adps.set_positions(adps.get_positions() + 0.5 * step * adps.get_velocities())
 
     latoms.set_momenta(latoms.get_momenta() + 0.5 * step * latoms.get_forces())
 
     if adps:
-        adps.set_momenta(adps.get_momenta() + 0.5 * step * adps.get_forces())
+        adps.set_momenta(adps.get_momenta() + 0.5 * step * adps.get_forces(latoms))
 
     if center:
         latoms.center()

@@ -19,7 +19,7 @@ def setup_cpu_calc(atoms, sum_type):
 
     adps = has_adp(atoms)
     if adps:
-        return q.astype(np.float32), has_adp(atoms).get_position().astype(
+        return q.astype(np.float32), has_adp(atoms).get_positions().astype(
             np.float32), n, qmax_bin, scatter_array.astype(
             np.float32)
     else:
