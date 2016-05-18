@@ -291,7 +291,7 @@ test_atoms = [setup_atoms(int(n)) for n in ns]
 test_adp_atoms = []
 for atoms in test_atoms:
     atoms2 = dc(atoms)
-    atoms2.adps = setup_adps(atoms2)
+    atoms2.info['adps'] = setup_adps(atoms2)
     test_adp_atoms.append(atoms2)
 test_double_atoms = [setup_double_atoms(int(n)) for n in ns]
 elastic_scatter_methods = [

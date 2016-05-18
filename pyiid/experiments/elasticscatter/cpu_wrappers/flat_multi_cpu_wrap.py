@@ -1,6 +1,7 @@
 from multiprocessing import Pool, cpu_count
 import psutil
 from pyiid.experiments.elasticscatter.atomics.cpu_atomics import *
+from pyiid.adp import has_adp
 
 __author__ = 'christopher'
 
@@ -16,15 +17,15 @@ def setup_cpu_calc(atoms, sum_type):
 
     n, qmax_bin = scatter_array.shape
 
-    for a in ['adp', 'adps']:
-        if hasattr(atoms, a):
-            return q.astype(np.float32), \
-                   getattr(atoms, a).get_position().astype(np.float32),\
-                   n, qmax_bin, scatter_array.astype(np.float32)
-
-    # Else we don't have any adps
-    return q.astype(np.float32), None, n, qmax_bin, scatter_array.astype(
-        np.float32)
+    adps = has_adp(atoms)
+    if adps:
+        return q.astype(np.float32), has_adp(atoms).get_position().astype(
+            np.float32), n, qmax_bin, scatter_array.astype(
+            np.float32)
+    else:
+        # Else we don't have any adps
+        return q.astype(np.float32), None, n, qmax_bin, scatter_array.astype(
+            np.float32)
 
 
 def wrap_fq(atoms, qbin=.1, sum_type='fq'):

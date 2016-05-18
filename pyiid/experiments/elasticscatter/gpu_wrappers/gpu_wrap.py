@@ -4,6 +4,7 @@ from pyiid.experiments.elasticscatter.atomics.gpu_atomics import *
 from pyiid.experiments import *
 from pyiid.experiments.elasticscatter.kernels.cpu_flat import \
     get_normalization_array
+from pyiid.adp import has_adp
 
 __author__ = 'christopher'
 
@@ -20,13 +21,10 @@ def setup_gpu_calc(atoms, sum_type):
     qmax_bin = scatter_array.shape[1]
     sort_gpus, sort_gmem = get_gpus_mem()
 
-    for a in ['adp', 'adps']:
-        if hasattr(atoms, a):
-            return q.astype(np.float32), \
-                   getattr(atoms, a).get_position().astype(np.float32), \
-                   n, qmax_bin, scatter_array.astype(np.float32), \
-                   sort_gpus, sort_gmem
-
+    adps = has_adp(atoms)
+    if adps:
+        return q, adps.get_position().astype(
+            np.float32), n, qmax_bin, scatter_array, sort_gpus, sort_gmem
     return q, None, n, qmax_bin, scatter_array, sort_gpus, sort_gmem
 
 
@@ -152,7 +150,8 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
     fq = gpu_multithreading(subs_fq, allocation, master_task, (n, qmax_bin),
                             (gpus, mem_list))
     fq = fq.astype(np.float32)
-    norm = np.empty((n * (n - 1) / 2., qmax_bin), np.float32)
+    print(n * (n - 1) / 2., qmax_bin)
+    norm = np.empty((int(n * (n - 1) / 2.), qmax_bin), np.float32)
     get_normalization_array(norm, scatter_array, 0)
     na = np.mean(norm, axis=0) * n
     old_settings = np.seterr(all='ignore')

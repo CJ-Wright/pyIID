@@ -2,7 +2,7 @@ import numpy as np
 from pyiid.experiments.elasticscatter.kernels.cpu_nxn import *
 from ..kernels.cpu_flat import get_normalization_array as flat_norm
 from pyiid.experiments.elasticscatter.atomics import pad_pdf
-
+from pyiid.adp import has_adp
 __author__ = 'christopher'
 
 
@@ -50,11 +50,9 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
     omega = np.zeros((n, n, qmax_bin), np.float32)
     get_omega(omega, r, qbin)
 
-    adps = None
-    if hasattr(atoms, 'adp'):
-        adps = atoms.adp.get_position().astype(np.float32)
-    elif hasattr(atoms, 'adps'):
-        adps = atoms.adps.get_position().astype(np.float32)
+    adps = has_adp(atoms)
+    if adps:
+        adps = adps.get_position().astype(np.float32)
     # get non-normalized fq
     if adps is None:
         get_fq_inplace(omega, norm)
@@ -137,11 +135,9 @@ def wrap_fq_grad(atoms, qbin=.1, sum_type='fq'):
     grad_omega = np.zeros((n, n, 3, qmax_bin), np.float32)
     get_grad_omega(grad_omega, omega, r, d, qbin)
 
-    adps = None
-    if hasattr(atoms, 'adp'):
-        adps = atoms.adp.get_position().astype(np.float32)
-    elif hasattr(atoms, 'adps'):
-        adps = atoms.adps.get_position().astype(np.float32)
+    adps = has_adp(atoms)
+    if adps:
+        adps = adps.get_position().astype(np.float32)
 
     if adps is None:
         # Get grad FQ
@@ -164,7 +160,7 @@ def wrap_fq_grad(atoms, qbin=.1, sum_type='fq'):
     # Normalize FQ
     grad_fq = grad_fq.sum(1)
     # '''
-    norm = np.zeros((n * (n - 1) / 2., qmax_bin), np.float32)
+    norm = np.zeros((int(n * (n - 1) / 2.), qmax_bin), np.float32)
     flat_norm(norm, scatter_array, 0)
     na = np.mean(norm, axis=0) * np.float32(n)
     old_settings = np.seterr(all='ignore')
@@ -187,11 +183,9 @@ def wrap_fq_dadp(atoms, qbin=.1, sum_type='fq'):
     qmax_bin = scatter_array.shape[1]
     n = len(q)
 
-    adps = None
-    if hasattr(atoms, 'adp'):
-        adps = atoms.adp.get_position().astype(np.float32)
-    elif hasattr(atoms, 'adps'):
-        adps = atoms.adps.get_position().astype(np.float32)
+    adps = has_adp(atoms)
+    if adps:
+        adps = adps.get_position().astype(np.float32)
     if adps is None:
         return np.zeros((n, 3, qmax_bin), np.float32)
 

@@ -6,6 +6,7 @@ from pyiid.experiments.elasticscatter.kernels.cpu_experimental import \
 
 from pyiid.experiments.elasticscatter.kernels import antisymmetric_reshape, \
     symmetric_reshape
+from pyiid.adp import has_adp
 
 __author__ = 'christopher'
 
@@ -38,7 +39,7 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
     # define scatter_q information and initialize constants
 
     n, qmax_bin = scatter_array.shape
-    k_max = n * (n - 1) / 2.
+    k_max = i4(n * (n - 1) / 2.)
     k_cov = i4(0)
 
     d = np.zeros((k_max, 3), np.float32)
@@ -53,11 +54,9 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
     omega = np.zeros((k_max, qmax_bin), np.float32)
     get_omega(omega, r, qbin)
 
-    adps = None
-    if hasattr(atoms, 'adp'):
-        adps = atoms.adp.get_position().astype(np.float32)
-    elif hasattr(atoms, 'adps'):
-        adps = atoms.adps.get_position().astype(np.float32)
+    adps = has_adp(atoms)
+    if adps:
+        adps = adps.get_position().astype(np.float32)
     # get non-normalized fq
     if adps is None:
         get_fq_inplace(omega, norm)
@@ -118,7 +117,7 @@ def wrap_fq_grad(atoms, qbin=.1, sum_type='fq'):
     # define scatter_q information and initialize constants
     qmax_bin = scatter_array.shape[1]
     n = len(q)
-    k_max = n * (n - 1) / 2.
+    k_max = i4(n * (n - 1) / 2.)
     k_cov = 0
 
     d = np.empty((k_max, 3), np.float32)
@@ -136,11 +135,9 @@ def wrap_fq_grad(atoms, qbin=.1, sum_type='fq'):
     grad_omega = np.zeros((k_max, 3, qmax_bin), np.float32)
     get_grad_omega(grad_omega, omega, r, d, qbin)
 
-    adps = None
-    if hasattr(atoms, 'adp'):
-        adps = atoms.adp.get_position().astype(np.float32)
-    elif hasattr(atoms, 'adps'):
-        adps = atoms.adps.get_position().astype(np.float32)
+    adps = has_adp(atoms)
+    if adps:
+        adps = adps.get_position().astype(np.float32)
     if adps is None:
         get_grad_fq_inplace(grad_omega, norm)
         grad = grad_omega

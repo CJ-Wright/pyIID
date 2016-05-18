@@ -36,3 +36,4 @@ if __name__ == '__main__':
     finally:
         os.environ["SHORT_TEST"] = "0"
         os.environ["PYIID_TEST_SEED"] = str(0)
+        exit()

@@ -4,8 +4,8 @@ __author__ = 'christopher'
 
 def has_adp(atoms):
     for a in ['adps', 'adp']:
-        if hasattr(atoms, a):
-            return getattr(atoms, a)
+        if a in atoms.info.keys():
+            return atoms.info[a]
     return None
 
 class ADP:
