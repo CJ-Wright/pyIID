@@ -7,7 +7,7 @@ from a collection of atoms.
 """
 import math
 import numpy as np
-from numba import cuda
+from accelerate import cuda
 from pyiid.experiments.elasticscatter.cpu_wrappers.nxn_cpu_wrap import \
     wrap_fq_grad as cpu_wrap_fq_grad, wrap_fq as cpu_wrap_fq
 from pyiid.experiments.elasticscatter.kernels.master_kernel import \
@@ -31,16 +31,16 @@ def check_gpu():
     Check if GPUs are available on this machine
     """
     try:
-        cuda.gpus.lst
+        cuda.cuda.gpus.lst
         tf = True
-    except cuda.CudaSupportError:
+    except cuda.cuda.CudaSupportError:
         tf = False
     return tf
 
 
 def check_cudafft():
     try:
-        from accelerate.cudalib import cufft
+        from accelerate.cuda import fft as cufft
         tf = True
     except ImportError:
         tf = False

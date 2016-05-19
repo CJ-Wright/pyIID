@@ -38,7 +38,7 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
     # define scatter_q information and initialize constants
 
     n, qmax_bin = scatter_array.shape
-    k_max = n * (n - 1) / 2.
+    k_max = int(n * (n - 1) / 2.)
     k_cov = i4(0)
 
     d = np.zeros((k_max, 3), np.float32)
@@ -100,7 +100,7 @@ def wrap_fq_grad(atoms, qbin=.1, sum_type='fq'):
     # define scatter_q information and initialize constants
     qmax_bin = scatter_array.shape[1]
     n = len(q)
-    k_max = n * (n - 1) / 2.
+    k_max = int(n * (n - 1) / 2.)
     k_cov = 0
 
     d = np.empty((k_max, 3), np.float32)

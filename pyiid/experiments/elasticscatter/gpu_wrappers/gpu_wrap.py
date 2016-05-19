@@ -145,7 +145,7 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
     fq = gpu_multithreading(subs_fq, allocation, master_task, (n, qmax_bin),
                             (gpus, mem_list))
     fq = fq.astype(np.float32)
-    norm = np.empty((n * (n - 1) / 2., qmax_bin), np.float32)
+    norm = np.empty((int(n * (n - 1) / 2.), qmax_bin), np.float32)
     get_normalization_array(norm, scatter_array, 0)
     na = np.mean(norm, axis=0) * n
     old_settings = np.seterr(all='ignore')
@@ -185,7 +185,7 @@ def wrap_fq_grad(atoms, qbin=.1, sum_type='fq'):
     grad_p = gpu_multithreading(subs_grad_fq, allocation, master_task,
                                 (n, qmax_bin),
                                 (gpus, mem_list))
-    norm = np.empty((n * (n - 1) / 2., qmax_bin), np.float32)
+    norm = np.empty((int(n * (n - 1) / 2.), qmax_bin), np.float32)
     get_normalization_array(norm, scatter_array, 0)
     na = np.mean(norm, axis=0) * n
     old_settings = np.seterr(all='ignore')
