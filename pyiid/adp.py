@@ -41,10 +41,10 @@ class ADP:
                 (len(atoms), 3))
         if fixed_adps is None:
             fixed_adps = np.ones(atoms.positions.shape)
-        self.adps = adps
-        self.adp_momenta = adp_momenta
-        self.adp_equivalency = adp_equivalency
-        self.fixed_adps = fixed_adps
+        self.adps = adps.copy()
+        self.adp_momenta = adp_momenta.copy()
+        self.adp_equivalency = adp_equivalency.copy()
+        self.fixed_adps = fixed_adps.copy()
         self.calc = None
 
     def get_positions(self):
@@ -55,7 +55,8 @@ class ADP:
         2darray:
             The current ADPs
         """
-        return self.adps
+        print('get pos')
+        return self.adps.copy()
 
     def set_positions(self, new_adps):
         """
@@ -69,7 +70,7 @@ class ADP:
         -------
 
         """
-        delta_adps = new_adps - self.adps
+        delta_adps = new_adps.copy() - self.adps
         # Make all the equivalent adps the same
         unique_adps = np.unique(self.adp_equivalency)
         for i in unique_adps:
@@ -101,7 +102,7 @@ class ADP:
         -------
 
         """
-        self.adp_momenta = new_momenta
+        self.adp_momenta = new_momenta.copy()
 
     def get_velocities(self):
         return self.get_momenta()

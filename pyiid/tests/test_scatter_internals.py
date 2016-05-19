@@ -34,7 +34,7 @@ def start(value):
         scatter_array = atoms.get_array('PDF scatter')
 
     n, qmax_bin = scatter_array.shape
-    k_max = n * (n - 1) / 2.
+    k_max = int(n * (n - 1) / 2.)
     return q, scatter_array, n, qmax_bin, k_max, 0
 
 

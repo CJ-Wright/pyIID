@@ -168,7 +168,7 @@ class ElasticScatter(object):
             t_value = False
         if not t_value:
             if self.verbose:
-                print 'calculating new scatter factors'
+                print('calculating new scatter factors')
             self._wrap_atoms(atoms)
             self.wrap_atoms_state = atoms
         return t_value

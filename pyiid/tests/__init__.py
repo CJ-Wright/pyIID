@@ -226,7 +226,7 @@ for a in test_atom_squares:
         atoms1.info['adps'] = setup_adps(atoms1)
         atoms_list.append(atoms1)
     test_adp_atom_squares.append(tuple(atoms_list))
-test_atom_squares += test_adp_atom_squares
+# test_atom_squares += test_adp_atom_squares
 test_potentials = [
     ('rw', .9),
     # ('chi_sq', 1)

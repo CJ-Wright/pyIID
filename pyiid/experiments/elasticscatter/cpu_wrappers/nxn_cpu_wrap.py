@@ -72,7 +72,7 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
     fq = np.sum(fq, axis=(0, 1), dtype=np.float64)
     fq = fq.astype(np.float32)
 
-    norm2 = np.zeros((n * (n - 1) / 2., qmax_bin), np.float32)
+    norm2 = np.zeros((int(n * (n - 1) / 2.), qmax_bin), np.float32)
     flat_norm(norm2, scatter_array, 0)
     na = np.mean(norm2, axis=0, dtype=np.float32) * np.float32(n)
     # na = np.mean(norm2, axis=0, dtype=np.float64) * n
@@ -221,7 +221,7 @@ def wrap_fq_dadp(atoms, qbin=.1, sum_type='fq'):
     # Normalize FQ
     grad_fq = grad_fq.sum(1)
     # '''
-    norm = np.zeros((n * (n - 1) / 2., qmax_bin), np.float32)
+    norm = np.zeros((int(n * (n - 1) / 2.), qmax_bin), np.float32)
     flat_norm(norm, scatter_array, 0)
     na = np.mean(norm, axis=0) * np.float32(n)
     old_settings = np.seterr(all='ignore')
