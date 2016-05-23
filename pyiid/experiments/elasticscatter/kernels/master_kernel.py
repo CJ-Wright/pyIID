@@ -111,12 +111,12 @@ def fft_fq_to_gr(f, qbin, qmin):
 
     Parameters
     -----------
-    :param qmin:
     f: Nd array
         F(Q)
     qbin: float
         Qbin size
-    qmin:
+    qmin: float
+        The minimum scatter vector
 
     Returns
     -------
@@ -392,5 +392,5 @@ def get_scale(target, calculated):
 def get_grad_scale(target, calculated, grad_calculated, tx, tz):
     a = get_scale(target, calculated)
     return (-2 * a * np.dot(calculated, grad_calculated[tx, tz, :]) +
-            np.dot(target, grad_calculated[tx, tz, :])) / \
-           np.dot(calculated, calculated)
+            np.dot(target, grad_calculated[tx, tz, :])) / np.dot(calculated,
+                                                                 calculated)

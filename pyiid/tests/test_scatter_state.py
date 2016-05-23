@@ -2,9 +2,11 @@ from pyiid.tests import *
 from pyiid.experiments.elasticscatter import ElasticScatter
 
 __author__ = 'christopher'
-# TODO: need to add a bunch of tests here.
+
+
 def check_meta(value):
     value[0](value[1:])
+
 
 def check_add_atom(value):
     atoms, exp = value[0:2]
@@ -35,6 +37,7 @@ def check_add_atom(value):
     # Check that all the values are not zero
     del atoms, exp, proc, alg, scat, ans1
     return
+
 
 def check_del_atom(value):
     atoms, exp = value[0:2]
@@ -67,6 +70,7 @@ def check_del_atom(value):
     del atoms, exp, proc, alg, scat, ans1
     return
 
+
 tests = [
     check_add_atom,
     check_del_atom
@@ -89,7 +93,9 @@ for d in dels:
 
 def test_meta():
     for v in test_data:
-            yield check_meta, v
+        yield check_meta, v
+
+
 if __name__ == '__main__':
     import nose
 

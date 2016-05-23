@@ -1,5 +1,5 @@
 from threading import Thread
-from numbapro.cudalib import cufft
+from accelerate.cuda import fft
 from pyiid.experiments.elasticscatter.atomics.gpu_atomics import *
 from pyiid.experiments import *
 from pyiid.experiments.elasticscatter.kernels.cpu_flat import \
@@ -23,7 +23,7 @@ def setup_gpu_calc(atoms, sum_type):
     return q, None, n, qmax_bin, scatter_array, sort_gpus, sort_gmem
 
 
-def subs_fq(fq, q, adps, scatter_array, qbin, gpu, k_cov, k_per_thread):
+def subs_fq(fq, q, scatter_array, qbin, gpu, k_cov, k_per_thread):
     """
     Thread function to calculate a chunk of F(Q)
 
@@ -47,11 +47,10 @@ def subs_fq(fq, q, adps, scatter_array, qbin, gpu, k_cov, k_per_thread):
     """
     # set up GPU
     with gpu:
-        fq += atomic_fq(q, adps, scatter_array, qbin, k_cov, k_per_thread)
+        fq += atomic_fq(q, scatter_array, qbin, k_cov, k_per_thread)
 
 
-def subs_grad_fq(grad_p, q, adps, scatter_array, qbin, gpu, k_cov,
-                 k_per_thread):
+def subs_grad_fq(grad_p, q, scatter_array, qbin, gpu, k_cov, k_per_thread):
     """
     Thread function to calculate a chunk of F(Q)
 
@@ -75,8 +74,7 @@ def subs_grad_fq(grad_p, q, adps, scatter_array, qbin, gpu, k_cov,
     """
     # set up GPU
     with gpu:
-        grad_p += atomic_grad_fq(q, adps, scatter_array, qbin, k_cov,
-                                 k_per_thread)
+        grad_p += atomic_grad_fq(q, scatter_array, qbin, k_cov, k_per_thread)
 
 
 def sub_grad_pdf(gpu, gpadc, gpadcfft, atoms_per_thread, n_cov):
@@ -99,7 +97,7 @@ def sub_grad_pdf(gpu, gpadc, gpadcfft, atoms_per_thread, n_cov):
     input_shape = [gpadcfft.shape[-1]]
     with gpu:
         batch_operations = atoms_per_thread
-        plan = cufft.FFTPlan(input_shape, np.complex64, np.complex64,
+        plan = fft.FFTPlan(input_shape, np.complex64, np.complex64,
                              batch_operations)
         for i in xrange(3):
             batch_input = np.ravel(
@@ -142,7 +140,7 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
     allocation = gpu_k_space_fq_allocation
 
     fq = np.zeros(qmax_bin, np.float64)
-    master_task = [fq, q, adps, scatter_array, qbin]
+    master_task = [fq, q, scatter_array, qbin]
     fq = gpu_multithreading(subs_fq, allocation, master_task, (n, qmax_bin),
                             (gpus, mem_list))
     fq = fq.astype(np.float32)
@@ -182,7 +180,7 @@ def wrap_fq_grad(atoms, qbin=.1, sum_type='fq'):
     allocation = gpu_k_space_grad_fq_allocation
 
     grad_p = np.zeros((n, 3, qmax_bin))
-    master_task = [grad_p, q, adps, scatter_array, qbin]
+    master_task = [grad_p, q, scatter_array, qbin]
     grad_p = gpu_multithreading(subs_grad_fq, allocation, master_task,
                                 (n, qmax_bin),
                                 (gpus, mem_list))

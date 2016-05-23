@@ -8,9 +8,11 @@ __author__ = 'christopher'
 rtol = 5e-4
 atol = 5e-5
 
+
 # Actual Tests
 def check_meta(value):
     value[0](value[1:])
+
 
 def check_scatter_fq(value):
     """
@@ -178,6 +180,7 @@ def check_scatter_grad_pdf(value):
     # make certain we did not give back the same pointer
     assert ans1 is not ans2
 
+
 tests = [
     check_scatter_fq,
     check_scatter_sq,
@@ -191,9 +194,10 @@ test_data = list(product(
     tests,
     test_atoms, test_exp, comparison_pro_alg_pairs))
 
+
 def test_meta():
     for v in test_data:
-            yield check_meta, v
+        yield check_meta, v
 
 
 if __name__ == '__main__':
