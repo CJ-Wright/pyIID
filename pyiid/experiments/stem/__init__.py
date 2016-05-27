@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 """
 The basic idea of this module is to provide the STEM class, which simulates
 STEM images from atomic configurations. Note that these simulations are very
@@ -58,7 +60,7 @@ if __name__ == '__main__':
     atoms.set_cell(atoms.get_cell() * 1.2)
     atoms.center()
     cell = atoms.get_cell()
-    print cell, len(atoms)
+    print(cell, len(atoms))
     resolution = .3 * np.ones(3)
     c = np.diagonal(cell)
     v = tuple(np.int32(np.ceil(c / resolution)))
@@ -66,9 +68,9 @@ if __name__ == '__main__':
     ed = np.zeros(v)
     i = 0
     for atom in atoms:
-        print i
+        print(i)
         ed += get_atomic_electron_density(atom, voxels, resolution)
         i += 1
-    print ed[:, :, 0]
+    print(ed[:, :, 0])
     plt.imshow(np.sum(ed, axis=2), cmap='viridis')
     plt.show()

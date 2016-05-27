@@ -136,7 +136,7 @@ class NUTSCanonicalEnsemble(Ensemble):
                                          force_temp=True)
         elif momentum:
             atoms.set_momenta(self.random_state.normal(0, 1, (
-                len(atoms), 3)))
+                len(atoms), 3)) * self.momentum)
         else:
             print('Some thermal energy needed')
 
@@ -164,10 +164,11 @@ class NUTSCanonicalEnsemble(Ensemble):
         # sample r0
         if self.momentum is None:
             MaxwellBoltzmannDistribution(self.traj[-1], self.thermal_nrg,
-                                         force_temp=True)
+                                         # force_temp=True
+                                         )
         else:
             self.traj[-1].set_momenta(self.random_state.normal(0, 1, (
-                len(self.traj[-1]), 3)))
+                len(self.traj[-1]), 3)) * self.momentum)
         # re-sample u, note we work in post exponential units:
         # [0, exp(-H(atoms0)] <= exp(-H(atoms1) >>> [0, 1] <= exp(-deltaH)
         u = self.random_state.uniform(0, 1)
@@ -195,6 +196,12 @@ class NUTSCanonicalEnsemble(Ensemble):
             if s_prime == 1 and self.random_state.uniform() < min(
                     1, n_prime * 1. / n):
                 self.traj += [atoms_prime]
+                if self.verbose:
+                    print('\t\t\tNew Potential Energy: {} eV'.format(atoms_prime.get_potential_energy()))
+                    print('\t\t\tNew Kinetic Energy: {} eV'.format(
+                        atoms_prime.get_kinetic_energy() ))
+                    print('\t\t\tNew Temperature: {} K'.format(
+                        atoms_prime.get_temperature()))
                 self.metadata['accepted_samples'] += 1
                 new_configurations.extend([atoms_prime])
                 atoms_prime.get_forces()
