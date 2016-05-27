@@ -4,8 +4,7 @@ from itertools import combinations
 from copy import deepcopy as dc
 from ase.atoms import Atoms as AAtoms
 import ase.io as aseio
-# from asap3.analysis.particle import FullNeighborList, CoordinationNumbers
-from pyiid.asa import calculate_asa
+from pyiid.asa import calculate_asa, get_neighbor_list, get_coordination
 __author__ = 'christopher'
 
 
@@ -99,7 +98,7 @@ def get_angle_list(atoms, cutoff, element=None, tag=None):
     ndarray:
         The list of bond angles in degrees
     """
-    n_list = list(FullNeighborList(cutoff, atoms))
+    n_list = list(get_neighbor_list(cutoff, atoms))
     angles = []
     for i in range(len(atoms)):
         z = list(combinations(n_list[i], 2))
@@ -134,7 +133,7 @@ def get_coord_list(atoms, cutoff, element=None, tag=None):
     if isinstance(atoms, list):
         coord_l = []
         for atms in atoms:
-            a = CoordinationNumbers(atms, cutoff)
+            a = get_coordination(cutoff, atms)
             if element is not None and tag is not None:
                 coord_l.append(
                     a[(np.asarray(atoms.get_chemical_symbols()) == element) &
@@ -150,7 +149,7 @@ def get_coord_list(atoms, cutoff, element=None, tag=None):
         return np.average(c, axis=0), np.std(c, axis=0)
 
     else:
-        a = CoordinationNumbers(atoms, cutoff)
+        a = get_coordination(cutoff, atoms)
         if element is not None and tag is not None:
             return a[(np.asarray(atoms.get_chemical_symbols()) == element) &
                      (atoms.get_tags() == tag)]
@@ -182,7 +181,7 @@ def get_bond_dist_list(atoms, cutoff, element=None, tag=None):
     ndarray:
         The list of bond distances
     """
-    n_list = list(FullNeighborList(cutoff, atoms))
+    n_list = list(get_neighbor_list(cutoff, atoms))
     bonds = []
     for i in range(len(atoms)):
         for a in n_list[i]:
