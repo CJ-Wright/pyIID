@@ -2,10 +2,6 @@ import math
 from builtins import range
 from ase.data import *
 import numpy as np
-try:
-    from asap3.analysis.particle import FullNeighborList
-except ImportError:
-    pass
 
 __doc__ = """
 
@@ -19,6 +15,21 @@ dots is used to calculate the area.
 Reference: A. Shrake & J. A. Rupley. "Environment and Exposure to
 Solvent of Protein Atoms. Lysozyme and Insulin." J Mol Biol. 79
 (1973) 351- 371. """
+
+def get_neighbor_list(cut, atoms):
+    r = atoms.get_all_distances()
+    n_list = []
+    for i in range(len(atoms)):
+        sub = \
+        np.where((0.0 < r[i, :]).astype(bool) & (r[i, :] < cut).astype(bool))[
+            0]
+        n_list.append(sub)
+    return n_list
+
+def get_coordination(cut, atoms):
+    nl = get_neighbor_list(cut, atoms)
+    cl = np.asarray([len(i) for i in nl])
+    return cl
 
 
 def generate_sphere_points(n):
@@ -72,7 +83,7 @@ def calculate_asa(atoms, probe, cutoff=None, tag=1, n_sphere_point=960):
     const = 4.0 * math.pi / len(sphere_points)
     areas = []
     surface = []
-    n_list = list(FullNeighborList(cutoff, atoms))
+    n_list = list(get_neighbor_list(cutoff, atoms))
     for i, atom_i in enumerate(atoms):
         neighbor_indices = n_list[i]
         n_neighbor = len(neighbor_indices)
