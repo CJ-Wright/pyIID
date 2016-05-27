@@ -2,7 +2,10 @@ import math
 from builtins import range
 from ase.data import *
 import numpy as np
-from asap3.analysis.particle import FullNeighborList
+try:
+    from asap3.analysis.particle import FullNeighborList
+except ImportError:
+    pass
 
 __doc__ = """
 

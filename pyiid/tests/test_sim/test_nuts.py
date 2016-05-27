@@ -4,6 +4,8 @@ from pyiid.experiments.elasticscatter import ElasticScatter
 from pyiid.sim.nuts_hmc import NUTSCanonicalEnsemble
 from pyiid.tests import *
 from ase.visualize import view
+from tempfile import NamedTemporaryFile
+from ase.io.trajectory import TrajectoryReader
 __author__ = 'christopher'
 
 test_nuts_data = tuple(product(dc(test_atom_squares), test_calcs))
@@ -23,6 +25,7 @@ def check_nuts(value):
     value: list or tuple
         The values to use in the tests
     """
+    traj_file = NamedTemporaryFile()
     ideal_atoms, _ = value[0]
     ideal_atoms.set_velocities(np.zeros((len(ideal_atoms), 3)))
     s = ElasticScatter(verbose=True)
@@ -48,7 +51,7 @@ def check_nuts(value):
     start_pe = ideal_atoms.get_potential_energy()
 
     nuts = NUTSCanonicalEnsemble(ideal_atoms, escape_level=4, verbose=True,
-                                 seed=seed)
+                                 seed=seed, trajectory=traj_file.name)
     traj, metadata = nuts.run(5)
 
     pe_list = []
@@ -57,12 +60,15 @@ def check_nuts(value):
     min_pe = np.min(pe_list)
     print(len(traj))
     print(min_pe, start_pe)
-    del traj
     if start_pe != 0.0:
         if not min_pe < start_pe:
             view(traj)
         assert min_pe < start_pe
-
+    read_traj = TrajectoryReader(traj_file.name)
+    print(len(traj), len(read_traj))
+    for atoms1, atoms2 in zip(read_traj, traj):
+        assert_allclose(atoms1.positions, atoms2.positions)
+    del traj
 
 if __name__ == '__main__':
     import nose

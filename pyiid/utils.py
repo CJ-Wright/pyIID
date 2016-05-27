@@ -4,7 +4,12 @@ from itertools import combinations
 from copy import deepcopy as dc
 from ase.atoms import Atoms as AAtoms
 import ase.io as aseio
-from asap3.analysis.particle import FullNeighborList, CoordinationNumbers
+try:
+    from asap3.analysis.particle import (FullNeighborList,
+                                         CoordinationNumbers
+                                         )
+except ImportError:
+    pass
 from pyiid.asa import calculate_asa
 __author__ = 'christopher'
 
