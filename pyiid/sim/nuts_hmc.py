@@ -158,17 +158,18 @@ class NUTSCanonicalEnsemble(Ensemble):
         return step_size
 
     def step(self):
+        atoms = dc(self.traj[-1])
         new_configurations = []
         if self.verbose:
             print('\ttime step size', self.step_size / fs, 'fs')
         # sample r0
         if self.momentum is None:
-            MaxwellBoltzmannDistribution(self.traj[-1], self.thermal_nrg,
+            MaxwellBoltzmannDistribution(atoms, self.thermal_nrg,
                                          # force_temp=True
                                          )
         else:
-            self.traj[-1].set_momenta(self.random_state.normal(0, 1, (
-                len(self.traj[-1]), 3)) * self.momentum)
+            atoms.set_momenta(self.random_state.normal(0, 1, (
+                len(atoms), 3)) * self.momentum)
         # re-sample u, note we work in post exponential units:
         # [0, exp(-H(atoms0)] <= exp(-H(atoms1) >>> [0, 1] <= exp(-deltaH)
         u = self.random_state.uniform(0, 1)
@@ -176,12 +177,12 @@ class NUTSCanonicalEnsemble(Ensemble):
         # Note that because we need to calculate the difference between the
         # proposed energy and the current energy we declare it here,
         # preventing the need for multiple calls to the energy function
-        e0 = self.traj[-1].get_total_energy()
+        e0 = atoms.get_total_energy()
 
         e = self.step_size
         n, s, j = 1, 1, 0
-        neg_atoms = dc(self.traj[-1])
-        pos_atoms = dc(self.traj[-1])
+        neg_atoms = dc(atoms)
+        pos_atoms = dc(atoms)
         while s == 1:
             v = self.random_state.choice([-1, 1])
             if v == -1:
@@ -196,6 +197,11 @@ class NUTSCanonicalEnsemble(Ensemble):
             if s_prime == 1 and self.random_state.uniform() < min(
                     1, n_prime * 1. / n):
                 self.traj += [atoms_prime]
+                if self.trajectory is not None:
+                    atoms_prime.get_forces()
+                    self.trajectory.write(atoms_prime)
+                    if self.verbose:
+                        print('\t\t\tTrajectory written', len(self.traj))
                 if self.verbose:
                     print('\t\t\tNew Potential Energy: {} eV'.format(atoms_prime.get_potential_energy()))
                     print('\t\t\tNew Kinetic Energy: {} eV'.format(
