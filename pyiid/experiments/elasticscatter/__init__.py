@@ -545,4 +545,4 @@ class ElasticScatter(object):
         pdf_grad = self.grad_pdf(fq_grad, self.exp['rstep'], self.pdf_qbin,
                                  rgrid,
                                  self.exp['qmin'])
-        return pdf_grad
+        return pdf_grad * -1.

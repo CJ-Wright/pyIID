@@ -2,7 +2,7 @@ import math
 
 from ase.data import *
 import numpy as np
-from asap3.analysis.particle import FullNeighborList
+# from asap3.analysis.particle import FullNeighborList
 
 __doc__ = """
 

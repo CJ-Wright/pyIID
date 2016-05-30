@@ -55,7 +55,6 @@ class ADP:
         2darray:
             The current ADPs
         """
-        print('get pos')
         return self.adps.copy()
 
     def set_positions(self, new_adps):
