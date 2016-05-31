@@ -1,10 +1,11 @@
-__author__ = 'christopher'
+from __future__ import print_function
 import nose
 from pyiid.testing.noseclasses import KnownFailure
 from numba import cuda
 from nose_exclude import NoseExclude
 import os
 import random
+__author__ = 'christopher'
 plugins = [KnownFailure, NoseExclude]
 env = {
     "NOSE_WITH_COVERAGE": 1,
@@ -27,7 +28,7 @@ def run():
 if __name__ == '__main__':
     try:
         os.environ["PYIID_TEST_SEED"] = str(int(random.random() * 2 ** 32))
-        print 'seed:', os.environ["PYIID_TEST_SEED"]
+        print('seed:', os.environ["PYIID_TEST_SEED"])
         run()
     finally:
         os.environ["PYIID_TEST_SEED"] = str(0)
