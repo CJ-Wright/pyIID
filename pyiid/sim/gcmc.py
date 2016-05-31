@@ -39,7 +39,7 @@ def add_atom(atoms, chem_potentials, beta, random_state, resolution=None):
     atoms_prime = dc(atoms)
 
     # make new atom
-    new_symbol = np.random.choice(chem_potentials.keys())
+    new_symbol = np.random.choice(list(chem_potentials.keys()))
     e0 = atoms.get_potential_energy()
     if resolution is None:
         new_position = np.random.uniform(0, np.max(atoms.get_cell(), 0))
