@@ -12,7 +12,7 @@ __author__ = 'christopher'
 
 
 class TestNUTS:
-    test_nuts_data = tuple(product(dc(test_atom_squares), test_calcs))
+    test_nuts_data = tuple(product(dc(test_atom_squares), test_calcs, [True, False]))
 
     def setUp(self):
         self.traj_file = NamedTemporaryFile(delete=False)
@@ -58,8 +58,12 @@ class TestNUTS:
         ideal_atoms.set_calculator(calc)
         start_pe = ideal_atoms.get_potential_energy()
 
+        if value[2]:
+            traj_name = self.traj_file.name
+        else:
+            traj_name = None
         nuts = NUTSCanonicalEnsemble(ideal_atoms, escape_level=4, verbose=True,
-                                     seed=seed, trajectory=self.traj_file.name)
+                                     seed=seed, trajectory=traj_name)
         traj, metadata = nuts.run(5)
         print(traj[0].get_momenta())
         pe_list = []
@@ -76,15 +80,16 @@ class TestNUTS:
             assert min_pe < start_pe
 
         self.traj_file.close()
-        assert os.path.exists(self.traj_file.name)
-        read_traj = TrajectoryReader(self.traj_file.name)
-        print(len(traj), len(read_traj))
-        assert len(traj) == len(read_traj)
-        for i, (atoms1, atoms2) in enumerate(zip(read_traj, traj)):
-            for att in ['get_positions', 'get_potential_energy',
-                        'get_forces', 'get_momenta']:
-                print(i, att)
-                assert_allclose(*[getattr(a, att)() for a in [atoms1, atoms2]])
+        if value[2]:
+            assert os.path.exists(self.traj_file.name)
+            read_traj = TrajectoryReader(self.traj_file.name)
+            print(len(traj), len(read_traj))
+            assert len(traj) == len(read_traj)
+            for i, (atoms1, atoms2) in enumerate(zip(read_traj, traj)):
+                for att in ['get_positions', 'get_potential_energy',
+                            'get_forces', 'get_momenta']:
+                    print(i, att)
+                    assert_allclose(*[getattr(a, att)() for a in [atoms1, atoms2]])
         del traj
 
 

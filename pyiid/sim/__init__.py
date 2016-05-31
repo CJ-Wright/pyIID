@@ -90,7 +90,8 @@ class Ensemble(Optimizer):
                 print('Interupted, returning data')
                 return self.traj, self.metadata
 
-        self.trajectory.close()
+        if self.trajectory is not None:
+            self.trajectory.close()
         return self.traj, self.metadata
 
     def step(self):
