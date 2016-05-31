@@ -1,11 +1,11 @@
 from __future__ import print_function
+from __future__ import print_function
 from pyiid.tests import *
 import numpy as np
 from pyiid.calc.spring_calc import Spring
 from ase import Atom
 from unittest import SkipTest
-from builtins import range
-
+from six.moves import xrange
 __author__ = 'christopher'
 
 
@@ -28,11 +28,11 @@ def check_voxel_nrg(value):
 
     voxel_nrg2 = np.zeros(voxel_nrg.shape)
     im, jm, km = voxel_nrg2.shape
-    for i in range(im):
+    for i in xrange(im):
         x = (i + .5) * resolution
-        for j in range(jm):
+        for j in xrange(jm):
             y = (j + .5) * resolution
-            for k in range(km):
+            for k in xrange(km):
                 z = (k + .5) * resolution
                 atoms2 = dc(atoms)
                 atoms2 += Atom('Au', (x, y, z))

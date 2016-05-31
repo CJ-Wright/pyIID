@@ -3,7 +3,7 @@ from ase.calculators.calculator import Calculator
 import numpy as np
 from pyiid.experiments.elasticscatter.kernels.cpu_nxn import get_d_array, \
     get_r_array
-from builtins import range
+from six.moves import xrange
 __author__ = 'christopher'
 
 
@@ -147,14 +147,14 @@ def voxel_spring_nrg(atoms, k_const, rt, resolution):
     voxels = np.zeros(c / resolution)
     q = atoms.get_positions().astype(np.float32)
     im, jm, km = voxels.shape
-    for i in range(im):
+    for i in xrange(im):
         x = (i + .5) * resolution
-        for j in range(jm):
+        for j in xrange(jm):
             y = (j + .5) * resolution
-            for k in range(km):
+            for k in xrange(km):
                 z = (k + .5) * resolution
                 temp2 = 0.0
-                for l in range(len(q)):
+                for l in xrange(len(q)):
                     temp = np.sqrt(
                         (x - q[l, 0]) ** 2 +
                         (y - q[l, 1]) ** 2 +
@@ -177,7 +177,7 @@ def atomwise_spring_nrg(atoms, k, rt):
     nrg = .5 * k * (r - rt) ** 2
     print(nrg)
     nrg[np.where(r > rt)] = 0.0
-    for i in range(len(nrg)):
+    for i in xrange(len(nrg)):
         nrg[i, i] = 0.0
     return -np.sum(nrg, axis=0) * 2
 
@@ -222,11 +222,11 @@ def voxel_com_spring_nrg(atoms, k_const, rt, resolution):
     voxels = np.zeros(c / resolution)
     com = atoms.get_center_of_mass()
     im, jm, km = voxels.shape
-    for i in range(im):
+    for i in xrange(im):
         x = (i + .5) * resolution
-        for j in range(jm):
+        for j in xrange(jm):
             y = (j + .5) * resolution
-            for k in range(km):
+            for k in xrange(km):
                 z = (k + .5) * resolution
                 temp = np.sqrt(
                     (x - com[0]) ** 2 +
@@ -300,14 +300,14 @@ def voxel_att_spring_nrg(atoms, k_const, rt, resolution):
     voxels = np.zeros(c / resolution)
     q = atoms.get_positions().astype(np.float32)
     im, jm, km = voxels.shape
-    for i in range(im):
+    for i in xrange(im):
         x = (i + .5) * resolution
-        for j in range(jm):
+        for j in xrange(jm):
             y = (j + .5) * resolution
-            for k in range(km):
+            for k in xrange(km):
                 z = (k + .5) * resolution
                 temp2 = 0.0
-                for l in range(len(q)):
+                for l in xrange(len(q)):
                     temp = np.sqrt(
                         (x - q[l, 0]) ** 2 +
                         (y - q[l, 1]) ** 2 +

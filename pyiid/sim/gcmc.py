@@ -1,12 +1,13 @@
 from __future__ import print_function
+from __future__ import print_function
+from __future__ import print_function
 from copy import deepcopy as dc
 from time import time
 import numpy as np
 from ase.atom import Atom
 from ase.units import *
 from pyiid.sim import Ensemble
-from builtins import range
-
+from six.moves import xrange
 __author__ = 'christopher'
 
 
@@ -178,6 +179,6 @@ class GrandCanonicalEnsemble(Ensemble):
         te = time() - t2
 
         total_time = 0.
-        for i in range(iterations):
+        for i in xrange(iterations):
             total_time += te
         return total_time

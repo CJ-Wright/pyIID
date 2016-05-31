@@ -4,10 +4,11 @@ from numba import *
 from numba import cuda, f4, i4
 
 from pyiid.experiments.elasticscatter.kernels import cuda_k_to_ij, cuda_ij_to_k
-from builtins import range
+from six.moves import xrange
 __author__ = 'christopher'
 
-# F(sv) kernels ---------------------------------------------------------------
+
+# F(Q) kernels ---------------------------------------------------------------
 @cuda.jit(argtypes=[f4[:, :], f4[:, :], i4])
 def get_d_array(d, q, offset):
     """
@@ -52,7 +53,7 @@ def get_r_array(r, d):
 @cuda.jit(argtypes=[f4[:, :], f4[:, :], i4])
 def get_normalization_array(norm_array, scat, offset):
     """
-    Generate the sv dependant normalization factors for the F(sv) array
+    Generate the Q dependant normalization factors for the F(Q) array
 
     Parameters
     -----------
@@ -95,7 +96,7 @@ def get_omega(omega, r, qbin):
 @cuda.jit(argtypes=[f4[:, :], f4[:, :], f4[:, :]])
 def get_fq(fq, omega, norm):
     """
-    Get the reduced structure factor F(sv) via the Debye Sum
+    Get the reduced structure factor F(Q) via the Debye Sum
 
     Parameters
     ----------
@@ -139,14 +140,14 @@ def get_grad_omega(grad_omega, omega, r, d, qbin):
     rk = r[k]
     a = (sv * math.cos(sv * rk)) - omega[k, qx]
     a /= rk * rk
-    for w in range(i4(3)):
+    for w in xrange(i4(3)):
         grad_omega[k, w, qx] = a * d[k, w]
 
 
 @cuda.jit(argtypes=[f4[:, :, :], f4[:, :, :], f4[:, :]])
 def get_grad_fq(grad, grad_omega, norm):
     """
-    Generate the gradient F(sv) for an atomic configuration
+    Generate the gradient F(Q) for an atomic configuration
 
     Parameters
     ------------
@@ -162,7 +163,7 @@ def get_grad_fq(grad, grad_omega, norm):
     if k >= kmax or qx >= qmax_bin:
         return
     a = norm[k, qx]
-    for w in range(i4(3)):
+    for w in xrange(i4(3)):
         grad[k, w, qx] = a * grad_omega[k, w, qx]
 
 
@@ -206,7 +207,7 @@ def fast_fast_flat_sum(new_grad, grad, k_cov):
         alpha = float32(1)
     k -= k_cov
     if 0 <= k < len(grad):
-        for tz in range(i4(3)):
+        for tz in xrange(i4(3)):
             cuda.atomic.add(new_grad, (i, tz, qx), grad[k, tz, qx] * alpha)
 
 
@@ -298,10 +299,11 @@ def experimental_sum_grad_fq1(new_grad, grad, k_cov):
         cuda.atomic.add(new_grad, (j, tz, qx), a)
         cuda.atomic.add(new_grad, (i, tz, qx), f4(-1.) * a)
 
+
 @cuda.jit(argtypes=[f4[:, :, :], f4[:, :]])
 def get_grad_fq_inplace(grad_omega, norm):
     """
-    Generate the gradient F(sv) for an atomic configuration
+    Generate the gradient F(Q) for an atomic configuration
 
     Parameters
     ------------
@@ -315,5 +317,5 @@ def get_grad_fq_inplace(grad_omega, norm):
     if k >= kmax or qx >= qmax_bin:
         return
     a = norm[k, qx]
-    for w in range(i4(3)):
+    for w in xrange(i4(3)):
         grad_omega[k, w, qx] *= a

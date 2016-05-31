@@ -2,8 +2,7 @@ import math
 from numba import *
 import mkl
 import os
-from builtins import range
-
+from six.moves import xrange
 __author__ = 'christopher'
 
 cache = True
@@ -27,9 +26,9 @@ def get_d_array(d, q):
         The atomic positions
     """
     n = len(q)
-    for i in range(i4(n)):
-        for j in range(i4(n)):
-            for w in range(i4(3)):
+    for i in xrange(i4(n)):
+        for j in xrange(i4(n)):
+            for w in xrange(i4(3)):
                 d[i, j, w] = q[j, w] - q[i, w]
 
 
@@ -46,10 +45,10 @@ def get_r_array(r, d):
         The coordinate pair distances
     """
     n = len(r)
-    for i in range(i4(n)):
-        for j in range(i4(n)):
+    for i in xrange(i4(n)):
+        for j in xrange(i4(n)):
             tmp = f4(0.)
-            for w in range(i4(3)):
+            for w in xrange(i4(3)):
                 tmp += d[i, j, w] * d[i, j, w]
             r[i, j] = math.sqrt(tmp)
 
@@ -68,9 +67,9 @@ def get_normalization_array(norm_array, scatter_array):
         The scatter factor array
     """
     n, _, qmax_bin = norm_array.shape
-    for qx in range(i4(qmax_bin)):
-        for i in range(i4(n)):
-            for j in range(i4(n)):
+    for qx in xrange(i4(qmax_bin)):
+        for i in xrange(i4(n)):
+            for j in xrange(i4(n)):
                 if i != j:
                     norm_array[i, j, qx] = scatter_array[i, qx] * \
                                            scatter_array[j, qx]
@@ -92,10 +91,10 @@ def get_omega(omega, r, qbin):
         The qbin size
     """
     n, _, qmax_bin = omega.shape
-    for qx in range(i4(qmax_bin)):
+    for qx in xrange(i4(qmax_bin)):
         sv = f4(qx) * qbin
-        for i in range(i4(n)):
-            for j in range(i4(n)):
+        for i in xrange(i4(n)):
+            for j in xrange(i4(n)):
                 if i != j:
                     rij = r[i, j]
                     omega[i, j, qx] = math.sin(sv * rij) / rij
@@ -105,9 +104,9 @@ def get_omega(omega, r, qbin):
      nopython=True, cache=cache)
 def get_fq(fq, omega, norm):
     n, _, qmax_bin = omega.shape
-    for qx in range(i4(qmax_bin)):
-        for i in range(i4(n)):
-            for j in range(i4(n)):
+    for qx in xrange(i4(qmax_bin)):
+        for i in xrange(i4(n)):
+            for j in xrange(i4(n)):
                 fq[qx] += norm[i, j, qx] * omega[i, j, qx]
 
 
@@ -115,9 +114,9 @@ def get_fq(fq, omega, norm):
      target=processor_target, nopython=True, cache=cache)
 def get_adp_fq(fq, omega, tau, norm):
     n, _, qmax_bin = omega.shape
-    for qx in range(i4(qmax_bin)):
-        for i in range(i4(n)):
-            for j in range(i4(n)):
+    for qx in xrange(i4(qmax_bin)):
+        for i in xrange(i4(n)):
+            for j in xrange(i4(n)):
                 fq[i, j, qx] = norm[i, j, qx] * omega[i, j, qx] * tau[i, j, qx]
 
 
@@ -125,9 +124,9 @@ def get_adp_fq(fq, omega, tau, norm):
      cache=cache)
 def get_fq_inplace(omega, norm):
     n, _, qmax_bin = omega.shape
-    for qx in range(i4(qmax_bin)):
-        for i in range(i4(n)):
-            for j in range(i4(n)):
+    for qx in xrange(i4(qmax_bin)):
+        for i in xrange(i4(n)):
+            for j in xrange(i4(n)):
                 omega[i, j, qx] *= norm[i, j, qx]
 
 
@@ -138,15 +137,15 @@ def get_fq_inplace(omega, norm):
      target=processor_target, nopython=True, cache=cache)
 def get_grad_omega(grad_omega, omega, r, d, qbin):
     n, _, _, qmax_bin = grad_omega.shape
-    for qx in range(i4(qmax_bin)):
+    for qx in xrange(i4(qmax_bin)):
         sv = f4(qx) * qbin
-        for i in range(i4(n)):
-            for j in range(i4(n)):
+        for i in xrange(i4(n)):
+            for j in xrange(i4(n)):
                 if i != j:
                     rij = r[i, j]
                     a = sv * math.cos(sv * rij) - omega[i, j, qx]
                     a /= rij * rij
-                    for w in range(i4(3)):
+                    for w in xrange(i4(3)):
                         grad_omega[i, j, w, qx] = a * d[i, j, w]
 
 
@@ -166,11 +165,11 @@ def get_grad_fq(grad, grad_omega, norm):
         The normalization array
     """
     n, _, _, qmax_bin = grad.shape
-    for i in range(i4(n)):
-        for w in range(i4(3)):
-            for j in range(i4(n)):
+    for i in xrange(i4(n)):
+        for w in xrange(i4(3)):
+            for j in xrange(i4(n)):
                 if i != j:
-                    for qx in range(grad.shape[3]):
+                    for qx in xrange(grad.shape[3]):
                         grad[i, j, w, qx] = norm[i, j, qx] * grad_omega[
                             i, j, w, qx]
 
@@ -189,9 +188,9 @@ def get_grad_fq_inplace(grad_omega, norm):
         The normalization array
     """
     n, _, _, qmax_bin = grad_omega.shape
-    for i in range(i4(n)):
-        for w in range(i4(3)):
-            for j in range(i4(n)):
+    for i in xrange(i4(n)):
+        for w in xrange(i4(3)):
+            for j in xrange(i4(n)):
                 if i != j:
-                    for qx in range(i4(qmax_bin)):
+                    for qx in xrange(i4(qmax_bin)):
                         grad_omega[i, j, w, qx] *= norm[i, j, qx]
