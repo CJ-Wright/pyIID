@@ -15,23 +15,23 @@ each atom as a gaussian with intensity = f(0) and sigma = covalent radius
 import numpy as np
 from scipy.stats import norm
 from ase.data import covalent_radii
-
+from builtins import range
 
 def get_atomic_electron_density(atom, voxels, resolution):
     # make var/covar matrix
     sigma = np.zeros((3, 3))
-    for i in xrange(3):
+    for i in range(3):
         sigma[i, i] = covalent_radii[atom.number]
 
     # make gaussian distribution centered on atom
     r = np.zeros(voxels.shape)
     q = atom.position
     im, jm, km, = voxels.shape
-    for i in xrange(im):
+    for i in range(im):
         x = (i + .5) * resolution[0]
-        for j in xrange(jm):
+        for j in range(jm):
             y = (j + .5) * resolution[1]
-            for k in xrange(km):
+            for k in range(km):
                 z = (k + .5) * resolution[2]
                 r[i, j, k] = 0
                 for l, w in zip(range(3), [x, y, z]):
