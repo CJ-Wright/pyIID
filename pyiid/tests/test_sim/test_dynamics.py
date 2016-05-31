@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import print_function
 from pyiid.tests import *
 from pyiid.sim.dynamics import classical_dynamics
 from pyiid.experiments.elasticscatter import ElasticScatter

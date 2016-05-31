@@ -1,8 +1,9 @@
 import math
-from builtins import range
+
 from ase.data import *
 import numpy as np
-
+from asap3.analysis.particle import FullNeighborList
+from six.moves import xrange
 __doc__ = """
 
 Calculate the accessible-surface area of atoms.
@@ -15,21 +16,6 @@ dots is used to calculate the area.
 Reference: A. Shrake & J. A. Rupley. "Environment and Exposure to
 Solvent of Protein Atoms. Lysozyme and Insulin." J Mol Biol. 79
 (1973) 351- 371. """
-
-def get_neighbor_list(cut, atoms):
-    r = atoms.get_all_distances()
-    n_list = []
-    for i in range(len(atoms)):
-        sub = \
-        np.where((0.0 < r[i, :]).astype(bool) & (r[i, :] < cut).astype(bool))[
-            0]
-        n_list.append(sub)
-    return n_list
-
-def get_coordination(cut, atoms):
-    nl = get_neighbor_list(cut, atoms)
-    cl = np.asarray([len(i) for i in nl])
-    return cl
 
 
 def generate_sphere_points(n):
@@ -48,7 +34,7 @@ def generate_sphere_points(n):
     points = np.zeros((n, 3))
     inc = math.pi * (3 - math.sqrt(5))
     offset = 2 / float(n)
-    for k in range(int(n)):
+    for k in xrange(int(n)):
         y = k * offset - 1 + (offset / 2)
         r = math.sqrt(1 - y * y)
         phi = k * inc
@@ -83,7 +69,7 @@ def calculate_asa(atoms, probe, cutoff=None, tag=1, n_sphere_point=960):
     const = 4.0 * math.pi / len(sphere_points)
     areas = []
     surface = []
-    n_list = list(get_neighbor_list(cutoff, atoms))
+    n_list = list(FullNeighborList(cutoff, atoms))
     for i, atom_i in enumerate(atoms):
         neighbor_indices = n_list[i]
         n_neighbor = len(neighbor_indices)
@@ -91,11 +77,11 @@ def calculate_asa(atoms, probe, cutoff=None, tag=1, n_sphere_point=960):
         radius = probe + vdw_radii[atom_i.number]
 
         n_accessible_point = 0
-        for k in range(n_sphere_point):
+        for k in xrange(n_sphere_point):
             is_accessible = True
             test_point = sphere_points[k, :] / np.linalg.norm(
                 sphere_points[k, :]) * radius + atom_i.position
-            cycled_indices = list(range(j_closest_neighbor, n_neighbor))
+            cycled_indices = range(j_closest_neighbor, n_neighbor)
             cycled_indices.extend(range(j_closest_neighbor))
 
             for j in cycled_indices:

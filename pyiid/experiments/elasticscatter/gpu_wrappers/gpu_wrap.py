@@ -1,11 +1,10 @@
 from threading import Thread
-from accelerate.cuda import fft
+from numbapro.cudalib import cufft
 from pyiid.experiments.elasticscatter.atomics.gpu_atomics import *
 from pyiid.experiments import *
 from pyiid.experiments.elasticscatter.kernels.cpu_flat import \
     get_normalization_array
-from builtins import range
-
+from six.moves import xrange
 __author__ = 'christopher'
 
 
@@ -21,7 +20,7 @@ def setup_gpu_calc(atoms, sum_type):
     qmax_bin = scatter_array.shape[1]
     sort_gpus, sort_gmem = get_gpus_mem()
 
-    return q, n, qmax_bin, scatter_array, sort_gpus, sort_gmem
+    return q, None, n, qmax_bin, scatter_array, sort_gpus, sort_gmem
 
 
 def subs_fq(fq, q, scatter_array, qbin, gpu, k_cov, k_per_thread):
@@ -98,9 +97,9 @@ def sub_grad_pdf(gpu, gpadc, gpadcfft, atoms_per_thread, n_cov):
     input_shape = [gpadcfft.shape[-1]]
     with gpu:
         batch_operations = atoms_per_thread
-        plan = fft.FFTPlan(input_shape, np.complex64, np.complex64,
-                           batch_operations)
-        for i in range(3):
+        plan = cufft.FFTPlan(input_shape, np.complex64, np.complex64,
+                             batch_operations)
+        for i in xrange(3):
             batch_input = np.ravel(
                 gpadc[n_cov:n_cov + atoms_per_thread, i, :]).astype(
                 np.complex64)
@@ -136,16 +135,16 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
     1darray;
         The reduced structure factor
     """
-    q, n, qmax_bin, scatter_array, gpus, mem_list = setup_gpu_calc(
+    q, adps, n, qmax_bin, scatter_array, gpus, mem_list = setup_gpu_calc(
         atoms, sum_type)
     allocation = gpu_k_space_fq_allocation
 
     fq = np.zeros(qmax_bin, np.float64)
-    master_task = [fq, q, scatter_array, qbin]
+    master_task = [fq, q, adps, scatter_array, qbin]
     fq = gpu_multithreading(subs_fq, allocation, master_task, (n, qmax_bin),
                             (gpus, mem_list))
     fq = fq.astype(np.float32)
-    norm = np.empty((int(n * (n - 1) / 2.), qmax_bin), np.float32)
+    norm = np.empty((n * (n - 1) / 2., qmax_bin), np.float32)
     get_normalization_array(norm, scatter_array, 0)
     na = np.mean(norm, axis=0) * n
     old_settings = np.seterr(all='ignore')
@@ -176,16 +175,16 @@ def wrap_fq_grad(atoms, qbin=.1, sum_type='fq'):
     1darray;
         The reduced structure factor
     """
-    q, n, qmax_bin, scatter_array, gpus, mem_list = setup_gpu_calc(
+    q, adps, n, qmax_bin, scatter_array, gpus, mem_list = setup_gpu_calc(
         atoms, sum_type)
     allocation = gpu_k_space_grad_fq_allocation
 
     grad_p = np.zeros((n, 3, qmax_bin))
-    master_task = [grad_p, q, scatter_array, qbin]
+    master_task = [grad_p, q, adps, scatter_array, qbin]
     grad_p = gpu_multithreading(subs_grad_fq, allocation, master_task,
                                 (n, qmax_bin),
                                 (gpus, mem_list))
-    norm = np.empty((int(n * (n - 1) / 2.), qmax_bin), np.float32)
+    norm = np.empty((n * (n - 1) / 2., qmax_bin), np.float32)
     get_normalization_array(norm, scatter_array, 0)
     na = np.mean(norm, axis=0) * n
     old_settings = np.seterr(all='ignore')

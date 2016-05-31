@@ -12,6 +12,44 @@ __author__ = 'christopher'
 Emax = 200
 
 
+def find_step_size(input_atoms, thermal_nrg):
+    """
+    Find a suitable starting step size for the simulation
+
+    Parameters
+    -----------
+    input_atoms: ase.Atoms object
+        The starting atoms for the simulation
+    thermal_nrg:
+        The thermal energy for the simulation
+
+    Returns
+    -------
+    float:
+        The step size
+    """
+    atoms = dc(input_atoms)
+    step_size = .5
+    MaxwellBoltzmannDistribution(atoms, temp=thermal_nrg, force_temp=True)
+
+    atoms_prime = leapfrog(atoms, step_size)
+
+    a = 2 * (np.exp(
+        -1 * atoms_prime.get_total_energy() + atoms.get_total_energy()
+    ) > 0.5) - 1
+
+    while (np.exp(-1 * atoms_prime.get_total_energy() +
+                      atoms.get_total_energy())) ** a > 2 ** -a:
+        step_size *= 2 ** a
+        print('trying step size', step_size)
+        atoms_prime = leapfrog(atoms, step_size)
+        if step_size < 1e-7 or step_size > 1e7:
+            step_size = 1.
+            break
+    print('optimal step size', step_size)
+    return step_size
+
+
 def buildtree(input_atoms, u, v, j, e, e0, rs, beta=1):
     """
     Build the tree of samples for NUTS, recursively
@@ -98,136 +136,30 @@ class NUTSCanonicalEnsemble(Ensemble):
         self.accept_target = accept_target
         self.temp = temperature
         self.thermal_nrg = self.temp * kB
-        self.step_size = self._find_step_size(atoms, self.thermal_nrg)
+        self.step_size = find_step_size(atoms, self.thermal_nrg)
         self.mu = np.log(10 * self.step_size)
         # self.ebar = 1
         self.sim_hbar = 0
         self.gamma = 0.05
         self.t0 = 10
         # self.k = .75
-        self.metadata.update({
-            'samples_total': 0,
-            'accepted_samples': 0
-        })
+        self.metadata['samples_total'] = 0
+        self.metadata['accepted_samples'] = 0
         self.escape_level = escape_level
         self.m = 0
         self.momentum = momentum
-        if self.thermal_nrg:
-            if self.verbose:
-                print('thermal_nrg', self.thermal_nrg)
-            MaxwellBoltzmannDistribution(atoms, temp=self.thermal_nrg,
-                                         force_temp=True)
-            if self.verbose:
-                print('kinetic energy', atoms.get_kinetic_energy())
-        elif self.momentum:
-            atoms.set_momenta(self.random_state.normal(0, momentum, (
-                len(atoms), 3)))
-            if self.verbose:
-                print('kinetic energy', atoms.get_kinetic_energy())
-        else:
-            print('Some thermal energy needed')
-
-    def _find_step_size(self, input_atoms, thermal_nrg=None, momentum=None):
-        """
-        Find a suitable starting step size for the simulation
-
-        Parameters
-        -----------
-        input_atoms: ase.Atoms object
-            The starting atoms for the simulation
-        thermal_nrg:
-            The thermal energy for the simulation
-
-        Returns
-        -------
-        float:
-            The step size
-        """
-        atoms = dc(input_atoms)
-        step_size = .5
-        if thermal_nrg:
-            MaxwellBoltzmannDistribution(atoms, temp=thermal_nrg,
-                                         force_temp=True)
-        elif momentum:
-            atoms.set_momenta(self.random_state.normal(0, momentum, (
-                len(atoms), 3)))
-        else:
-            print('Some thermal energy needed')
-
-        atoms_prime = leapfrog(atoms, step_size)
-
-        a = 2 * (np.exp(
-            -1 * atoms_prime.get_total_energy() + atoms.get_total_energy()
-        ) > 0.5) - 1
-
-        while (np.exp(-1 * atoms_prime.get_total_energy() +
-                          atoms.get_total_energy())) ** a > 2 ** -a:
-            step_size *= 2 ** a
-            print('trying step size', step_size)
-            atoms_prime = leapfrog(atoms, step_size)
-            if step_size < 1e-7 or step_size > 1e7:
-                step_size = 1.
-                break
-        print('optimal step size', step_size)
-        return step_size
-
-    def _find_step_size(self, input_atoms, thermal_nrg=None, momentum=None):
-        """
-        Find a suitable starting step size for the simulation
-
-        Parameters
-        -----------
-        input_atoms: ase.Atoms object
-            The starting atoms for the simulation
-        thermal_nrg:
-            The thermal energy for the simulation
-
-        Returns
-        -------
-        float:
-            The step size
-        """
-        atoms = dc(input_atoms)
-        step_size = .5
-        if thermal_nrg:
-            MaxwellBoltzmannDistribution(atoms, temp=thermal_nrg,
-                                         force_temp=True)
-        elif momentum:
-            atoms.set_momenta(self.random_state.normal(0, 1, (
-                len(atoms), 3)) * self.momentum)
-        else:
-            print('Some thermal energy needed')
-
-        atoms_prime = leapfrog(atoms, step_size)
-
-        a = 2 * (np.exp(
-            -1 * atoms_prime.get_total_energy() + atoms.get_total_energy()
-        ) > 0.5) - 1
-
-        while (np.exp(-1 * atoms_prime.get_total_energy() +
-                          atoms.get_total_energy())) ** a > 2 ** -a:
-            step_size *= 2 ** a
-            print('trying step size', step_size)
-            atoms_prime = leapfrog(atoms, step_size)
-            if step_size < 1e-7 or step_size > 1e7:
-                step_size = 1.
-                break
-        print('optimal step size', step_size)
-        return step_size
 
     def step(self):
-        atoms = dc(self.traj[-1])
         new_configurations = []
         if self.verbose:
             print('\ttime step size', self.step_size / fs, 'fs')
         # sample r0
         if self.momentum is None:
-            MaxwellBoltzmannDistribution(atoms, self.thermal_nrg,
-                                         # force_temp=True
-                                         )
+            MaxwellBoltzmannDistribution(self.traj[-1], self.thermal_nrg,
+                                         force_temp=True)
         else:
-            atoms.set_momenta(self.random_state.normal(0, 1, (
-                len(atoms), 3)) * self.momentum)
+            self.traj[-1].set_momenta(self.random_state.normal(0, 1, (
+                len(self.traj[-1]), 3)))
         # re-sample u, note we work in post exponential units:
         # [0, exp(-H(atoms0)] <= exp(-H(atoms1) >>> [0, 1] <= exp(-deltaH)
         u = self.random_state.uniform(0, 1)
@@ -235,12 +167,12 @@ class NUTSCanonicalEnsemble(Ensemble):
         # Note that because we need to calculate the difference between the
         # proposed energy and the current energy we declare it here,
         # preventing the need for multiple calls to the energy function
-        e0 = atoms.get_total_energy()
+        e0 = self.traj[-1].get_total_energy()
 
         e = self.step_size
         n, s, j = 1, 1, 0
-        neg_atoms = dc(atoms)
-        pos_atoms = dc(atoms)
+        neg_atoms = dc(self.traj[-1])
+        pos_atoms = dc(self.traj[-1])
         while s == 1:
             v = self.random_state.choice([-1, 1])
             if v == -1:
@@ -255,21 +187,7 @@ class NUTSCanonicalEnsemble(Ensemble):
             if s_prime == 1 and self.random_state.uniform() < min(
                     1, n_prime * 1. / n):
                 self.traj += [atoms_prime]
-                if self.trajectory is not None:
-                    atoms_prime.get_forces()
-                    self.trajectory.write(atoms_prime)
-                    if self.verbose:
-                        print('\t\t\tTrajectory written', len(self.traj))
-                if self.verbose:
-                    print('\t\t\tNew Potential Energy: {} eV'.format(atoms_prime.get_potential_energy()))
-                    print('\t\t\tNew Kinetic Energy: {} eV'.format(
-                        atoms_prime.get_kinetic_energy() ))
-                    print('\t\t\tNew Temperature: {} K'.format(
-                        atoms_prime.get_temperature()))
                 self.metadata['accepted_samples'] += 1
-                if self.verbose:
-                    print('accepted configuration at ',
-                          atoms_prime.get_potential_energy())
                 new_configurations.extend([atoms_prime])
                 atoms_prime.get_forces()
                 atoms_prime.get_potential_energy()

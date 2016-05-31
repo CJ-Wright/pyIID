@@ -1,4 +1,7 @@
 from __future__ import print_function
+from __future__ import print_function
+from __future__ import print_function
+from __future__ import print_function
 from pyiid.tests import *
 from pyiid.experiments.elasticscatter import ElasticScatter
 from pyiid.experiments.elasticscatter.kernels import (antisymmetric_reshape,
@@ -23,8 +26,8 @@ def check_meta(value):
 
 def start(value):
     atoms, exp = value[:2]
-    e = ElasticScatter(exp)
-    e._wrap_atoms(atoms)
+    scat = ElasticScatter(exp)
+    scat._wrap_atoms(atoms)
     q = atoms.get_positions().astype(np.float32)
     if value[2] == 'fq':
         scatter_array = atoms.get_array('F(Q) scatter')
@@ -32,7 +35,7 @@ def start(value):
         scatter_array = atoms.get_array('PDF scatter')
 
     n, qmax_bin = scatter_array.shape
-    k_max = int(n * (n - 1) / 2.)
+    k_max = n * (n - 1) / 2.
     return q, scatter_array, n, qmax_bin, k_max, 0
 
 

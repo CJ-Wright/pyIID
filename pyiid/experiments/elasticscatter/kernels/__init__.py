@@ -2,8 +2,8 @@ import math
 from numba import *
 from numba import cuda, f4, i4, int32
 import numpy as np
-from builtins import range
-
+from six.moves import xrange
+from six.moves import xrange
 __author__ = 'christopher'
 
 
@@ -22,7 +22,7 @@ def k_to_ij(k):
 def symmetric_reshape(in_data):
     im, jm = k_to_ij(in_data.shape[0])
     out_data = np.zeros((im, im) + in_data.shape[1:])
-    for k in range(in_data.shape[0]):
+    for k in xrange(in_data.shape[0]):
         i, j = k_to_ij(k)
         out_data[i, j] = in_data[k]
         out_data[j, i] = in_data[k]
@@ -32,7 +32,7 @@ def symmetric_reshape(in_data):
 def antisymmetric_reshape(in_data):
     im, jm = k_to_ij(in_data.shape[0])
     out_data = np.zeros((im, im) + in_data.shape[1:])
-    for k in range(in_data.shape[0]):
+    for k in xrange(in_data.shape[0]):
         i, j = k_to_ij(k)
         out_data[i, j] = -1 * in_data[k]
         out_data[j, i] = in_data[k]
