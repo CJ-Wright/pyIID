@@ -16,6 +16,7 @@ import numpy as np
 from scipy.stats import norm
 from ase.data import covalent_radii
 
+
 def get_atomic_electron_density(atom, voxels, resolution):
     # make var/covar matrix
     sigma = np.zeros((3, 3))
@@ -34,7 +35,7 @@ def get_atomic_electron_density(atom, voxels, resolution):
                 z = (k + .5) * resolution[2]
                 r[i, j, k] = 0
                 for l, w in zip(range(3), [x, y, z]):
-                    r[i, j, k] += (w - q[l])**2
+                    r[i, j, k] += (w - q[l]) ** 2
 
     # make gaussian
     # put gaussian on voxel grid
@@ -45,7 +46,6 @@ def get_atomic_electron_density(atom, voxels, resolution):
     return ed
 
 
-
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
     from ase import Atoms
@@ -54,7 +54,8 @@ if __name__ == '__main__':
     import ase.io as aseio
 
     # atoms = Atoms('Pt', [(0, 0, 0)])
-    atoms = Atoms(FaceCenteredCubic('Pt', [[1,0,0],[1,1,0],[1,1,1]], (2, 3, 2)))
+    atoms = Atoms(
+        FaceCenteredCubic('Pt', [[1, 0, 0], [1, 1, 0], [1, 1, 1]], (2, 3, 2)))
     # atoms = atoms[[atom.index for atom in atoms if atom.position[2]< 1.5]]
     view(atoms)
     atoms.set_cell(atoms.get_cell() * 1.2)

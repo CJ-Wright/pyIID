@@ -146,6 +146,8 @@ class ElasticScatter(object):
             if name in atoms.arrays.keys():
                 del atoms.arrays[name]
             atoms.set_array(name, scatter_array)
+        if self.verbose:
+            print(atoms.arrays.keys())
 
         atoms.info['exp'] = self.exp
         atoms.info['scatter_atoms'] = n
@@ -164,11 +166,18 @@ class ElasticScatter(object):
         """
         t_value = True
         if self.wrap_atoms_state is None:
+            if self.verbose:
+                print('wrap atoms state')
             t_value = False
-        elif 'F(Q) scatter' not in atoms.arrays.keys():
+        elif 'F(Q) scatter' not in atoms.arrays.keys() or \
+                        'PDF scatter' not in atoms.arrays.keys():
+            if self.verbose:
+                print('no FQ/PDF scatter factors')
             t_value = False
         elif atoms.info['exp'] != self.exp or atoms.info[
             'scatter_atoms'] != len(atoms):
+            if self.verbose:
+                print('experiment does not match or number of atoms changed')
             t_value = False
         if not t_value:
             if self.verbose:

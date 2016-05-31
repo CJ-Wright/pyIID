@@ -112,6 +112,64 @@ class NUTSCanonicalEnsemble(Ensemble):
         self.escape_level = escape_level
         self.m = 0
         self.momentum = momentum
+        if self.thermal_nrg:
+            if self.verbose:
+                print('thermal_nrg', self.thermal_nrg)
+            MaxwellBoltzmannDistribution(atoms, temp=self.thermal_nrg,
+                                         force_temp=True)
+            if self.verbose:
+                print('kinetic energy', atoms.get_kinetic_energy())
+        elif self.momentum:
+            atoms.set_momenta(self.random_state.normal(0, momentum, (
+                len(atoms), 3)))
+            if self.verbose:
+                print('kinetic energy', atoms.get_kinetic_energy())
+        else:
+            print('Some thermal energy needed')
+
+    def _find_step_size(self, input_atoms, thermal_nrg=None, momentum=None):
+        """
+        Find a suitable starting step size for the simulation
+
+        Parameters
+        -----------
+        input_atoms: ase.Atoms object
+            The starting atoms for the simulation
+        thermal_nrg:
+            The thermal energy for the simulation
+
+        Returns
+        -------
+        float:
+            The step size
+        """
+        atoms = dc(input_atoms)
+        step_size = .5
+        if thermal_nrg:
+            MaxwellBoltzmannDistribution(atoms, temp=thermal_nrg,
+                                         force_temp=True)
+        elif momentum:
+            atoms.set_momenta(self.random_state.normal(0, momentum, (
+                len(atoms), 3)))
+        else:
+            print('Some thermal energy needed')
+
+        atoms_prime = leapfrog(atoms, step_size)
+
+        a = 2 * (np.exp(
+            -1 * atoms_prime.get_total_energy() + atoms.get_total_energy()
+        ) > 0.5) - 1
+
+        while (np.exp(-1 * atoms_prime.get_total_energy() +
+                          atoms.get_total_energy())) ** a > 2 ** -a:
+            step_size *= 2 ** a
+            print('trying step size', step_size)
+            atoms_prime = leapfrog(atoms, step_size)
+            if step_size < 1e-7 or step_size > 1e7:
+                step_size = 1.
+                break
+        print('optimal step size', step_size)
+        return step_size
 
     def _find_step_size(self, input_atoms, thermal_nrg=None, momentum=None):
         """
@@ -209,6 +267,9 @@ class NUTSCanonicalEnsemble(Ensemble):
                     print('\t\t\tNew Temperature: {} K'.format(
                         atoms_prime.get_temperature()))
                 self.metadata['accepted_samples'] += 1
+                if self.verbose:
+                    print('accepted configuration at ',
+                          atoms_prime.get_potential_energy())
                 new_configurations.extend([atoms_prime])
                 atoms_prime.get_forces()
                 atoms_prime.get_potential_energy()
