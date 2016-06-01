@@ -190,3 +190,33 @@ def get_bond_dist_list(atoms, cutoff, element=None, tag=None):
                 break
             bonds.append(atoms.get_distance(i, a))
     return np.nan_to_num(np.asarray(bonds))
+
+
+def onion_tag(atoms, probe=1.4, cutoff=None):
+    tags = np.zeros(len(atoms))
+    tag_counter = 0
+    loop_atoms = atoms.copy()
+    remaining = np.arange(len(atoms))
+    finished_atoms = []
+
+    while len(atoms) >= len(loop_atoms):
+        # Get me all the indexes of the surface atoms in the current config
+        _, _, surface_atom_idxs = calculate_asa(loop_atoms, probe=probe)
+
+        finished_atoms.append(surface_atom_idxs)
+        print('surface idx')
+        print(surface_atom_idxs)
+        # remaining acts as a lookup table for the idx
+        tags[remaining[surface_atom_idxs]] = tag_counter
+        print('tags')
+        print(tags)
+
+        remaining = [i for i in list(range(len(atoms))) if
+                     i not in finished_atoms]
+        remaining = np.asarray(remaining)
+        print('remaining')
+        print(remaining)
+        print('\n\n')
+        tag_counter += 1
+        del loop_atoms[surface_atom_idxs]
+    atoms.set_tags(tags)

@@ -9,7 +9,13 @@ except ImportError:
     tf = True
 __author__ = 'christopher'
 
-atoms = FaceCenteredCubic('Au', [[1, 0, 0], [1, 1, 0], [1, 1, 1]], (2, 4, 2))
+atoms = Atoms(FaceCenteredCubic('Au', [[1, 0, 0], [1, 1, 0], [1, 1, 1]], (2, 4, 2)))
+
+
+def test_onion_tag():
+    onion_tag(atoms)
+    print(atoms.get_tags())
+    AAA
 
 
 def test_tag_surface_atoms():
@@ -43,8 +49,8 @@ if __name__ == '__main__':
         # '-s',
         '--with-doctest',
         # '--nocapture',
-        # '-v'
-        # '-x'
+        '-v',
+        '-x'
     ],
         # env={"NOSE_PROCESSES": 1, "NOSE_PROCESS_TIMEOUT": 599},
         exit=False)

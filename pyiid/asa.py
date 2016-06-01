@@ -83,6 +83,8 @@ def calculate_asa(atoms, probe, cutoff=None, tag=1, n_sphere_point=960):
     const = 4.0 * math.pi / len(sphere_points)
     areas = []
     surface = []
+    surface_atom_idxs = []
+
     n_list = list(get_neighbor_list(cutoff, atoms))
     for i, atom_i in enumerate(atoms):
         neighbor_indices = n_list[i]
@@ -113,5 +115,6 @@ def calculate_asa(atoms, probe, cutoff=None, tag=1, n_sphere_point=960):
         area = const * n_accessible_point * radius * radius
         if area > 0:
             atoms[i].tag = tag
+            surface_atom_idxs.append(i)
         areas.append(area)
-    return areas, surface
+    return areas, surface, surface_atom_idxs
