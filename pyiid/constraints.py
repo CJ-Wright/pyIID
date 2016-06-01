@@ -12,7 +12,9 @@ class SameMagnitude:
         Parameters
         ----------
         idxs_l: list of lists of ints
-            A list of lists of atom indices
+            A list of lists of atom indices, all indicies in the same inner
+            list will have the same magnitude of force, calculated to be
+            average magnitude for all the atoms in the group.
         """
         self.idxs_l = idxs_l
 
