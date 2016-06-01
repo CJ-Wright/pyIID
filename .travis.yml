@@ -3,6 +3,7 @@ language: python
 
 python:
   - 2.7
+  - 3.4
 
 before_install:
   - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then wget http://repo.continuum.io/miniconda/Miniconda-3.5.5-Linux-x86_64.sh -O miniconda.sh; else wget http://repo.continuum.io/miniconda/Miniconda3-3.5.5-Linux-x86_64.sh -O miniconda.sh; fi
@@ -21,11 +22,6 @@ install:
   - source activate testenv
   - pip install ase pympler
   - pip install nose-exclude
-  - wget http://dcwww.camp.dtu.dk/campos/download/Asap-3.8.4.tar.gz
-  - tar xf Asap-3.8.4.tar.gz
-  - cd Asap-3.8.4
-  - python setup.py install
-  - cd ..
   - python setup.py install
   - pip install python-coveralls
 
