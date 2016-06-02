@@ -5,6 +5,7 @@ from copy import deepcopy as dc
 from ase.atoms import Atoms as AAtoms
 import ase.io as aseio
 from pyiid.asa import calculate_asa, get_neighbor_list, get_coordination
+
 __author__ = 'christopher'
 
 
@@ -196,27 +197,32 @@ def onion_tag(atoms, probe=1.4, cutoff=None):
     tags = np.zeros(len(atoms))
     tag_counter = 0
     loop_atoms = atoms.copy()
+
     remaining = np.arange(len(atoms))
     finished_atoms = []
 
     while len(atoms) >= len(loop_atoms):
+        if len(loop_atoms) == 1:
+            tags[remaining] = tag_counter
+            break
         # Get me all the indexes of the surface atoms in the current config
         _, _, surface_atom_idxs = calculate_asa(loop_atoms, probe=probe)
 
-        finished_atoms.append(surface_atom_idxs)
-        print('surface idx')
-        print(surface_atom_idxs)
-        # remaining acts as a lookup table for the idx
-        tags[remaining[surface_atom_idxs]] = tag_counter
-        print('tags')
-        print(tags)
+        surface_atom_idxs = np.asarray(surface_atom_idxs)
 
-        remaining = [i for i in list(range(len(atoms))) if
-                     i not in finished_atoms]
-        remaining = np.asarray(remaining)
-        print('remaining')
-        print(remaining)
-        print('\n\n')
-        tag_counter += 1
+        # remaining acts as a lookup table for the original idx
+        for sidx in surface_atom_idxs:
+            tags[remaining[sidx]] = tag_counter
+
+        # Add the surface atoms to the finished atoms
+        finished_atoms.extend(remaining[surface_atom_idxs].tolist())
+
+        # Remove the surface atoms
         del loop_atoms[surface_atom_idxs]
+
+        # The remaining atoms idx are the ones not in finished atoms
+        remaining = np.asarray(
+            [r for r in remaining.tolist() if r not in finished_atoms])
+
+        tag_counter += 1
     atoms.set_tags(tags)
