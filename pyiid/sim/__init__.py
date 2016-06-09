@@ -5,6 +5,7 @@ import numpy as np
 from numpy.random import RandomState
 from builtins import range
 from ase.io.trajectory import Trajectory
+import time
 __author__ = 'christopher'
 
 
@@ -73,6 +74,7 @@ class Ensemble(Optimizer):
 
     def run(self, steps=100000000, eq_steps=None, eq_tol=None, **kwargs):
         self.metadata['planned iterations'] = steps
+        self.metadata['start time'] = time.time()
         i = 0
         while i < steps:
             # Check if we are at equilibrium, if we want that
@@ -88,10 +90,12 @@ class Ensemble(Optimizer):
             # If we blow up, write the last structure down and exit gracefully
             except KeyboardInterrupt:
                 print('Interupted, returning data')
+                self.metadata['stop time'] = time.time()
                 return self.traj, self.metadata
 
         if self.trajectory is not None:
             self.trajectory.close()
+        self.metadata['stop time'] = time.time()
         return self.traj, self.metadata
 
     def step(self):

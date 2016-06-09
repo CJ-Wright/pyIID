@@ -2,6 +2,10 @@ from pyiid.tests import *
 from ase.calculators.calculator import Calculator
 from ase import Atoms
 from pyiid.constraints import SameMagnitude
+from ase.cluster import FaceCenteredCubic
+from ase.calculators.lj import LennardJones
+from pyiid.utils import onion_tag
+from ase.constraints import FixedLine
 
 class UnevenCalc(Calculator):
     implemented_properties = ['energy', 'forces']
@@ -59,7 +63,7 @@ class UnevenCalc(Calculator):
             [2, 0, 0]
         ], dtype=float)
 
-def test_constraint():
+def test_constraint1():
     atoms = Atoms('Au2', [[0, 0, 0], [1, 0, 0]])
     calc = UnevenCalc()
     atoms.set_calculator(calc)
@@ -70,8 +74,44 @@ def test_constraint():
     f2 = atoms.get_forces()
     print(f2)
     assert np.any(f1 != f2)
+    
+def test_constraint2():
+    atoms = Atoms(
+            FaceCenteredCubic('Au', [[1, 0, 0], [1, 1, 0], [1, 1, 1]],
+                              (2, 4, 2)))
+    calc3 = LennardJones()
+    calc3.parameters.update({'sigma':2.8/1.122, 'epsilon':.005})
+
+    onion_tag(atoms)
+    fl = []
+    for i, atom in enumerate(atoms):
+        disp = atom.position - atoms.get_center_of_mass()
+        disp[np.where((-1e-15 < disp) & (disp < 1e-15))] = 0.0
+        if np.any(disp != 0.0):
+            fl.append(FixedLine(i, disp))
+    idxsl = []
+
+    for a in set(atoms.get_tags()):
+        idxsl.append([atom.index for atom in atoms if atom.tag == a])
+    sm = SameMagnitude(idxs_l=idxsl)
+    fl.append(sm)
+
+    print(fl)
+    atoms.set_constraint(fl)
+    atoms.set_calculator(calc3)
+    print(atoms.get_forces())
+    print(atoms.get_forces())
+
 
 if __name__ == '__main__':
     import nose
 
-    nose.runmodule(argv=['-s', '--with-doctest'], exit=False)
+    nose.runmodule(argv=[
+        # '-s',
+        '--with-doctest',
+        # '--nocapture',
+        '-v',
+        '-x'
+    ],
+        # env={"NOSE_PROCESSES": 1, "NOSE_PROCESS_TIMEOUT": 599},
+        exit=False)
