@@ -1,12 +1,13 @@
 import numpy as np
 from ase.calculators.calculator import Calculator
+from . import ExpCalc
 
 from pyiid.calc import wrap_rw, wrap_chi_sq, wrap_grad_rw, wrap_grad_chi_sq
 
 __author__ = 'christopher'
 
 
-class Calc1D(Calculator):
+class Calc1D(ExpCalc):
     """
     Class for doing PDF based RW/chi**2 calculations
     """
@@ -18,20 +19,14 @@ class Calc1D(Calculator):
                  exp_function=None, exp_grad_function=None,
                  conv=1., potential='rw', **kwargs):
 
-        Calculator.__init__(self, restart, ignore_bad_restart_file,
-                            label, atoms, **kwargs)
+        ExpCalc.__init__(self, restart, ignore_bad_restart_file,
+                            label, atoms, target_data,
+                 exp_function, exp_grad_function, **kwargs)
         # Check calculator kwargs for all the needed info
-        if target_data is None or len(target_data.shape) != 1:
-            raise NotImplementedError('Need a 1d array target data set')
-        if exp_function is None or exp_grad_function is None:
-            raise NotImplementedError('Need functions which return the '
-                                      'simulated data associated with the '
-                                      'experiment and its gradient')
-        self.target_data = target_data
-        self.exp_function = exp_function
-        self.exp_grad_function = exp_grad_function
+        assert len(target_data.shape) == 1, 'Need a 1d array target data set'
+
         self.scale = 1
-        self.rw_to_eV = conv
+        self.conv_to_ev = conv
         if potential == 'chi_sq':
             self.potential = wrap_chi_sq
             self.grad = wrap_grad_chi_sq
@@ -84,13 +79,13 @@ class Calc1D(Calculator):
         energy, scale = self.potential(self.exp_function(atoms),
                                        self.target_data)
         self.scale = scale
-        self.results['energy'] = energy * self.rw_to_eV
+        self.results['energy'] = energy * self.conv_to_ev
 
     def calculate_forces(self, atoms):
         # self.results['forces'] = np.zeros((len(atoms), 3))
         forces = self.grad(self.exp_grad_function(atoms),
                            self.exp_function(atoms),
-                           self.target_data) * self.rw_to_eV
+                           self.target_data) * self.conv_to_ev
 
         self.results['forces'] = forces
 
