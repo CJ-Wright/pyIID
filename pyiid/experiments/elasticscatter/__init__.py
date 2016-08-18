@@ -46,7 +46,7 @@ def check_cudafft():
         tf = True
     except ImportError:
         tf = False
-        print 'no cudafft'
+        print('no cudafft')
         cufft = None
     return tf
 
