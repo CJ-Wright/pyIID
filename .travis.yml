@@ -33,5 +33,5 @@ script:
   - coverage report -m
 
 after_script:
-  coveralls
-  codecov
+  - coveralls
+  - codecov
