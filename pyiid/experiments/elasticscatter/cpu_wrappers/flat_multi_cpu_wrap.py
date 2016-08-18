@@ -1,3 +1,4 @@
+from __future__ import print_function
 from multiprocessing import Pool, cpu_count
 import psutil
 from pyiid.experiments.elasticscatter.atomics.cpu_atomics import *
@@ -167,3 +168,32 @@ def cpu_multiprocessing(atomic_function, allocation,
     p.close()
     # print ans
     return ans
+
+
+if __name__ == '__main__':
+    from ase.atoms import Atoms
+    from pyiid.experiments.elasticscatter import wrap_atoms
+    # from pyiid.experiments.cpu_wrappers.nxn_cpu_wrap import wrap_fq_grad as
+    #  mfqg
+    import matplotlib.pyplot as plt
+
+    plt.ion()
+    n = 5000
+    pos = np.random.random((n, 3)) * 10.
+    atoms = Atoms('Au' + str(n), pos)
+    # atoms = Atoms('Au4', [[0, 0, 0], [3, 0, 0], [0, 3, 0], [3, 3, 0]])
+    wrap_atoms(atoms)
+
+    # fq = wrap_fq(atoms, atoms.info['exp']['qbin'])
+    # fq2 = mfq(atoms, atoms.info['exp']['qbin'])
+    # print fq2.shape
+    # plt.plot(fq)
+    # plt.plot(fq2)
+    # plt.plot((fq-fq2)/fq)
+    # plt.show()
+    # assert_allclose(fq, fq2, 3e-4)
+    grad_fq = wrap_fq_grad(atoms, atoms.info['exp']['qbin'])
+    print(grad_fq)
+    # mgrad_fq = mfqg(atoms, atoms.info['exp']['qbin'])
+    # assert_allclose(grad_fq, mgrad_fq)
+    # raw_input()

@@ -1,3 +1,4 @@
+from __future__ import print_function
 from pyiid.tests import *
 from pyiid.experiments.elasticscatter import ElasticScatter
 from pyiid.calc.calc_1d import Calc1D
@@ -79,7 +80,7 @@ def check_forces(value):
     atoms2.set_calculator(calc)
     # print atoms2.get_potential_energy()
     forces = atoms2.get_forces()
-    print forces
+    print(forces)
     com = atoms2.get_center_of_mass()
     for i in range(len(atoms2)):
         dist = atoms2[i].position - com

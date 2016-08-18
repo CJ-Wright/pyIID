@@ -1,9 +1,11 @@
+from __future__ import print_function
 from copy import deepcopy as dc
 from time import time
 import numpy as np
 from ase.atom import Atom
 from ase.units import *
 from pyiid.sim import Ensemble
+from builtins import range
 
 __author__ = 'christopher'
 
@@ -37,7 +39,7 @@ def add_atom(atoms, chem_potentials, beta, random_state, resolution=None):
     atoms_prime = dc(atoms)
 
     # make new atom
-    new_symbol = np.random.choice(chem_potentials.keys())
+    new_symbol = np.random.choice(list(chem_potentials.keys()))
     e0 = atoms.get_potential_energy()
     if resolution is None:
         new_position = np.random.uniform(0, np.max(atoms.get_cell(), 0))
@@ -88,7 +90,7 @@ def del_atom(atoms, chem_potentials, beta, random_state):
     """
     if len(atoms) <= 1:
         return None
-    print len(atoms)
+    print(len(atoms))
     # make the proposed system
     atoms_prime = dc(atoms)
     e0 = atoms.get_potential_energy()
@@ -150,7 +152,7 @@ class GrandCanonicalEnsemble(Ensemble):
                                  )
         if new_atoms is not None:
             if self.verbose:
-                print '\t' + mv + ' atom accepted', len(new_atoms)
+                print('\t' + mv + ' atom accepted', len(new_atoms))
 
             if mv == 'add':
                 self.metadata['accepted_additions'] += 1
@@ -161,7 +163,7 @@ class GrandCanonicalEnsemble(Ensemble):
             return [new_atoms]
         else:
             if self.verbose:
-                print '\t' + mv + ' atom rejected', len(self.traj[-1])
+                print('\t' + mv + ' atom rejected', len(self.traj[-1]))
 
             if mv == 'add':
                 self.metadata['rejected_additions'] += 1
@@ -176,6 +178,6 @@ class GrandCanonicalEnsemble(Ensemble):
         te = time() - t2
 
         total_time = 0.
-        for i in xrange(iterations):
+        for i in range(iterations):
             total_time += te
         return total_time

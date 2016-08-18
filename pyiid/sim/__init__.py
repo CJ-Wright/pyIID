@@ -1,7 +1,10 @@
+from __future__ import print_function
 from copy import deepcopy as dc
 from ase.optimize.optimize import Optimizer
 import numpy as np
 from numpy.random import RandomState
+from builtins import range
+from ase.io.trajectory import Trajectory
 from pyiid.adp import has_adp
 
 __author__ = 'christopher'
@@ -31,7 +34,7 @@ def leapfrog(atoms, step, center=True):
     adps = None
     if has_adp(latoms):
         adps = has_adp(latoms)
-    
+
     latoms.set_momenta(latoms.get_momenta() + 0.5 * step * latoms.get_forces())
     if adps is not None:
         adps.set_momenta(adps.get_momenta() + 0.5 * step * adps.get_forces(latoms))
@@ -54,7 +57,7 @@ class Ensemble(Optimizer):
     def __init__(self, atoms, restart=None, logfile=None, trajectory=None,
                  seed=None,
                  verbose=False):
-        Optimizer.__init__(self, atoms, restart, logfile, trajectory)
+        Optimizer.__init__(self, atoms, restart, logfile, trajectory=None)
         atoms.get_forces()
         atoms.get_potential_energy()
         if seed is None:
@@ -62,9 +65,19 @@ class Ensemble(Optimizer):
         self.verbose = verbose
         self.random_state = RandomState(seed)
         self.starting_atoms = dc(atoms)
-        self.traj = [dc(atoms)]
         self.pe = []
-        self.metadata = {}
+        self.metadata = {'seed': seed}
+        self.traj = [dc(atoms)]
+        print(self.traj[0].get_momenta())
+        if trajectory is not None:
+            self.trajectory = Trajectory(trajectory, mode='w')
+            self.trajectory.write(self.traj[-1])
+            if self.verbose:
+                print('Trajectory written', len(self.traj))
+        else:
+            self.trajectory = None
+        if verbose:
+            print('trajectory file', self.trajectory)
 
     def check_eq(self, eq_steps, tol):
         ret = np.cumsum(self.pe, dtype=float)
@@ -73,13 +86,26 @@ class Ensemble(Optimizer):
         return np.sum(np.gradient(ret[eq_steps:])) < tol
 
     def run(self, steps=100000000, eq_steps=None, eq_tol=None, **kwargs):
-        for i in xrange(steps):
+        self.metadata['planned iterations'] = steps
+        i = 0
+        while i < steps:
+            # Check if we are at equilibrium, if we want that
             if eq_steps is not None:
                 if self.check_eq(eq_steps, eq_tol):
                     break
+            # Verboseness
             if self.verbose:
-                print 'iteration number', i
-            self.step()
+                print('iteration number', i)
+            try:
+                self.step()
+                i += 1
+            # If we blow up, write the last structure down and exit gracefully
+            except KeyboardInterrupt:
+                print('Interupted, returning data')
+                return self.traj, self.metadata
+
+        if self.trajectory is not None:
+            self.trajectory.close()
         return self.traj, self.metadata
 
     def step(self):

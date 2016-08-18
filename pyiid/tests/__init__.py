@@ -1,4 +1,3 @@
-from __future__ import print_function
 """
 This module provides some utilities and lists of test values for the test suite
 Note there is only one CPU nxn comparison test, the CPU nxn code is
@@ -7,6 +6,7 @@ which is much faster.
 Then we run all nuts_benchmarks against the CPU flat kernels.
 Thus it is imperative that the flat CPU runs with no errors.
 """
+from __future__ import print_function
 import numpy as np
 from ase import Atoms, Atom
 from numpy.testing import assert_allclose
@@ -15,7 +15,6 @@ import os
 from copy import deepcopy as dc
 import random
 from pyiid.testing.decorators import *
-from pyiid.experiments.elasticscatter import ElasticScatter
 from pyiid.calc.spring_calc import Spring
 from pyiid.adp import ADP, has_adp
 from nose.plugins.skip import SkipTest
@@ -130,8 +129,8 @@ def generate_experiment():
     """
     exp_dict = {}
     exp_keys = ['qmin', 'qmax', 'qbin', 'rmin', 'rmax', 'rstep']
-    exp_ranges = [(0, 1.5), (19., 25.), (.1, .8),
-                  (0., 2.5), (30., 50.), (.005, .015)]
+    exp_ranges = [(0, 1.5), (19., 25.), (.8, .12), (0., 2.5), (30., 50.),
+                  (.005, .015)]
     for n, k in enumerate(exp_keys):
         exp_dict[k] = rs.uniform(exp_ranges[n][0], exp_ranges[n][1])
     exp_dict['sampling'] = rs.choice(['full', 'ns'])
@@ -158,10 +157,10 @@ def stats_check(ans1, ans2, rtol=1e-7, atol=0):
     except:
         old_err_settings = np.seterr(divide='ignore')
         print('bulk statistics:')
-        print('max', np.max(np.abs(ans2 - ans1)),)
-        print('min', np.min(np.abs(ans2 - ans1)),)
-        print('men', np.mean(np.abs(ans2 - ans1)),)
-        print('med', np.median(np.abs(ans2 - ans1)),)
+        print('max', np.max(np.abs(ans2 - ans1)))
+        print('min', np.min(np.abs(ans2 - ans1)))
+        print('men', np.mean(np.abs(ans2 - ans1)))
+        print('med', np.median(np.abs(ans2 - ans1)))
         print('std', np.std(np.abs(ans2 - ans1)))
 
         if isinstance(ans1, type(np.asarray([1]))):

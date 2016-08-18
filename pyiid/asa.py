@@ -1,5 +1,5 @@
 import math
-
+from builtins import range
 from ase.data import *
 import numpy as np
 
@@ -95,7 +95,7 @@ def calculate_asa(atoms, probe, cutoff=None, tag=1, n_sphere_point=960):
             is_accessible = True
             test_point = sphere_points[k, :] / np.linalg.norm(
                 sphere_points[k, :]) * radius + atom_i.position
-            cycled_indices = range(j_closest_neighbor, n_neighbor)
+            cycled_indices = list(range(j_closest_neighbor, n_neighbor))
             cycled_indices.extend(range(j_closest_neighbor))
 
             for j in cycled_indices:

@@ -1,10 +1,11 @@
-__author__ = 'christopher'
+from __future__ import print_function
 import nose
 from pyiid.testing.noseclasses import KnownFailure
 from numba import cuda
 from nose_exclude import NoseExclude
 import os
 import random
+__author__ = 'christopher'
 plugins = [KnownFailure, NoseExclude]
 env = {
     "NOSE_WITH_COVERAGE": 1,
@@ -12,7 +13,6 @@ env = {
     'NOSE_COVER_HTML': 1,
     'NOSE_VERBOSE': 2,
     'NOSE_PROCESS_TIMEOUT': 599,
-    'NOSE_EXCLUDE_DIRS': 'old_files/'
 }
 
 from nose.plugins import multiprocess

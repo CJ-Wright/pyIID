@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 
 import numpy as np
@@ -35,7 +36,7 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
 
     # get  number of allocated nodes
     n_nodes = count_nodes()
-    print 'nodes', n_nodes
+    print('nodes', n_nodes)
 
     # get info on our gpu setup and available memory
     mem_list = gpu_avail(n_nodes)
@@ -89,9 +90,9 @@ def wrap_fq_grad(atoms, qbin=.1, sum_type='fq'):
     ranks, mem_list = gpu_avail(n_nodes)
     gpu_total_mem = 0
     for i in range(ranks[-1] + 1):
-        print mem_list[i]
+        print(mem_list[i])
         gpu_total_mem += mem_list[i]
-    print gpu_total_mem
+    print(gpu_total_mem)
 
     n_cov = 0
     m_list = []

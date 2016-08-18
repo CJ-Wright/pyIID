@@ -1,3 +1,4 @@
+from __future__ import print_function
 """
 The results of an ElasticScatter experiment should be the same regardless of
 the processor/algorithm used to obtain the results.

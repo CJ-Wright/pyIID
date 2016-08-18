@@ -1,3 +1,4 @@
+from __future__ import print_function
 from pyiid.tests import *
 import numpy as np
 from pyiid.calc.spring_calc import Spring
@@ -47,7 +48,7 @@ def check_grad_spring(value):
     com = atoms1.get_center_of_mass()
     for i in range(len(atoms1)):
         dist = atoms1[i].position - com
-        print i, dist, forces[i], np.cross(dist, forces[i])
+        print(i, dist, forces[i], np.cross(dist, forces[i]))
         # make certain the forces are not zero automatically
         assert np.any(forces[i])
         stats_check(np.cross(dist, forces[i]), np.zeros(3))

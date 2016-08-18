@@ -32,7 +32,7 @@ def get_scatter_array(scatter_array, numbers, qbin):
         for tx in range(n):
             # note xraylib uses q = sin(th/2)
             # as opposed to our q = 4pi sin(th/2)
-            scatter_array[tx, kq] = xraylib.FF_Rayl(numbers[tx],
+            scatter_array[tx, kq] = xraylib.FF_Rayl(int(numbers[tx]),
                                                     kq * qbin / 4 / np.pi)
 
 

@@ -1,14 +1,13 @@
-from __future__ import print_function
 
 """
 Smoke test all the major ElasticScatter methods
 """
+from __future__ import print_function
 from pyiid.tests import *
 from pyiid.experiments.elasticscatter import ElasticScatter
 import inspect
 
 __author__ = 'christopher'
-
 
 # ----------------------------------------------------------------------------
 def check_method(value):

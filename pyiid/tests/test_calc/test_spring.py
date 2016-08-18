@@ -1,8 +1,10 @@
+from __future__ import print_function
 from pyiid.tests import *
 import numpy as np
 from pyiid.calc.spring_calc import Spring
 from ase import Atom
 from unittest import SkipTest
+from builtins import range
 
 __author__ = 'christopher'
 
@@ -26,11 +28,11 @@ def check_voxel_nrg(value):
 
     voxel_nrg2 = np.zeros(voxel_nrg.shape)
     im, jm, km = voxel_nrg2.shape
-    for i in xrange(im):
+    for i in range(im):
         x = (i + .5) * resolution
-        for j in xrange(jm):
+        for j in range(jm):
             y = (j + .5) * resolution
-            for k in xrange(km):
+            for k in range(km):
                 z = (k + .5) * resolution
                 atoms2 = dc(atoms)
                 atoms2 += Atom('Au', (x, y, z))
@@ -50,7 +52,7 @@ def check_atomwise_nrg(value):
     calc = Spring(**value[1])
     atoms.set_calculator(calc)
     e0 = atoms.get_potential_energy()
-    print e0, e0 / 2.
+    print(e0, e0 / 2.)
     voxel_nrg = atoms.calc.calculate_atomwise_energy(atoms)
 
     nrg2 = np.zeros(len(atoms))
@@ -82,7 +84,7 @@ def test_meta():
 if __name__ == '__main__':
     import nose
 
-    print len(test_data)
+    print(len(test_data))
     nose.runmodule(argv=[
         # '-s',
         '--with-doctest',

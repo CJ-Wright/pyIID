@@ -114,7 +114,6 @@ def wrap_fq_grad(atoms, qbin=.1, sum_type='fq'):
     qmax_bin = scatter_array.shape[1]
     n = len(q)
 
-
     # Get pair coordinate distance array
     d = np.zeros((n, n, 3), np.float32)
     get_d_array(d, q)
