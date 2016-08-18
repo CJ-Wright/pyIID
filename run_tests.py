@@ -46,9 +46,8 @@ __author__ = 'christopher'
 
 if __name__ == '__main__':
     # show output results from every test function
-    args = ['-v']
     # show the message output for skipped and expected failure tests
-    args.append('-rxs')
+    args = ['-v', '-rxs']
     args.extend(sys.argv[1:])
     try:
         os.environ["PYIID_TEST_SEED"] = str(int(random.random() * 2 ** 32))
