@@ -25,9 +25,11 @@ install:
   - pip install nose-exclude
   - python setup.py install
   - pip install python-coveralls
+  git clean -xfd
 
 script:
-  - python run_tests.py
+  - coverage run run_tests.py
+  - coverage report -m
 
 after_script:
   coveralls
