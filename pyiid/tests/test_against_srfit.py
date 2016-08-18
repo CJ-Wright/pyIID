@@ -11,8 +11,8 @@ test_data = tuple(product([local_test_atoms], [None]))
 
 
 # TODO move this back to a test generator, leave the decorator on the check
-@pytest.mark.xfail(raises=ImportError, reason='Need installed srfit for this stest')
-@known_fail_if(not srfit)
+@pytest.mark.xfail(not srfit, reason='Need installed srfit for this stest')
+# @known_fail_if(not srfit)
 def test_fq_against_srfit():
     # unpack the atoms and experiment
     atoms = local_test_atoms
@@ -38,13 +38,17 @@ def test_fq_against_srfit():
 
 
 if __name__ == '__main__':
-    import nose
+    # import pytest
 
-    nose.runmodule(argv=[
-        # '-s',
-        '--with-doctest',
+    pytest.main(['-x', __file__])
+
+    # import nose
+    #
+    # nose.runmodule(argv=[
+    #     '-s',
+        # '--with-doctest',
         # '--nocapture',
         # '-v'
-    ],
-        # env={"NOSE_PROCESSES": 1, "NOSE_PROCESS_TIMEOUT": 599},
-        exit=False)
+    # ],
+    #     env={"NOSE_PROCESSES": 1, "NOSE_PROCESS_TIMEOUT": 599},
+        # exit=False)

@@ -19,8 +19,8 @@ def test_consistency():
         for a, b in permutations(outs[j], 2):
             stats_check(a, b, rtol=2e-7, atol=1e-7)
 
-@pytest.mark.xfail(raises=ImportError, reason='Need installed srfit for this stest')
-@known_fail_if(not srfit)
+@pytest.mark.xfail(not srfit, reason='Need installed srfit for this stest')
+# @known_fail_if(not srfit)
 def test_consistency2():
     outs = [[] for i in range(len(test_atoms))]
     s = ElasticScatter(verbose=True)
