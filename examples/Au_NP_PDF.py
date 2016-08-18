@@ -12,8 +12,9 @@ from ase.visualize import view
 # We use the Atomic Simulation Environment to take care of our atoms
 # atoms = Atoms('Au4', [[0, 0, 0], [3, 0, 0], [0, 3, 0], [3, 3, 0]])
 atoms = Octahedron('Au', 2)
-view(atoms)
 # we can view the atoms by importing ASE's gui
+view(atoms)
+
 scat = ElasticScatter()
 pdf = scat.get_pdf(atoms)
 r = scat.get_r()
