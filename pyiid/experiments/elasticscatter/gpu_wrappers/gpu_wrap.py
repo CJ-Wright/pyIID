@@ -142,12 +142,12 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
     1darray;
         The reduced structure factor
     """
-    q, n, qmax_bin, scatter_array, gpus, mem_list = setup_gpu_calc(
+    q, adps, n, qmax_bin, scatter_array, gpus, mem_list = setup_gpu_calc(
         atoms, sum_type)
     allocation = gpu_k_space_fq_allocation
 
     fq = np.zeros(qmax_bin, np.float64)
-    master_task = [fq, q, scatter_array, qbin]
+    master_task = [fq, q, adps, scatter_array, qbin]
     fq = gpu_multithreading(subs_fq, allocation, master_task, (n, qmax_bin),
                             (gpus, mem_list))
     fq = fq.astype(np.float32)
@@ -182,12 +182,12 @@ def wrap_fq_grad(atoms, qbin=.1, sum_type='fq'):
     1darray;
         The reduced structure factor
     """
-    q, n, qmax_bin, scatter_array, gpus, mem_list = setup_gpu_calc(
+    q, adps, n, qmax_bin, scatter_array, gpus, mem_list = setup_gpu_calc(
         atoms, sum_type)
     allocation = gpu_k_space_grad_fq_allocation
 
     grad_p = np.zeros((n, 3, qmax_bin))
-    master_task = [grad_p, q, scatter_array, qbin]
+    master_task = [grad_p, q, adps, scatter_array, qbin]
     grad_p = gpu_multithreading(subs_grad_fq, allocation, master_task,
                                 (n, qmax_bin),
                                 (gpus, mem_list))

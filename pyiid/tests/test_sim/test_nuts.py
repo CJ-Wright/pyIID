@@ -20,6 +20,16 @@ class TestNUTS:
     def tearDown(self):
         os.remove(self.traj_file.name)
 
+    @classmethod
+    def setup_class(self):
+        self.traj_file = NamedTemporaryFile(delete=False)
+
+    @classmethod
+    def teardown_class(self):
+        print(self.traj_file.name)
+        os.remove(self.traj_file.name)
+        print(os.path.exists(self.traj_file.name))
+
     def test_nuts_dynamics(self):
         for v in self.test_nuts_data:
             yield self.check_nuts, v
@@ -104,6 +114,16 @@ class TestASE:
         os.remove(self.traj_file.name)
         print(os.path.exists(self.traj_file.name))
 
+    @classmethod
+    def setup_class(self):
+        self.traj_file = NamedTemporaryFile(delete=False)
+
+    @classmethod
+    def teardown_class(self):
+        print(self.traj_file.name)
+        os.remove(self.traj_file.name)
+        print(os.path.exists(self.traj_file.name))
+
     def test_ase(self):
         for v in self.test_nuts_data:
             yield self.check_ase, v
@@ -135,11 +155,14 @@ class TestASE:
 
 
 if __name__ == '__main__':
-    import nose
-
-    nose.runmodule(argv=['--with-doctest',
-                         # '--nocapture',
-                         '-v',
-                         '-x'
-                         ],
-                   exit=False)
+    # import nose
+    import pytest
+    args = ['-v']
+    args.append('-rxs')
+    pytest.main(args)
+    # nose.runmodule(argv=['--with-doctest',
+    #                      '--nocapture',
+                         # '-v',
+                         # '-x'
+                         # ],
+                   # exit=False)

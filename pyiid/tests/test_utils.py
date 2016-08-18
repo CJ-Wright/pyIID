@@ -4,6 +4,7 @@ Test pyIID's utilities
 from pyiid.tests import *
 from ase.cluster import FaceCenteredCubic
 from pyiid.utils import *
+import pytest
 
 tf = False
 try:
@@ -19,7 +20,7 @@ def test_tag_surface_atoms():
     tag_surface_atoms(atoms)
     assert np.sum(atoms.get_tags()) == 42
 
-
+@pytest.mark.xfail(raises=ImportError, reason='Need installed srfit for this stest')
 @known_fail_if(tf)
 def test_get_angle_list():
     from scipy.special import comb
