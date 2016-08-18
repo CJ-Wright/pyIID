@@ -315,7 +315,7 @@ class ElasticScatter(object):
         self._check_wrap_atoms_state(atoms)
         fq = self.fq(atoms, self.exp['qbin'])
         fq = fq[int(np.floor(self.exp['qmin'] / self.exp['qbin'])):]
-        if noise is not None:
+        if noise is not None and noise > 0.0:
             fq_noise = noise * np.abs(self.get_scatter_vector()) / np.abs(
                 np.average(atoms.get_array('F(Q) scatter'), axis=0) ** 2)[int(np.floor(self.exp['qmin'] / self.exp['qbin'])):]
             if fq_noise[0] == 0.0:
@@ -348,7 +348,7 @@ class ElasticScatter(object):
         """
         self._check_wrap_atoms_state(atoms)
         fq = self.fq(atoms, self.pdf_qbin, 'PDF')
-        if noise is not None:
+        if noise is not None and noise > 0.0:
             a = np.abs(self.get_scatter_vector(pdf=True))
             b = np.abs(np.average(atoms.get_array('PDF scatter') ** 2, axis=0))
             if isinstance(noise, np.ndarray) and noise.shape != a.shape:
