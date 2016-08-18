@@ -116,7 +116,7 @@ def get_sigma_from_adp(sigma, adps, r, d, offset):
         return
     i, j = cuda_k_to_ij(i4(k + offset))
     tmp = f4(0.)
-    for w in xrange(i4(3)):
+    for w in range(i4(3)):
         tmp += (adps[i, w] - adps[j, w]) * d[k, w] / r[k]
     sigma[k] = tmp
 
@@ -243,7 +243,7 @@ def get_grad_tau(grad_tau, tau, r, d, sigma, adps, qbin, offset):
     i, j = cuda_k_to_ij(i4(k + offset))
     rk = r[k]
     tmp = sigma[k] * sv * sv * tau[k, qx] / (rk * rk * rk)
-    for w in xrange(i4(3)):
+    for w in range(i4(3)):
         grad_tau[k, w, qx] = tmp * (
             d[k, w] * sigma[k] - (adps[i, w] - adps[j, w]) * (rk * rk))
 
@@ -295,7 +295,7 @@ def get_adp_grad_fq(grad, omega, tau, grad_omega, grad_tau, norm):
     a = norm[k, qx]
     b = tau[k, qx]
     c = omega[k, qx]
-    for w in xrange(i4(3)):
+    for w in range(i4(3)):
         grad[k, w, qx] = a * (b * grad_omega[k, w, qx] +
                               c * grad_tau[k, w, qx])
 
@@ -467,7 +467,7 @@ def get_dtau_dadp(dtau_dadp, tau, sigma, r, d, qbin):
     k, qx = cuda.grid(2)
     sv = qx * qbin
     tmp = f4(-1.) * sigma[k] * sv * sv * tau[k, qx] / r[k]
-    for w in xrange(i4(3)):
+    for w in range(i4(3)):
         dtau_dadp[k, w, qx] = tmp * d[k, w]
 
 
@@ -475,5 +475,5 @@ def get_dtau_dadp(dtau_dadp, tau, sigma, r, d, qbin):
 def get_dfq_dadp_inplace(dtau_dadp, omega, norm):
     kmax, _, qmax_bin = dtau_dadp.shape
     k, qx = cuda.grid(2)
-    for w in xrange(i4(3)):
+    for w in range(i4(3)):
         dtau_dadp[k, w, qx] *= norm[k, qx] * omega[k, qx]

@@ -99,10 +99,10 @@ def get_omega(omega, r, qbin):
 @jit(void(f4[:], f4[:, :], f4[:], f4[:, :], i4), target=processor_target,
      nopython=True, cache=cache)
 def get_sigma_from_adp(sigma, adps, r, d, offset):
-    for k in xrange(len(sigma)):
+    for k in range(len(sigma)):
         i, j = k_to_ij(i4(k + offset))
         tmp = f4(0.)
-        for w in xrange(i4(3)):
+        for w in range(i4(3)):
             tmp += (adps[i, w] - adps[j, w]) * d[k, w] / r[k]
         sigma[k] = tmp
 
@@ -111,9 +111,9 @@ def get_sigma_from_adp(sigma, adps, r, d, offset):
      cache=cache)
 def get_tau(dw_factor, sigma, qbin):
     kmax, qmax_bin = dw_factor.shape
-    for qx in xrange(i4(qmax_bin)):
+    for qx in range(i4(qmax_bin)):
         sv = qbin * f4(qx)
-        for k in xrange(kmax):
+        for k in range(kmax):
             dw_factor[k, qx] = math.exp(
                 f4(-.5) * sigma[k] * sigma[k] * sv * sv)
 
@@ -131,8 +131,8 @@ def get_fq(fq, omega, norm):
      target=processor_target, nopython=True, cache=cache)
 def get_adp_fq(fq, omega, tau, norm):
     kmax, qmax_bin = omega.shape
-    for qx in xrange(i4(qmax_bin)):
-        for k in xrange(kmax):
+    for qx in range(i4(qmax_bin)):
+        for k in range(kmax):
             fq[k, qx] = norm[k, qx] * omega[k, qx] * tau[k, qx]
 
 
@@ -166,13 +166,13 @@ def get_grad_omega(grad_omega, omega, r, d, qbin):
      target=processor_target, nopython=True, cache=cache)
 def get_grad_tau(grad_tau, tau, r, d, sigma, adps, qbin, offset):
     kmax, _, qmax_bin = grad_tau.shape
-    for qx in xrange(i4(qmax_bin)):
+    for qx in range(i4(qmax_bin)):
         sv = f4(qx) * qbin
-        for k in xrange(kmax):
+        for k in range(kmax):
             i, j = k_to_ij(k + offset)
             rk = r[k]
             tmp = f4(sigma[k] * f4(sv * sv) * tau[k, qx]) / f4(rk * rk * rk)
-            for w in xrange(i4(3)):
+            for w in range(i4(3)):
                 grad_tau[k, w, qx] = f4(tmp) * f4(
                     d[k, w] * sigma[k] - f4(adps[i, w] - adps[j, w]) * f4(
                         rk * rk))
@@ -273,11 +273,11 @@ def fast_fast_flat_sum(new_grad, grad, k_cov):
      target=processor_target, nopython=True, cache=cache)
 def get_dtau_dadp(dtau_dadp, tau, sigma, r, d, qbin):
     kmax, _, qmax_bin = dtau_dadp.shape
-    for qx in xrange(i4(qmax_bin)):
+    for qx in range(i4(qmax_bin)):
         sv = qx * qbin
-        for k in xrange(kmax):
+        for k in range(kmax):
             tmp = f4(-1.) * sigma[k] * sv * sv * tau[k, qx] / r[k]
-            for w in xrange(i4(3)):
+            for w in range(i4(3)):
                 dtau_dadp[k, w, qx] = tmp * d[k, w]
 
 
@@ -285,7 +285,7 @@ def get_dtau_dadp(dtau_dadp, tau, sigma, r, d, qbin):
      target=processor_target, nopython=True, cache=cache)
 def get_dfq_dadp_inplace(dtau_dadp, omega, norm):
     kmax, _, qmax_bin = dtau_dadp.shape
-    for qx in xrange(i4(qmax_bin)):
-        for k in xrange(kmax):
-            for w in xrange(i4(3)):
+    for qx in range(i4(qmax_bin)):
+        for k in range(kmax):
+            for w in range(i4(3)):
                 dtau_dadp[k, w, qx] *= norm[k, qx] * omega[k, qx]

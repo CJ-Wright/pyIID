@@ -166,7 +166,7 @@ def fft_gr_to_fq(g, rstep, rmin):
     gpadc[:2 * len(g):2] = g[:]
     # gpadc2[:2 * len(g):2] = g[:]
     '''
-    for i in xrange(len(g)):
+    for i in range(len(g)):
         gpadc[2 * ilo] = g[i]
         ilo += 1
     # '''
@@ -177,7 +177,7 @@ def fft_gr_to_fq(g, rstep, rmin):
     # gpadc2[-2:-2 * len(g) + 1:-2] = -1 * g[1:]
     '''
     ihi = 2 * npad2 - 1
-    for ilo in xrange(1, npad2):
+    for ilo in range(1, npad2):
         gpadc[2 * ihi] = -1 * gpadc[2 * ilo]
         ihi -= 1
     '''
@@ -195,7 +195,7 @@ def fft_gr_to_fq(g, rstep, rmin):
     f[:] = gpadcfft[:npad2 * 2:2] * npad2 * rstep
     # f2[:] = gpadcfft[:npad2 * 2:2] * npad2 * rstep
     '''
-    for i in xrange(npad2):
+    for i in range(npad2):
         # f[i] = gpadcfft[2 * i + 1] * npad2 * rstep
         f[i] = gpadcfft[2 * i] * npad2 * rstep
     assert_allclose(f2, f)
