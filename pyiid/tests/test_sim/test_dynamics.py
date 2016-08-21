@@ -28,26 +28,31 @@ def check_dynamics(value):
     ideal_atoms.set_velocities(np.zeros((len(ideal_atoms), 3)))
     if isinstance(value[1], str):
         s = ElasticScatter(verbose=True)
-        target_data = None
-        exp_func = None
-        exp_grad = None
         if value[1] == 'PDF':
             target_data = s.get_pdf(ideal_atoms)
             exp_func = s.get_pdf
             exp_grad = s.get_grad_pdf
-
+            adp_exp_grad = s.get_grad_adp_pdf
         elif value[1] == 'FQ':
             target_data = s.get_fq(ideal_atoms)
             exp_func = s.get_fq
             exp_grad = s.get_grad_fq
+            adp_exp_grad = s.get_grad_adp_fq
         calc = Calc1D(target_data=target_data,
                       exp_function=exp_func, exp_grad_function=exp_grad,
                       potential='rw', conv=30)
+        adp_calc = Calc1D(target_data=target_data,
+                          exp_function=exp_func,
+                          exp_grad_function=adp_exp_grad,
+                          potential='rw', conv=30)
     else:
         calc = value[1]
+        adp_calc = value[1]
     ideal_atoms.positions *= 1.02
 
     ideal_atoms.set_calculator(calc)
+    if has_adp(ideal_atoms):
+        has_adp(ideal_atoms).set_calculator(adp_calc)
     start_pe = ideal_atoms.get_potential_energy()
     e = value[2]
     traj = classical_dynamics(ideal_atoms, e, 5)

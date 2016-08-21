@@ -4,6 +4,7 @@ from pyiid.experiments.elasticscatter.atomics.gpu_atomics import *
 from pyiid.experiments import *
 from pyiid.experiments.elasticscatter.kernels.cpu_flat import \
     get_normalization_array
+from pyiid.adp import has_adp
 from builtins import range
 
 __author__ = 'christopher'
@@ -21,10 +22,14 @@ def setup_gpu_calc(atoms, sum_type):
     qmax_bin = scatter_array.shape[1]
     sort_gpus, sort_gmem = get_gpus_mem()
 
-    return q, n, qmax_bin, scatter_array, sort_gpus, sort_gmem
+    adps = has_adp(atoms)
+    if adps:
+        return q, adps.get_positions().astype(
+            np.float32), n, qmax_bin, scatter_array, sort_gpus, sort_gmem
+    return q, None, n, qmax_bin, scatter_array, sort_gpus, sort_gmem
 
 
-def subs_fq(fq, q, scatter_array, qbin, gpu, k_cov, k_per_thread):
+def subs_fq(fq, q, adps, scatter_array, qbin, gpu, k_cov, k_per_thread):
     """
     Thread function to calculate a chunk of F(Q)
 
@@ -48,10 +53,11 @@ def subs_fq(fq, q, scatter_array, qbin, gpu, k_cov, k_per_thread):
     """
     # set up GPU
     with gpu:
-        fq += atomic_fq(q, scatter_array, qbin, k_cov, k_per_thread)
+        fq += atomic_fq(q, adps, scatter_array, qbin, k_cov, k_per_thread)
 
 
-def subs_grad_fq(grad_p, q, scatter_array, qbin, gpu, k_cov, k_per_thread):
+def subs_grad_fq(grad_p, q, adps, scatter_array, qbin, gpu, k_cov,
+                 k_per_thread):
     """
     Thread function to calculate a chunk of F(Q)
 
@@ -75,7 +81,8 @@ def subs_grad_fq(grad_p, q, scatter_array, qbin, gpu, k_cov, k_per_thread):
     """
     # set up GPU
     with gpu:
-        grad_p += atomic_grad_fq(q, scatter_array, qbin, k_cov, k_per_thread)
+        grad_p += atomic_grad_fq(q, adps, scatter_array, qbin, k_cov,
+                                 k_per_thread)
 
 
 def sub_grad_pdf(gpu, gpadc, gpadcfft, atoms_per_thread, n_cov):
@@ -105,7 +112,6 @@ def sub_grad_pdf(gpu, gpadc, gpadcfft, atoms_per_thread, n_cov):
                 gpadc[n_cov:n_cov + atoms_per_thread, i, :]).astype(
                 np.complex64)
             batch_output = np.zeros(batch_input.shape, dtype=np.complex64)
-
             _ = plan.inverse(batch_input, out=batch_output)
             del batch_input
             data_out = np.reshape(batch_output,
@@ -136,12 +142,12 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
     1darray;
         The reduced structure factor
     """
-    q, n, qmax_bin, scatter_array, gpus, mem_list = setup_gpu_calc(
+    q, adps, n, qmax_bin, scatter_array, gpus, mem_list = setup_gpu_calc(
         atoms, sum_type)
     allocation = gpu_k_space_fq_allocation
 
     fq = np.zeros(qmax_bin, np.float64)
-    master_task = [fq, q, scatter_array, qbin]
+    master_task = [fq, q, adps, scatter_array, qbin]
     fq = gpu_multithreading(subs_fq, allocation, master_task, (n, qmax_bin),
                             (gpus, mem_list))
     fq = fq.astype(np.float32)
@@ -176,12 +182,12 @@ def wrap_fq_grad(atoms, qbin=.1, sum_type='fq'):
     1darray;
         The reduced structure factor
     """
-    q, n, qmax_bin, scatter_array, gpus, mem_list = setup_gpu_calc(
+    q, adps, n, qmax_bin, scatter_array, gpus, mem_list = setup_gpu_calc(
         atoms, sum_type)
     allocation = gpu_k_space_grad_fq_allocation
 
     grad_p = np.zeros((n, 3, qmax_bin))
-    master_task = [grad_p, q, scatter_array, qbin]
+    master_task = [grad_p, q, adps, scatter_array, qbin]
     grad_p = gpu_multithreading(subs_grad_fq, allocation, master_task,
                                 (n, qmax_bin),
                                 (gpus, mem_list))
@@ -249,12 +255,21 @@ def grad_pdf(grad_fq, rstep, qstep, rgrid, qmin):
     while n_cov < n:
         for gpu, mem in zip(gpus, mems):
             if gpu not in p_dict.keys() or p_dict[gpu].is_alive() is False:
+                # TODO: Note that the second division by a memory scale factor
+                # is not needed but I don't know the official memory
+                # allocation and this makes certain we don't crash the system
+                # on a memory allocation
+                memory_scale_factor = 1.7
                 atoms_per_thread = int(
-                    math.floor(.8 * mem / gpadcfft.shape[-1] / 8 / 2))
+                    math.floor(.8 * mem / gpadcfft.shape[
+                        -1] / 8 / 2 / memory_scale_factor))
                 if atoms_per_thread > n - n_cov:
                     atoms_per_thread = n - n_cov
                 if n_cov >= n:
                     break
+                # print(mem / 1e9, gpadcfft.shape[
+                #     -1] * 8 * 2 * atoms_per_thread / 1e9,
+                #       atoms_per_thread)
                 p = Thread(target=sub_grad_pdf,
                            args=(
                                gpu, gpadc, gpadcfft, atoms_per_thread,

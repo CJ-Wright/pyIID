@@ -1,3 +1,7 @@
+"""
+This module tests the analytical F(Q) gradient using a small perturbation in
+atom position.
+"""
 from __future__ import print_function
 from pyiid.tests import *
 from pyiid.experiments.elasticscatter import ElasticScatter

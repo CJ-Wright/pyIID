@@ -5,6 +5,8 @@ import numpy as np
 from numpy.random import RandomState
 from builtins import range
 from ase.io.trajectory import Trajectory
+from pyiid.adp import has_adp
+
 __author__ = 'christopher'
 
 
@@ -29,11 +31,23 @@ def leapfrog(atoms, step, center=True):
     """
     latoms = dc(atoms)
 
+    adps = None
+    if has_adp(latoms):
+        adps = has_adp(latoms)
+
+    latoms.set_momenta(latoms.get_momenta() + 0.5 * step * latoms.get_forces())
+    if adps is not None:
+        adps.set_momenta(adps.get_momenta() + 0.5 * step * adps.get_forces(latoms))
+
+    latoms.set_positions(latoms.get_positions() + step * latoms.get_velocities())
+    if adps is not None:
+        adps.set_positions(adps.get_positions() + 0.5 * step * adps.get_velocities())
+
     latoms.set_momenta(latoms.get_momenta() + 0.5 * step * latoms.get_forces())
 
-    latoms.positions += step * latoms.get_velocities()
+    if adps is not None:
+        adps.set_momenta(adps.get_momenta() + 0.5 * step * adps.get_forces(latoms))
 
-    latoms.set_momenta(latoms.get_momenta() + 0.5 * step * latoms.get_forces())
     if center:
         latoms.center()
     return latoms

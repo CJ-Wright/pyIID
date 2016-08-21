@@ -1,3 +1,7 @@
+"""
+Test that the forces we calculate from the PES using analytical results are the
+same as when we use the ase numerical forces method.
+"""
 from pyiid.tests import *
 from pyiid.experiments.elasticscatter import ElasticScatter
 from pyiid.calc.calc_1d import Calc1D
@@ -7,10 +11,9 @@ __author__ = 'christopher'
 test_dynamics_data = tuple(product(test_atoms, test_calcs))
 
 
-def run_gen_dynamics():
+def test_gen_dynamics():
     for v in test_dynamics_data:
         yield check_n_forces, v
-
 
 def check_n_forces(value):
     """

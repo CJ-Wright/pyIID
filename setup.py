@@ -8,5 +8,5 @@ setup(
     license='',
     author='christopher',
     author_email='',
-    description='', requires=['scipy']
+    description=''
 )

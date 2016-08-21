@@ -10,9 +10,9 @@ if __name__ == '__main__':
     rank = comm.Get_rank()
     for task in iter(lambda: comm.sendrecv(dest=0), StopIteration):
         if grad_cov is None:
-            grad_cov = atomic_grad_fq(*task)
+            grad_cov = atomic_grad_fq(*task, adps)
         else:
-            grad_cov += atomic_grad_fq(*task)
+            grad_cov += atomic_grad_fq(*task, adps)
     # Return Finished Data
     # TODO: Use MPI Buffer object to do this for speed enhancement
     comm.gather(sendobj=grad_cov, root=0)

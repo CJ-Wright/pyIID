@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 """
 The main class in this module `ElasticScatter` holds the experimental details,
 and processor information needed to calculate the elastic powder scattering
@@ -7,12 +5,16 @@ from a collection of atoms.
 """
 import math
 import numpy as np
-from accelerate import cuda
+from accelerate.cuda import cuda
+
 from pyiid.experiments.elasticscatter.cpu_wrappers.nxn_cpu_wrap import \
-    wrap_fq_grad as cpu_wrap_fq_grad, wrap_fq as cpu_wrap_fq
+    wrap_fq_grad as cpu_wrap_fq_grad, wrap_fq as cpu_wrap_fq, \
+    wrap_fq_dadp as cpu_wrap_dadp
 from pyiid.experiments.elasticscatter.kernels.master_kernel import \
     grad_pdf as cpu_grad_pdf, get_pdf_at_qmin, get_scatter_array
+
 from scipy.interpolate import griddata
+from pyiid.adp import has_adp
 
 __author__ = 'christopher'
 
@@ -31,16 +33,16 @@ def check_gpu():
     Check if GPUs are available on this machine
     """
     try:
-        cuda.cuda.gpus.lst
+        tf = cuda.gpus.lst
         tf = True
-    except cuda.cuda.CudaSupportError:
+    except cuda.CudaSupportError:
         tf = False
     return tf
 
 
 def check_cudafft():
     try:
-        from accelerate.cuda import fft as cufft
+        from accelerate.cuda import fft
         tf = True
     except ImportError:
         tf = False
@@ -67,20 +69,13 @@ class ElasticScatter(object):
 
     """
 
-    def __init__(self, exp_dict=None, verbose=False, seed=None):
+    def __init__(self, exp_dict=None, verbose=False):
         self.verbose = verbose
         self.wrap_atoms_state = None
-        if seed is None:
-            self.seed = int(np.random.random() * 2 ** 32)
-        elif isinstance(seed, int):
-            self.seed = seed
-        else:
-            raise ValueError('Expected an integer!')
-        self.rs = np.random.RandomState(self.seed)
 
         # Currently supported processor architectures, in order of most
         # advanced to least
-        self.avail_pro = ['MPI-GPU', 'Multi-GPU', 'CPU']
+        self.avail_pro = ['MPI-GPU', 'GPU', 'CPU']
 
         # needed parameters to specify an experiment
         self.exp_dict_keys = ['qmin', 'qmax', 'qbin', 'rmin', 'rmax', 'rstep',
@@ -101,6 +96,7 @@ class ElasticScatter(object):
         self.fq = cpu_wrap_fq
         self.grad = cpu_wrap_fq_grad
         self.grad_pdf = cpu_grad_pdf
+        self.adp_grad = cpu_wrap_dadp
         self.processor = 'CPU'
         self.alg = 'nxn'
 
@@ -111,7 +107,7 @@ class ElasticScatter(object):
         """
         Call this function before applying calculator, it will generate static
         arrays for the scattering, preventing recalculation
-    
+
         Parameters
         -----------
         atoms: ase.Atoms
@@ -146,8 +142,6 @@ class ElasticScatter(object):
             if name in atoms.arrays.keys():
                 del atoms.arrays[name]
             atoms.set_array(name, scatter_array)
-        if self.verbose:
-            print(atoms.arrays.keys())
 
         atoms.info['exp'] = self.exp
         atoms.info['scatter_atoms'] = n
@@ -166,18 +160,11 @@ class ElasticScatter(object):
         """
         t_value = True
         if self.wrap_atoms_state is None:
-            if self.verbose:
-                print('wrap atoms state')
             t_value = False
-        elif 'F(Q) scatter' not in atoms.arrays.keys() or \
-                        'PDF scatter' not in atoms.arrays.keys():
-            if self.verbose:
-                print('no FQ/PDF scatter factors')
+        elif 'F(Q) scatter' not in atoms.arrays.keys():
             t_value = False
         elif atoms.info['exp'] != self.exp or atoms.info[
             'scatter_atoms'] != len(atoms):
-            if self.verbose:
-                print('experiment does not match or number of atoms changed')
             t_value = False
         if not t_value:
             if self.verbose:
@@ -264,7 +251,8 @@ class ElasticScatter(object):
             self.grad = flat_grad
             self.alg = 'flat'
             if check_cudafft():
-                from pyiid.experiments.elasticscatter.gpu_wrappers.gpu_wrap import \
+                from pyiid.experiments.elasticscatter.gpu_wrappers.gpu_wrap \
+                    import \
                     grad_pdf
                 self.grad_pdf = grad_pdf
             else:
@@ -276,15 +264,17 @@ class ElasticScatter(object):
             if kernel_type == 'nxn':
                 self.fq = cpu_wrap_fq
                 self.grad = cpu_wrap_fq_grad
+                self.adp_grad = cpu_wrap_dadp
                 self.alg = 'nxn'
 
             elif kernel_type == 'flat':
                 from pyiid.experiments.elasticscatter.cpu_wrappers \
                     .flat_multi_cpu_wrap import \
-                    wrap_fq, wrap_fq_grad
+                    wrap_fq, wrap_fq_grad, wrap_fq_dadp
 
                 self.fq = wrap_fq
                 self.grad = wrap_fq_grad
+                self.adp_grad = wrap_fq_dadp
                 self.alg = 'flat'
 
             elif kernel_type == 'flat-serial':
@@ -300,17 +290,7 @@ class ElasticScatter(object):
             self.processor = processor
             return True
 
-    def check_wrap_atoms_state(self, atoms):
-        if self.wrap_atoms_state is None:
-            return False
-        if 'F(Q) scatter' not in atoms.arrays.keys():
-            return False
-        if atoms.info['exp'] != self.exp or \
-                        atoms.info['scatter_atoms'] != len(atoms):
-            return False
-        return True
-
-    def get_fq(self, atoms, iq_std=None, noise_distribution=None):
+    def get_fq(self, atoms, noise=None, noise_distribution=np.random.normal):
         """
         Calculate the reduced structure factor F(Q)
 
@@ -318,7 +298,7 @@ class ElasticScatter(object):
         ----------
         atoms: ase.Atoms
             The atomic configuration for which to calculate F(Q)
-        iq_std: {None, float, ndarray}, optional
+        noise: {None, float, ndarray}, optional
             Add noise to the data, if `noise` is a float then assume flat
             gaussian noise with a standard deviation of noise, if an array
             then assume that each point has a gaussian distribution of noise
@@ -332,24 +312,19 @@ class ElasticScatter(object):
         1darray:
             The reduced structure factor
         """
-        if self.check_wrap_atoms_state(atoms) is False:
-            if self.verbose:
-                print('calculating new scatter factors')
-            self._wrap_atoms(atoms)
-            self.wrap_atoms_state = atoms
+        self._check_wrap_atoms_state(atoms)
         fq = self.fq(atoms, self.exp['qbin'])
         fq = fq[int(np.floor(self.exp['qmin'] / self.exp['qbin'])):]
-        if iq_std is not None:
-            fq_std = iq_std * np.abs(self.get_scatter_vector()) / np.abs(
-                np.average(atoms.get_array('F(Q) scatter'), axis=0) ** 2)[int(
-                np.floor(self.exp['qmin'] / self.exp['qbin'])):]
-            if fq_std[0] == 0.0:
-                fq_std[0] += 1e-9  # added because we can't have zero noise
-            exp_noise = self.rs.normal(0, fq_std)
+        if noise is not None and noise > 0.0:
+            fq_noise = noise * np.abs(self.get_scatter_vector()) / np.abs(
+                np.average(atoms.get_array('F(Q) scatter'), axis=0) ** 2)[int(np.floor(self.exp['qmin'] / self.exp['qbin'])):]
+            if fq_noise[0] == 0.0:
+                fq_noise[0] += 1e-9  # added because we can't have zero noise
+            exp_noise = noise_distribution(fq, fq_noise)
             fq += exp_noise
         return fq
 
-    def get_pdf(self, atoms, iq_std=None, noise_distribution=np.random.normal):
+    def get_pdf(self, atoms, noise=None, noise_distribution=np.random.normal):
         """
         Calculate the atomic pair distribution factor, PDF, G(r)
 
@@ -357,7 +332,7 @@ class ElasticScatter(object):
         ----------
         atoms: ase.Atoms
             The atomic configuration for which to calculate the PDF
-        iq_std: {None, float, ndarray}, optional
+        noise: {None, float, ndarray}, optional
             Add noise to the data, if `noise` is a float then assume flat
             gaussian noise with a standard deviation of noise, if an array
             then assume that each point has a gaussian distribution of noise
@@ -371,23 +346,18 @@ class ElasticScatter(object):
         1darray:
             The PDF
         """
-        if self.check_wrap_atoms_state(atoms) is False:
-            if self.verbose:
-                print('calculating new scatter factors')
-            self._wrap_atoms(atoms)
-            self.wrap_atoms_state = atoms
+        self._check_wrap_atoms_state(atoms)
         fq = self.fq(atoms, self.pdf_qbin, 'PDF')
-        if iq_std is not None:
+        if noise is not None and noise > 0.0:
             a = np.abs(self.get_scatter_vector(pdf=True))
             b = np.abs(np.average(atoms.get_array('PDF scatter') ** 2, axis=0))
-            if hasattr(iq_std, 'shape') and iq_std.shape != a.shape:
-                iq_std = griddata(np.arange(0, iq_std.shape), iq_std,
-                                  np.arange(
-                                      a.shape))
-            fq_noise = iq_std * a / b
+            if isinstance(noise, np.ndarray) and noise.shape != a.shape:
+                noise = griddata(np.arange(0, noise.shape), noise, np.arange(
+                    a.shape))
+            fq_noise = noise * a / b
             if fq_noise[0] == 0.0:
                 fq_noise[0] += 1e-9  # added because we can't have zero noise
-            exp_noise = self.rs.normal(0, fq_noise)
+            exp_noise = noise_distribution(fq, fq_noise)
             fq += exp_noise
         r = self.get_r()
         pdf0 = get_pdf_at_qmin(
@@ -399,7 +369,7 @@ class ElasticScatter(object):
         )
         return pdf0
 
-    def get_sq(self, atoms, iq_std=None, noise_distribution=np.random.normal):
+    def get_sq(self, atoms, noise=None, noise_distribution=np.random.normal):
         """
         Calculate the structure factor S(Q)
 
@@ -407,20 +377,12 @@ class ElasticScatter(object):
         ----------
         atoms: ase.Atoms
             The atomic configuration for which to calculate S(Q)
-        iq_std: {None, float, ndarray}, optional
-            Add noise to the data, if `noise` is a float then assume flat
-            gaussian noise with a standard deviation of noise, if an array
-            then assume that each point has a gaussian distribution of noise
-            with a standard deviation given by noise. Note that this noise is
-            noise in I(Q) which is propagated to F(Q)
-        noise_distribution: distribution function
-            The distribution function to take the scattering pattern
         Returns
         -------
         1darray:
             The structure factor
         """
-        fq = self.get_fq(atoms, iq_std, noise_distribution)
+        fq = self.get_fq(atoms, noise, noise_distribution)
         old_settings = np.seterr(all='ignore')
         sq = (fq / self.get_scatter_vector()) + np.ones(
             self.get_scatter_vector().shape)
@@ -428,7 +390,7 @@ class ElasticScatter(object):
         sq[np.isinf(sq)] = 0.
         return sq
 
-    def get_iq(self, atoms, iq_std=None, noise_distribution=np.random.normal):
+    def get_iq(self, atoms, noise=None, noise_distribution=np.random.normal):
         """
         Calculate the scattering intensity, I(Q)
 
@@ -436,20 +398,12 @@ class ElasticScatter(object):
         ----------
         atoms: ase.Atoms
             The atomic configuration for which to calculate I(Q)
-        iq_std: {None, float, ndarray}, optional
-            Add noise to the data, if `noise` is a float then assume flat
-            gaussian noise with a standard deviation of noise, if an array
-            then assume that each point has a gaussian distribution of noise
-            with a standard deviation given by noise. Note that this noise is
-            noise in I(Q) which is propagated to F(Q)
-        noise_distribution: distribution function
-            The distribution function to take the scattering pattern
         Returns
         -------
         1darray:
             The scattering intensity
         """
-        sq = self.get_sq(atoms, iq_std, noise_distribution)
+        sq = self.get_sq(atoms, noise, noise_distribution)
         f2 = np.average(atoms.get_array('F(Q) scatter'), axis=0) ** 2
         iq = sq * f2[int(np.floor(self.exp['qmin'] / self.exp['qbin'])):]
         return iq
@@ -496,11 +450,7 @@ class ElasticScatter(object):
         3darray:
             The gradient of the reduced structure factor
         """
-        if self.check_wrap_atoms_state(atoms) is False:
-            if self.verbose:
-                print('calculating new scatter factors')
-            self._wrap_atoms(atoms)
-            self.wrap_atoms_state = atoms
+        self._check_wrap_atoms_state(atoms)
         g = self.grad(atoms, self.exp['qbin'])
         return g[:, :, int(np.floor(self.exp['qmin'] / self.exp['qbin'])):]
 
@@ -517,11 +467,7 @@ class ElasticScatter(object):
         3darray:
             The gradient of the PDF
         """
-        if self.check_wrap_atoms_state(atoms) is False:
-            if self.verbose:
-                print('calculating new scatter factors')
-            self._wrap_atoms(atoms)
-            self.wrap_atoms_state = atoms
+        self._check_wrap_atoms_state(atoms)
         fq_grad = self.grad(atoms, self.pdf_qbin, 'PDF')
         qmin_bin = int(self.exp['qmin'] / self.pdf_qbin)
         fq_grad[:, :, :qmin_bin] = 0.
@@ -565,3 +511,38 @@ class ElasticScatter(object):
             The r range for this experiment
         """
         return np.arange(self.exp['rmin'], self.exp['rmax'], self.exp['rstep'])
+
+    def get_grad_adp_fq(self, atoms):
+        self._check_wrap_atoms_state(atoms)
+        if has_adp(atoms):
+            # Calculate the grad of the adps using the wrappers
+            grad_adp_fq = self.adp_grad(atoms, self.exp['qbin'])
+        else:
+            print("It seems that the atoms don't have any adps, "
+                  "you need adps to call this method")
+            grad_adp_fq = np.zeros(atoms.get_positions().shape)
+        return grad_adp_fq
+
+    def get_grad_adp_pdf(self, atoms):
+        """
+        Calculate the gradient of the PDF
+
+        Parameters
+        ----------
+        atoms: ase.Atoms
+            The atomic configuration for which to calculate grad PDF
+        Returns
+        -------
+        3darray:
+            The gradient of the PDF
+        """
+        self._check_wrap_atoms_state(atoms)
+        fq_grad = self.adp_grad(atoms, self.pdf_qbin, 'PDF')
+        qmin_bin = int(self.exp['qmin'] / self.pdf_qbin)
+        fq_grad[:, :, :qmin_bin] = 0.
+        rgrid = self.get_r()
+
+        pdf_grad = self.grad_pdf(fq_grad, self.exp['rstep'], self.pdf_qbin,
+                                 rgrid,
+                                 self.exp['qmin'])
+        return pdf_grad * -1.

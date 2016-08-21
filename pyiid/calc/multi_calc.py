@@ -94,11 +94,11 @@ class MultiCalc(Calculator):
                 # need to know what kind of atom is being added
                 '''
                 im, jm, km = voxel_energy.shape
-                for i in xrange(im):
+                for i in range(im):
                     x = (i + .5) * resolution
-                    for j in xrange(jm):
+                    for j in range(jm):
                         y = (j + .5) * resolution
-                        for k in xrange(km):
+                        for k in range(km):
                             z = (k + .5) * resolution
                             atoms2 = dc(atoms)
                             atoms2 += Atom(element, (x, y, z))

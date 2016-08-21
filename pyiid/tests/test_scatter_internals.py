@@ -1,3 +1,6 @@
+"""
+Rigorously test the flattened CPU kernel against the NXN kernel, step by step.
+"""
 from __future__ import print_function
 from pyiid.tests import *
 from pyiid.experiments.elasticscatter import ElasticScatter

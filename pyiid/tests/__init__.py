@@ -1,12 +1,12 @@
-from __future__ import print_function
-
 """
+This module provides some utilities and lists of test values for the test suite
 Note there is only one CPU nxn comparison test, the CPU nxn code is
 rather slow, thus we test it against the flattened Multi core CPU code,
 which is much faster.
 Then we run all nuts_benchmarks against the CPU flat kernels.
 Thus it is imperative that the flat CPU runs with no errors.
 """
+from __future__ import print_function
 import numpy as np
 from ase import Atoms, Atom
 from numpy.testing import assert_allclose
@@ -16,6 +16,8 @@ from copy import deepcopy as dc
 import random
 from pyiid.testing.decorators import *
 from pyiid.calc.spring_calc import Spring
+from pyiid.adp import ADP, has_adp
+from nose.plugins.skip import SkipTest
 
 srfit = False
 try:
@@ -93,6 +95,13 @@ def setup_atoms(n):
     atoms = Atoms('Au' + str(int(n)), q)
     atoms.center()
     return atoms
+
+
+def setup_adps(atoms):
+    n = len(atoms)
+    adp_tensor = rs.randint(10, 100, (n, 3)) * .001
+    adps = ADP(atoms, adp_tensor)
+    return adps
 
 
 def setup_double_atoms(n):
@@ -208,6 +217,15 @@ def stats_check(ans1, ans2, rtol=1e-7, atol=0):
 # Setup lists of test variables for combinations
 test_exp = [None]
 test_atom_squares = [setup_atomic_square()]
+test_adp_atom_squares = []
+for a in test_atom_squares:
+    atoms_list = []
+    for atoms in a:
+        atoms1 = dc(atoms)
+        atoms1.info['adps'] = setup_adps(atoms1)
+        atoms_list.append(atoms1)
+    test_adp_atom_squares.append(tuple(atoms_list))
+# test_atom_squares += test_adp_atom_squares
 test_potentials = [
     ('rw', .9),
     # ('chi_sq', 1)
@@ -218,7 +236,7 @@ test_spring_kwargs = [{'k': 100, 'rt': 5., 'sp_type': 'rep'},
                       {'k': 100, 'rt': 1., 'sp_type': 'att'}]
 
 test_calcs = [Spring(**t_kwargs) for t_kwargs in test_spring_kwargs]
-# test_calcs.extend(['FQ', 'PDF'])
+test_calcs.extend(['FQ', 'PDF'])
 
 ns = [10]
 travis = False
@@ -245,13 +263,13 @@ elif os.getenv('SHORT_TEST'):
     proc_alg_pairs = [('CPU', 'nxn'),
                       ('CPU', 'flat'),
                       ('CPU', 'flat-serial'),
-                      ('Multi-GPU', 'flat'),
+                      ('GPU', 'flat'),
                       ]
     comparison_pro_alg_pairs = [
         # (('CPU', 'nxn'), ('CPU', 'flat-serial')),
         # (('CPU', 'flat-serial'), ('CPU', 'flat')),
         (('CPU', 'nxn'), ('CPU', 'flat')),
-        (('CPU', 'flat'), ('Multi-GPU', 'flat')),
+        (('CPU', 'flat'), ('GPU', 'flat')),
 
     ]
 else:
@@ -259,23 +277,34 @@ else:
         10,
         100,
         # 400,
-        1000
+        # 1000
     ]
     num_exp = 3
-    proc_alg_pairs = [('CPU', 'nxn'),
-                      ('CPU', 'flat-serial'),
-                      ('CPU', 'flat'),
-                      ('Multi-GPU', 'flat'),
-                      ]
+    proc_alg_pairs = [
+        ('CPU', 'nxn'),
+        ('CPU', 'flat-serial'),
+        ('CPU', 'flat'),
+        ('GPU', 'flat'),
+    ]
     comparison_pro_alg_pairs = [
         (('CPU', 'nxn'), ('CPU', 'flat-serial')),
         (('CPU', 'flat-serial'), ('CPU', 'flat')),
         # (('CPU', 'nxn'), ('CPU', 'flat')),
-        (('CPU', 'flat'), ('Multi-GPU', 'flat')),
-        # (('CPU', 'nxn'), ('Multi-GPU', 'flat'))
+        (('CPU', 'flat'), ('GPU', 'flat')),
+        # (('CPU', 'nxn'), ('GPU', 'flat'))
 
     ]
 
 test_exp.extend([generate_experiment() for i in range(num_exp)])
 test_atoms = [setup_atoms(int(n)) for n in ns]
+test_adp_atoms = []
+for atoms in test_atoms:
+    atoms2 = dc(atoms)
+    atoms2.info['adps'] = setup_adps(atoms2)
+    test_adp_atoms.append(atoms2)
 test_double_atoms = [setup_double_atoms(int(n)) for n in ns]
+elastic_scatter_methods = [
+    'get_fq', 'get_pdf', 'get_grad_fq', 'get_grad_pdf', 'get_sq', 'get_iq',
+]
+elastic_scatter_adp_methods = ['get_grad_adp_fq', 'get_grad_adp_pdf', ]
+elastic_scatter_methods += elastic_scatter_adp_methods

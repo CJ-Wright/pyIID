@@ -34,8 +34,12 @@ def check_leapfrog_no_momentum(value):
     atoms = value[0]
     calc = Spring(rt=1, k=100)
     atoms.set_calculator(calc)
+    if has_adp(atoms):
+        has_adp(atoms).set_calculator(calc)
     atoms2 = leapfrog(atoms, 1, False)
     stats_check(atoms.positions, atoms2.positions)
+    if has_adp(atoms):
+        stats_check(has_adp(atoms).get_positions(), has_adp(atoms2).get_positions())
 
 
 def check_leapfrog_momentum(value):
@@ -51,8 +55,13 @@ def check_leapfrog_momentum(value):
     calc = Spring(rt=1, k=100)
     atoms.set_momenta(np.ones((len(atoms), 3)))
     atoms.set_calculator(calc)
+    if has_adp(atoms):
+        has_adp(atoms).set_calculator(calc)
     atoms2 = leapfrog(atoms, 1, False)
     stats_check(atoms.positions, atoms2.positions - atoms.get_velocities())
+    if has_adp(atoms):
+        stats_check(has_adp(atoms).get_positions(),
+                    has_adp(atoms2).get_positions() - has_adp(atoms2).get_velocities())
 
 
 def check_leapfrog_reversibility(value):
@@ -68,9 +77,14 @@ def check_leapfrog_reversibility(value):
     calc = Spring(rt=1, k=100)
     atoms.set_momenta(np.ones((len(atoms), 3)))
     atoms.set_calculator(calc)
+    if has_adp(atoms):
+        has_adp(atoms).set_calculator(calc)
     atoms2 = leapfrog(atoms, 1, False)
     atoms3 = leapfrog(atoms2, -1, False)
     stats_check(atoms.positions, atoms3.positions)
+    if has_adp(atoms):
+        stats_check(has_adp(atoms).get_positions(),
+                    has_adp(atoms2).get_positions())
 
 
 if __name__ == '__main__':
