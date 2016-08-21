@@ -320,8 +320,7 @@ class ElasticScatter(object):
                 np.average(atoms.get_array('F(Q) scatter'), axis=0) ** 2)[int(np.floor(self.exp['qmin'] / self.exp['qbin'])):]
             if fq_noise[0] == 0.0:
                 fq_noise[0] += 1e-9  # added because we can't have zero noise
-            exp_noise = noise_distribution(fq, fq_noise)
-            fq += exp_noise
+            fq = noise_distribution(fq, fq_noise)
         return fq
 
     def get_pdf(self, atoms, noise=None, noise_distribution=np.random.normal):
@@ -357,8 +356,7 @@ class ElasticScatter(object):
             fq_noise = noise * a / b
             if fq_noise[0] == 0.0:
                 fq_noise[0] += 1e-9  # added because we can't have zero noise
-            exp_noise = noise_distribution(fq, fq_noise)
-            fq += exp_noise
+            fq = noise_distribution(fq, fq_noise)
         r = self.get_r()
         pdf0 = get_pdf_at_qmin(
             fq,
