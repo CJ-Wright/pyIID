@@ -5,9 +5,13 @@ from pyiid.experiments import *
 from pyiid.experiments.elasticscatter.kernels.cpu_flat import \
     get_normalization_array
 from builtins import range
+from pyiid.experiments.elasticscatter.cpu_wrappers.flat_multi_cpu_wrap import cpu_multiprocessing
+
 
 __author__ = 'christopher'
 
+def norm_allocation(n, sv, mem):
+    return int(math.floor(float(.8 * mem / 4/ sv - n)))
 
 def setup_gpu_calc(atoms, sum_type):
     # atoms info
@@ -145,9 +149,16 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
     fq = gpu_multithreading(subs_fq, allocation, master_task, (n, qmax_bin),
                             (gpus, mem_list))
     fq = fq.astype(np.float32)
-    norm = np.empty((int(n * (n - 1) / 2.), qmax_bin), np.float32)
-    get_normalization_array(norm, scatter_array, 0)
-    na = np.mean(norm, axis=0) * n
+    # TODO: fix memory error here, use CPU multiprocessing
+    norm = np.empty(qmax_bin, np.float32)
+    master_task = [norm, scatter_array]
+    sum_norm = cpu_multiprocessing(normalization, norm_allocation, master_task,
+                               (n, qmax_bin))
+    sum_norm = np.sum(sum_norm, axis-0)
+    # norm = np.empty((int(n * (n - 1) / 2.), qmax_bin), np.float32)
+    # get_normalization_array(norm, scatter_array, 0)
+    # na = np.mean(norm, axis=0) * n
+    na = sum_norm / (int(n * (n - 1) / 2.))  * n
     old_settings = np.seterr(all='ignore')
     fq = np.nan_to_num(fq / na)
     np.seterr(**old_settings)
@@ -312,3 +323,8 @@ def gpu_multithreading(subs_function, allocation,
     for value in p_dict.values():
         value.join()
     return master_task[0]
+
+def normalization(task):
+    norm, scatter_array, kmax, kcov = task
+    get_normalization_array(norm, scatter_array, i4(kcov))
+    return np.sum(norm, axis=0)

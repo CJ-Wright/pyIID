@@ -209,7 +209,7 @@ if __name__ == '__main__':
         '--with-doctest',
         # '--nocapture',
         '-v',
-        # '-x',
+        '-x',
     ],
         # env={"NOSE_PROCESSES": 1, "NOSE_PROCESS_TIMEOUT": 599},
         exit=False)
