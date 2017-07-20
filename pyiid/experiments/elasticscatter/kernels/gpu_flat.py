@@ -5,6 +5,7 @@ from numba import cuda, f4, i4
 
 from pyiid.experiments.elasticscatter.kernels import cuda_k_to_ij, cuda_ij_to_k
 from builtins import range
+
 __author__ = 'christopher'
 
 
@@ -141,6 +142,7 @@ def get_tau(dw_factor, sigma, qbin):
     sv = f4(qx) * qbin
     dw_factor[k, qx] = math.exp(f4(-.5) * sigma[k] * sigma[k] * sv * sv)
 
+
 @cuda.jit(argtypes=[f4[:, :], f4[:, :], f4[:, :]])
 def get_fq(fq, omega, norm):
     """
@@ -182,6 +184,7 @@ def get_adp_fq(fq, omega, tau, norm):
         return
     fq[k, qx] = norm[k, qx] * omega[k, qx] * tau[k, qx]
 
+
 # Gradient kernels -------------------------------------------------------
 @cuda.jit(argtypes=[f4[:, :, :], f4[:, :], f4[:], f4[:, :], f4])
 def get_grad_omega(grad_omega, omega, r, d, qbin):
@@ -216,10 +219,13 @@ def get_grad_omega(grad_omega, omega, r, d, qbin):
 @cuda.jit(
     argtypes=[f4[:, :, :], f4[:, :], f4[:], f4[:, :], f4[:], f4[:, :], f4, i4])
 def get_grad_tau(grad_tau, tau, r, d, sigma, adps, qbin, offset):
-    """
-    Get the gradient of the Debye-Waller factors with respect to atomic position
+    """ Get the gradient of the Debye-Waller factors with respect to atomic
+    position
+
+    Parameters
+    ----------
     grad_tau: kx3xQ array
-     The gradient
+        The gradient
     tau: kxQ array
         The Debye-Waller factor
     r:k array
@@ -246,6 +252,7 @@ def get_grad_tau(grad_tau, tau, r, d, sigma, adps, qbin, offset):
     for w in range(i4(3)):
         grad_tau[k, w, qx] = tmp * (
             d[k, w] * sigma[k] - (adps[i, w] - adps[j, w]) * (rk * rk))
+
 
 @cuda.jit(argtypes=[f4[:, :, :], f4[:, :, :], f4[:, :]])
 def get_grad_fq(grad, grad_omega, norm):
@@ -298,6 +305,7 @@ def get_adp_grad_fq(grad, omega, tau, grad_omega, grad_tau, norm):
     for w in range(i4(3)):
         grad[k, w, qx] = a * (b * grad_omega[k, w, qx] +
                               c * grad_tau[k, w, qx])
+
 
 @cuda.jit(argtypes=[f4[:, :, :]])
 def zero3d(a):
@@ -427,6 +435,7 @@ def get_adp_fq_inplace(norm, omega, tau):
     if k >= kmax or qx >= qmax_bin:
         return
     norm[k, qx] *= omega[k, qx] * tau[k, qx]
+
 
 @cuda.jit(argtypes=[f4[:, :, :], f4[:, :, :], i4])
 def experimental_sum_grad_fq1(new_grad, grad, k_cov):

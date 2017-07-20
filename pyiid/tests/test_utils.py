@@ -20,6 +20,7 @@ def test_tag_surface_atoms():
     tag_surface_atoms(atoms)
     assert np.sum(atoms.get_tags()) == 42
 
+
 @pytest.mark.xfail(not srfit, reason='Need installed srfit for this stest')
 # @known_fail_if(tf)
 def test_get_angle_list():

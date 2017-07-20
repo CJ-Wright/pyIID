@@ -10,9 +10,9 @@ from ase.io.trajectory import TrajectoryReader, Trajectory
 __author__ = 'christopher'
 
 
-
 class TestNUTS:
-    test_nuts_data = tuple(product(dc(test_atom_squares), test_calcs, [True, False]))
+    test_nuts_data = tuple(
+        product(dc(test_atom_squares), test_calcs, [True, False]))
 
     def setUp(self):
         self.traj_file = NamedTemporaryFile(delete=False)
@@ -21,14 +21,14 @@ class TestNUTS:
         os.remove(self.traj_file.name)
 
     @classmethod
-    def setup_class(self):
-        self.traj_file = NamedTemporaryFile(delete=False)
+    def setup_class(cls):
+        cls.traj_file = NamedTemporaryFile(delete=False)
 
     @classmethod
-    def teardown_class(self):
-        print(self.traj_file.name)
-        os.remove(self.traj_file.name)
-        print(os.path.exists(self.traj_file.name))
+    def teardown_class(cls):
+        print(cls.traj_file.name)
+        os.remove(cls.traj_file.name)
+        print(os.path.exists(cls.traj_file.name))
 
     def test_nuts_dynamics(self):
         for v in self.test_nuts_data:
@@ -99,7 +99,8 @@ class TestNUTS:
                 for att in ['get_positions', 'get_potential_energy',
                             'get_forces', 'get_momenta']:
                     print(i, att)
-                    assert_allclose(*[getattr(a, att)() for a in [atoms1, atoms2]])
+                    assert_allclose(
+                        *[getattr(a, att)() for a in [atoms1, atoms2]])
         del traj
 
 
@@ -115,14 +116,14 @@ class TestASE:
         print(os.path.exists(self.traj_file.name))
 
     @classmethod
-    def setup_class(self):
-        self.traj_file = NamedTemporaryFile(delete=False)
+    def setup_class(cls):
+        cls.traj_file = NamedTemporaryFile(delete=False)
 
     @classmethod
-    def teardown_class(self):
-        print(self.traj_file.name)
-        os.remove(self.traj_file.name)
-        print(os.path.exists(self.traj_file.name))
+    def teardown_class(cls):
+        print(cls.traj_file.name)
+        os.remove(cls.traj_file.name)
+        print(os.path.exists(cls.traj_file.name))
 
     def test_ase(self):
         for v in self.test_nuts_data:
@@ -157,12 +158,12 @@ class TestASE:
 if __name__ == '__main__':
     # import nose
     import pytest
-    args = ['-v']
-    args.append('-rxs')
+
+    args = ['-v', '-rxs']
     pytest.main(args)
     # nose.runmodule(argv=['--with-doctest',
     #                      '--nocapture',
-                         # '-v',
-                         # '-x'
-                         # ],
-                   # exit=False)
+    # '-v',
+    # '-x'
+    # ],
+    # exit=False)

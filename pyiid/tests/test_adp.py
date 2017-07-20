@@ -1,5 +1,6 @@
 from pyiid.tests import *
 from pyiid.adp import ADP
+
 __author__ = 'christopher'
 
 rtol = 5e-4
@@ -16,6 +17,7 @@ def check_method(value):
 
 
 test_data = list(product(test_adp_atoms))
+
 
 def test_meta():
     for v in test_data:

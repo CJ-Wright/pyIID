@@ -5,7 +5,6 @@ from pyiid.experiments.elasticscatter.kernels.master_kernel import get_rw, \
     get_grad_chi_sq
 from ase.calculators.calculator import Calculator
 
-
 __author__ = 'christopher'
 
 
@@ -106,6 +105,7 @@ def wrap_grad_chi_sq(grad_gcalc, gcalc, gobs):
     get_grad_chi_sq(grad_chi_sq, grad_gcalc, gcalc, gobs, scale)
     return grad_chi_sq
 
+
 class Null(Calculator):
     """
     Returns zero forces or energy
@@ -118,9 +118,8 @@ class Null(Calculator):
         Calculator.__init__(self, restart, ignore_bad_restart_file,
                             label, atoms, **kwargs)
 
-    def calculate(self, atoms=None, properties=['energy'],
-                  system_changes=['positions', 'numbers', 'cell',
-                                  'pbc', 'charges', 'magmoms']):
+    def calculate(self, atoms=None, properties=None,
+                  system_changes=None):
         """PDF Calculator
         Parameters
         ----------
@@ -135,6 +134,11 @@ class Null(Calculator):
             'pbc', 'charges' and 'magmoms'.
         """
 
+        if system_changes is None:
+            system_changes = ['positions', 'numbers', 'cell',
+                              'pbc', 'charges', 'magmoms']
+        if properties is None:
+            properties = ['energy']
         Calculator.calculate(self, atoms, properties, system_changes)
 
         # we shouldn't really recalc if charges or magmos change

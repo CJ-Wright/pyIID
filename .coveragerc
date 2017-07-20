@@ -1,11 +1,13 @@
 [run]
-source=pyiid
+source = 
+    streams
 [report]
 omit =
     */python?.?/*
     */site-packages/nose/*
-    *test*
-    pyiid/__init__.py
+    # ignore _version.py and versioneer.py
+    .*version.*
+    *_version.py
 
 exclude_lines =
-    def set_default
+    if __name__ == '__main__':

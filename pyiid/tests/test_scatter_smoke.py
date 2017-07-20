@@ -1,4 +1,3 @@
-
 """
 Smoke test all the major ElasticScatter methods
 """
@@ -8,6 +7,7 @@ from pyiid.experiments.elasticscatter import ElasticScatter
 import inspect
 
 __author__ = 'christopher'
+
 
 # ----------------------------------------------------------------------------
 def check_method(value):

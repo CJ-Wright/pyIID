@@ -21,5 +21,5 @@ ssol = sol.subs(sqrt(summation((gob(r) - als * gcalc)**2, (r, rmin, rmax))/summa
 # ssol = ssol.subs(al, als)
 # pprint(ssol)
 print(latex(ssol.simplify()))
-print '\n\n\n'
+print('\n\n\n')
 print(latex(diff(al, x).subs(al, als).simplify()))

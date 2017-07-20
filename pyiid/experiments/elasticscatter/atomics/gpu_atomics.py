@@ -1,6 +1,6 @@
 import math
 import numpy as np
-from numba import *
+from numba import cuda
 from pyiid.experiments import generate_grid
 
 __author__ = 'christopher'

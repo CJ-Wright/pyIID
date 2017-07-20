@@ -41,9 +41,8 @@ class Calc1D(Calculator):
         else:
             raise NotImplementedError('Potential not implemented')
 
-    def calculate(self, atoms=None, properties=['energy'],
-                  system_changes=['positions', 'numbers', 'cell',
-                                  'pbc', 'charges', 'magmoms']):
+    def calculate(self, atoms=None, properties=None,
+                  system_changes=None):
         """PDF Calculator
         Parameters
         ----------
@@ -58,6 +57,11 @@ class Calc1D(Calculator):
             'pbc', 'charges' and 'magmoms'.
         """
 
+        if system_changes is None:
+            system_changes = ['positions', 'numbers', 'cell',
+                              'pbc', 'charges', 'magmoms']
+        if properties is None:
+            properties = ['energy']
         Calculator.calculate(self, atoms, properties, system_changes)
 
         # we shouldn't really recalc if charges or magmos change

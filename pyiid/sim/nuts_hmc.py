@@ -261,9 +261,10 @@ class NUTSCanonicalEnsemble(Ensemble):
                     if self.verbose:
                         print('\t\t\tTrajectory written', len(self.traj))
                 if self.verbose:
-                    print('\t\t\tNew Potential Energy: {} eV'.format(atoms_prime.get_potential_energy()))
+                    print('\t\t\tNew Potential Energy: {} eV'.format(
+                        atoms_prime.get_potential_energy()))
                     print('\t\t\tNew Kinetic Energy: {} eV'.format(
-                        atoms_prime.get_kinetic_energy() ))
+                        atoms_prime.get_kinetic_energy()))
                     print('\t\t\tNew Temperature: {} K'.format(
                         atoms_prime.get_temperature()))
                 self.metadata['accepted_samples'] += 1

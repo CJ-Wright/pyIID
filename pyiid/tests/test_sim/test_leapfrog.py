@@ -39,7 +39,8 @@ def check_leapfrog_no_momentum(value):
     atoms2 = leapfrog(atoms, 1, False)
     stats_check(atoms.positions, atoms2.positions)
     if has_adp(atoms):
-        stats_check(has_adp(atoms).get_positions(), has_adp(atoms2).get_positions())
+        stats_check(has_adp(atoms).get_positions(),
+                    has_adp(atoms2).get_positions())
 
 
 def check_leapfrog_momentum(value):
@@ -61,7 +62,8 @@ def check_leapfrog_momentum(value):
     stats_check(atoms.positions, atoms2.positions - atoms.get_velocities())
     if has_adp(atoms):
         stats_check(has_adp(atoms).get_positions(),
-                    has_adp(atoms2).get_positions() - has_adp(atoms2).get_velocities())
+                    has_adp(atoms2).get_positions() -
+                    has_adp(atoms2).get_velocities())
 
 
 def check_leapfrog_reversibility(value):

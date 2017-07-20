@@ -3,6 +3,7 @@ from pyiid.experiments.elasticscatter.kernels.cpu_nxn import *
 from ..kernels.cpu_flat import get_normalization_array as flat_norm
 from pyiid.experiments.elasticscatter.atomics import pad_pdf
 from pyiid.adp import has_adp
+
 __author__ = 'christopher'
 
 

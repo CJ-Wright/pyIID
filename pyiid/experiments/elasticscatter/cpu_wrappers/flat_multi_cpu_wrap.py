@@ -138,6 +138,7 @@ def wrap_fq_dadp(atoms, qbin=.1, sum_type='fq'):
     del q, n, qmax_bin, scatter_array, k_max, ans
     return grad_p
 
+
 def cpu_multiprocessing(atomic_function, allocation,
                         master_task, constants):
     # print atomic_function, allocation, master_task, constants

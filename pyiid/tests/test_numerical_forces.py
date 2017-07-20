@@ -15,6 +15,7 @@ def test_gen_dynamics():
     for v in test_dynamics_data:
         yield check_n_forces, v
 
+
 def check_n_forces(value):
     """
     Test numerical vs analytical forces

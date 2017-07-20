@@ -7,7 +7,6 @@ from ase.cluster import Octahedron
 import matplotlib.pyplot as plt
 from ase.visualize import view
 
-
 # Lets set up the atoms
 # We use the Atomic Simulation Environment to take care of our atoms
 # atoms = Atoms('Au4', [[0, 0, 0], [3, 0, 0], [0, 3, 0], [3, 3, 0]])
@@ -33,15 +32,15 @@ calc = Calc1D(
     exp_grad_function=scat.get_grad_pdf,  # the function which produces the
     #  gradient of the calculated data
     conv=100,  # conversion from the unitless goodness of fit to eV
-    potential='rw' # use the rw PES over chi squared
+    potential='rw'  # use the rw PES over chi squared
 )
 
 # Now we attach the calculator to our displaced atoms
 atoms2.set_calculator(calc)
 # Now we can get back the potential energy
-print atoms2.get_potential_energy()
+print(atoms2.get_potential_energy())
 # And the forces
-print atoms2.get_forces()
+print(atoms2.get_forces())
 
 # Now we need to make the ensemble
 ensemble = NUTSCanonicalEnsemble(atoms2, temperature=1000,

@@ -2,11 +2,13 @@ import numpy as np
 
 __author__ = 'christopher'
 
+
 def has_adp(atoms):
     for a in ['adps', 'adp']:
         if a in atoms.info.keys():
             return atoms.info[a]
     return None
+
 
 class ADP:
     def __init__(self, atoms, adps=None, adp_momenta=None,

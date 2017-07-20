@@ -39,9 +39,8 @@ class Spring(Calculator):
             self.v_nrg = voxel_att_spring_nrg
             self.atomwise_nrg = atomwise_att_spring_nrg
 
-    def calculate(self, atoms=None, properties=['energy'],
-                  system_changes=['positions', 'numbers', 'cell',
-                                  'pbc', 'charges', 'magmoms']):
+    def calculate(self, atoms=None, properties=None,
+                  system_changes=None):
         """Spring Calculator
         Parameters
         ----------
@@ -56,6 +55,11 @@ class Spring(Calculator):
             'pbc', 'charges' and 'magmoms'.
         """
 
+        if system_changes is None:
+            system_changes = ['positions', 'numbers', 'cell',
+                              'pbc', 'charges', 'magmoms']
+        if properties is None:
+            properties = ['energy']
         Calculator.calculate(self, atoms, properties, system_changes)
 
         # we shouldn't really recalc if charges or magmos change

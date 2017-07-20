@@ -163,8 +163,8 @@ class ElasticScatter(object):
             t_value = False
         elif 'F(Q) scatter' not in atoms.arrays.keys():
             t_value = False
-        elif atoms.info['exp'] != self.exp or atoms.info[
-            'scatter_atoms'] != len(atoms):
+        elif (atoms.info['exp'] != self.exp
+              or atoms.info['scatter_atoms'] != len(atoms)):
             t_value = False
         if not t_value:
             if self.verbose:
@@ -242,10 +242,9 @@ class ElasticScatter(object):
             return True
 
         elif processor == self.avail_pro[1] and check_gpu() is True:
-            from pyiid.experiments.elasticscatter.gpu_wrappers.gpu_wrap import \
-                wrap_fq as flat_fq
-            from pyiid.experiments.elasticscatter.gpu_wrappers.gpu_wrap import \
-                wrap_fq_grad as flat_grad
+            from pyiid.experiments.elasticscatter\
+                .gpu_wrappers.gpu_wrap import (wrap_fq as flat_fq,
+                                               wrap_fq_grad as flat_grad)
 
             self.fq = flat_fq
             self.grad = flat_grad
@@ -317,7 +316,8 @@ class ElasticScatter(object):
         fq = fq[int(np.floor(self.exp['qmin'] / self.exp['qbin'])):]
         if noise is not None and noise > 0.0:
             fq_noise = noise * np.abs(self.get_scatter_vector()) / np.abs(
-                np.average(atoms.get_array('F(Q) scatter'), axis=0) ** 2)[int(np.floor(self.exp['qmin'] / self.exp['qbin'])):]
+                np.average(atoms.get_array('F(Q) scatter'), axis=0)
+                ** 2)[int(np.floor(self.exp['qmin'] / self.exp['qbin'])):]
             if fq_noise[0] == 0.0:
                 fq_noise[0] += 1e-9  # added because we can't have zero noise
             fq = noise_distribution(fq, fq_noise)

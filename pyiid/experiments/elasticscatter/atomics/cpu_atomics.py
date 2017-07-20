@@ -108,6 +108,7 @@ def k_space_dfq_dadp_allocation(n, qmax_bin, mem):
         float(.8 * mem - 16 * qmax_bin * n - 24 * n) / (
             4 * (6 * qmax_bin + 5))))
 
+
 def atomic_fq(task):
     q, adps, scatter_array, qbin, k_max, k_cov = task
     n, qmax_bin = scatter_array.shape
@@ -200,7 +201,7 @@ def atomic_dfq_dadp(task):
     tau = np.zeros((k_max, qmax_bin), np.float32)
     get_tau(tau, sigma, qbin)
 
-    dtau_dadp= np.zeros((k_max, 3, qmax_bin), np.float32)
+    dtau_dadp = np.zeros((k_max, 3, qmax_bin), np.float32)
     get_dtau_dadp(dtau_dadp, tau, sigma, r, d, qbin)
 
     get_dfq_dadp_inplace(dtau_dadp, omega, norm)

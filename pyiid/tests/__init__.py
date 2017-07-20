@@ -6,18 +6,17 @@ which is much faster.
 Then we run all nuts_benchmarks against the CPU flat kernels.
 Thus it is imperative that the flat CPU runs with no errors.
 """
-from __future__ import print_function
-import numpy as np
-from ase import Atoms, Atom
-from numpy.testing import assert_allclose
 from itertools import *
+
+import numpy as np
 import os
-from copy import deepcopy as dc
 import random
-from pyiid.testing.decorators import *
+from ase import Atoms
+from copy import deepcopy as dc
+from numpy.testing import assert_allclose
+
+from pyiid.adp import ADP
 from pyiid.calc.spring_calc import Spring
-from pyiid.adp import ADP, has_adp
-from nose.plugins.skip import SkipTest
 
 srfit = False
 try:
@@ -138,12 +137,9 @@ def generate_experiment():
 
 
 def setup_atomic_square():
-    """
-    Setup squares of 4 gold atoms with known positions
-    :return:
-    """
+    """ Setup squares of 4 gold atoms with known positions """
     atoms1 = Atoms('Au4', [[0, 0, 0], [3, 0, 0], [0, 3, 0], [3, 3, 0]])
-    atoms1.center()
+    atoms1.center(1)
     atoms2 = atoms1.copy()
     scale = .75
     atoms2.positions *= scale
