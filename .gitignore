@@ -78,5 +78,5 @@ old_files
 old_files/*
 cover
 benchmarks
-extra
+#extra
 scripts
