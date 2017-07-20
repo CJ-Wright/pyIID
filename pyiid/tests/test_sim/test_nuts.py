@@ -3,7 +3,6 @@ from pyiid.calc.calc_1d import Calc1D
 from pyiid.experiments.elasticscatter import ElasticScatter
 from pyiid.sim.nuts_hmc import NUTSCanonicalEnsemble
 from pyiid.tests import *
-from ase.visualize import view
 from tempfile import NamedTemporaryFile, mkstemp
 from ase.io.trajectory import TrajectoryReader, Trajectory
 
@@ -85,8 +84,6 @@ class TestNUTS:
         print(min_pe, start_pe)
 
         if start_pe != 0.0:
-            if not min_pe < start_pe:
-                view(traj)
             assert min_pe < start_pe
 
         self.traj_file.close()
