@@ -203,7 +203,7 @@ def atomic_fq(q, adps, scatter_array, qbin, k_cov, k_per_thread):
     final = dfinal.copy_to_host(stream=stream2)
     # remove from memory
     del dq, dd, dscat, dr, dnorm, dfq, dfinal, dsum
-    cuda.current_context().trashing.clear()
+    cuda.current_context().deallocations.clear()
     return final
 
 
@@ -326,5 +326,5 @@ def atomic_grad_fq(q, adps, scatter_array, qbin, k_cov, k_per_thread):
     experimental_sum_grad_fq1[bpg_kq, tpb_kq, stream2](dnew_grad, dgrad, k_cov)
     rtn = dnew_grad.copy_to_host(stream=stream2)
     del dgrad, dnew_grad
-    cuda.current_context().trashing.clear()
+    cuda.current_context().deallocations.clear()
     return rtn

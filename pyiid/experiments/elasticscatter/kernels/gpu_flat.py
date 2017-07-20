@@ -1,6 +1,6 @@
 import math
 
-from numba import *
+from numba import float32
 from numba import cuda, f4, i4
 
 from pyiid.experiments.elasticscatter.kernels import cuda_k_to_ij, cuda_ij_to_k
@@ -329,7 +329,9 @@ def d2_to_d1_sum(d1, d2):
 
     if qx >= len(d1):
         return
-    tmp = d2[:, qx].sum()
+    tmp = 0
+    for i in range(len(d2)):
+        tmp += d2[i, qx]
     d1[qx] = tmp
 
 
