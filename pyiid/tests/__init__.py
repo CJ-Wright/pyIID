@@ -251,7 +251,7 @@ if os.getenv('TRAVIS'):
 elif os.getenv('SHORT_TEST'):
     ns = [
         10,
-        100,
+        # 100,
         # 400,
         # 1000
     ]
