@@ -5,6 +5,7 @@ atoms change.
 # TODO: We should also check that the state updates if whe transmute elements
 from pyiid.tests import *
 from pyiid.experiments.elasticscatter import ElasticScatter
+from ase import Atom
 
 __author__ = 'christopher'
 
@@ -96,9 +97,9 @@ for d in dels:
     del test_data[d]
 
 
-def test_meta():
-    for v in test_data:
-        yield check_meta, v
+@pytest.mark.parametrize("a", test_data)
+def test_meta(a):
+    check_meta(a)
 
 
 if __name__ == '__main__':

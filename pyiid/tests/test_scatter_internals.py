@@ -109,20 +109,6 @@ test_data = list(product(
     ['fq', 'pdf']))
 
 
-def test_meta():
-    for v in test_data:
-        yield check_meta, v
-
-
-if __name__ == '__main__':
-    import nose
-
-    nose.runmodule(argv=[
-        '-s',
-        '--with-doctest',
-        # '--nocapture',
-        '-v',
-        # '-x',
-    ],
-        # env={"NOSE_PROCESSES": 1, "NOSE_PROCESS_TIMEOUT": 599},
-        exit=False)
+@pytest.mark.parametrize("a", test_data)
+def test_meta(a):
+    check_meta(a)

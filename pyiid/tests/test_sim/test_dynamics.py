@@ -6,12 +6,12 @@ from pyiid.calc.calc_1d import Calc1D
 
 __author__ = 'christopher'
 
-test_dynamics_data = tuple(product(test_atom_squares, test_calcs, [1, -1]))
+test_data = tuple(product(test_atom_squares, test_calcs, [1, -1]))
 
 
-def test_gen_dynamics():
-    for v in test_dynamics_data:
-        yield check_dynamics, v
+@pytest.mark.parametrize("a", test_data)
+def test_meta(a):
+    check_dynamics(a)
 
 
 def check_dynamics(value):
@@ -65,14 +65,3 @@ def check_dynamics(value):
     print(pe_list)
     if start_pe != 0.0:
         assert min_pe < start_pe
-
-
-if __name__ == '__main__':
-    import nose
-
-    nose.runmodule(argv=['--with-doctest',
-                         # '--nocapture',
-                         '-v',
-                         '-x'
-                         ],
-                   exit=False)

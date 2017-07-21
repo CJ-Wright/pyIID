@@ -1,6 +1,7 @@
 from pyiid.tests import *
 from pyiid.experiments.elasticscatter import ElasticScatter
 from pyiid.calc.calc_1d import Calc1D
+import pytest
 
 __author__ = 'christopher'
 
@@ -112,20 +113,6 @@ test_data = tuple(product(tests,
                           comparison_pro_alg_pairs, test_experiment_types))
 
 
-def test_meta():
-    for v in test_data:
-        yield check_meta, v
-
-
-if __name__ == '__main__':
-    import nose
-
-    nose.runmodule(argv=[
-        # '-s',
-        '--with-doctest',
-        # '--nocapture',
-        '-v',
-        '-x'
-    ],
-        # env={"NOSE_PROCESSES": 1, "NOSE_PROCESS_TIMEOUT": 599},
-        exit=False)
+@pytest.mark.parametrize("a", test_data)
+def test_meta(a):
+    check_meta(a)

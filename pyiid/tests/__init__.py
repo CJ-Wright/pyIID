@@ -17,6 +17,9 @@ from numpy.testing import assert_allclose
 
 from pyiid.adp import ADP
 from pyiid.calc.spring_calc import Spring
+import pytest
+from unittest import SkipTest
+from pyiid.adp import has_adp
 
 srfit = False
 try:

@@ -3,7 +3,9 @@ The results of atoms with ADPs should be different from those without ADPs.
 """
 from pyiid.tests import *
 from pyiid.experiments.elasticscatter import ElasticScatter
-
+from pyiid.adp import has_adp
+from unittest import SkipTest
+import pytest
 __author__ = 'christopher'
 
 # rtol = 4e-4
@@ -52,21 +54,6 @@ test_data = list(product(
 
 ))
 
-
-def test_meta():
-    for v in test_data:
-        yield check_method, v
-
-
-if __name__ == '__main__':
-    import nose
-    print(test_data[0][1:])
-    nose.runmodule(argv=[
-        '-s',
-        '--with-doctest',
-        # '--nocapture',
-        '-v',
-        # '-x',
-    ],
-        # env={"NOSE_PROCESSES": 1, "NOSE_PROCESS_TIMEOUT": 599},
-        exit=False)
+@pytest.mark.parametrize("a", test_data)
+def test_meta(a):
+    check_method(a)

@@ -102,7 +102,7 @@ def sub_grad_pdf(gpu, gpadc, gpadcfft, atoms_per_thread, n_cov):
     n_cov: int
         Number of atoms previously covered
     """
-    input_shape = [gpadcfft.shape[-1]]
+    input_shape = tuple([gpadcfft.shape[-1]])
     with gpu:
         batch_operations = atoms_per_thread
         plan = fft.FFTPlan(input_shape, np.complex64, np.complex64,

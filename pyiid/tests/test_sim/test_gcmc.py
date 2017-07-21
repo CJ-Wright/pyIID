@@ -4,16 +4,17 @@ from pyiid.experiments.elasticscatter import ElasticScatter
 from pyiid.sim.gcmc import GrandCanonicalEnsemble
 from pyiid.tests import *
 from pyiid.calc.spring_calc import Spring
+import pytest
 
 __author__ = 'christopher'
 
-test_nuts_data = tuple(
+test_data = tuple(
     product(dc(test_atom_squares), [Spring(k=10, rt=2.5)], [None, .1]))
 
 
-def test_nuts_dynamics():
-    for v in test_nuts_data:
-        yield check_nuts, v
+@pytest.mark.parametrize("a", test_data)
+def test_nuts_dynamics(a):
+    check_nuts(a)
 
 
 def check_nuts(value):

@@ -1,25 +1,18 @@
 from pyiid.tests import *
 from pyiid.sim import leapfrog
 from pyiid.calc.spring_calc import Spring
+from pyiid.adp import has_adp
 import numpy as np
 __author__ = 'christopher'
 
 test_data = test_atom_squares
 
 
-def test_gen_check_leapfrog_no_momentum():
-    for v in test_data:
-        yield check_leapfrog_no_momentum, v
-
-
-def test_gen_check_leapfrog_momentum():
-    for v in test_data:
-        yield check_leapfrog_momentum, v
-
-
-def test_gen_check_leapfrog_reversibility():
-    for v in test_data:
-        yield check_leapfrog_reversibility, v
+@pytest.mark.parametrize("a", test_data)
+def test_meta(a):
+    check_leapfrog_no_momentum(a)
+    check_leapfrog_momentum(a)
+    check_leapfrog_reversibility(a)
 
 
 def check_leapfrog_no_momentum(value):
@@ -87,9 +80,3 @@ def check_leapfrog_reversibility(value):
     if has_adp(atoms):
         stats_check(has_adp(atoms).get_positions(),
                     has_adp(atoms2).get_positions())
-
-
-if __name__ == '__main__':
-    import nose
-
-    nose.runmodule(argv=['-s', '--with-doctest'], exit=False)
