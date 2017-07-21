@@ -33,10 +33,11 @@ def check_gpu():
     Check if GPUs are available on this machine
     """
     try:
-        tf = cuda.gpus.lst
-        tf = True
+        cuda.gpus.lst
     except cuda.CudaSupportError:
         tf = False
+    else:
+        tf = True
     return tf
 
 
