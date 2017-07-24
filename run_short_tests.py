@@ -9,9 +9,8 @@ __author__ = 'christopher'
 
 if __name__ == '__main__':
     # show output results from every test function
-    args = ['-v', '-rxs']
+    args = ['-vrxs']
     # show the message output for skipped and expected failure tests
-    args.extend(sys.argv[1:])
     try:
         os.environ["SHORT_TEST"] = "1"
         os.environ["PYIID_TEST_SEED"] = str(int(random.random() * 2 ** 32))

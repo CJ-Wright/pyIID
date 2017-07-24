@@ -1,12 +1,21 @@
 import numpy as np
+from numba import i4
 
-from pyiid.experiments.elasticscatter.kernels.cpu_flat import *
-from pyiid.experiments.elasticscatter.kernels.cpu_experimental import \
-    experimental_sum_grad_cpu
-
-from pyiid.experiments.elasticscatter.kernels import antisymmetric_reshape, \
-    symmetric_reshape
 from pyiid.adp import has_adp
+from pyiid.experiments.elasticscatter. \
+    kernels.cpu_flat import (get_d_array,
+                             get_r_array,
+                             get_normalization_array,
+                             get_omega,
+                             get_fq_inplace,
+                             get_sigma_from_adp,
+                             get_tau,
+                             get_adp_fq,
+                             get_grad_omega,
+                             get_grad_fq_inplace,
+                             get_grad_tau,
+                             get_adp_grad_fq,
+                             experimental_sum_grad_cpu)
 
 __author__ = 'christopher'
 

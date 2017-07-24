@@ -1,5 +1,6 @@
 import math
-from numba import *
+# from numba import *
+from numba import jit
 import mkl
 import numpy as np
 import xraylib

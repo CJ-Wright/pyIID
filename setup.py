@@ -10,5 +10,6 @@ setup(
     author='christopher',
     author_email='',
     description='', install_requires=['numba', 'numpy', 'scipy', 'ase',
-                                      'matplotlib']
+                                      'matplotlib', 'pytest', 'psutil',
+                                      'mpi4py']
 )

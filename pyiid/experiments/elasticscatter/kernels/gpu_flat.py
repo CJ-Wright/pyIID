@@ -3,7 +3,8 @@ import math
 from numba import float32
 from numba import cuda, f4, i4
 
-from pyiid.experiments.elasticscatter.kernels import cuda_k_to_ij, cuda_ij_to_k
+from pyiid.experiments.elasticscatter.kernels.utils import (
+    cuda_k_to_ij, cuda_ij_to_k)
 from builtins import range
 
 __author__ = 'christopher'
@@ -311,7 +312,7 @@ def get_adp_grad_fq(grad, omega, tau, grad_omega, grad_tau, norm):
 def zero3d(a):
     """
     Zero out a 3D array on the GPU
-    
+
     Parameters
     ----------
     a: Mx3xQ array

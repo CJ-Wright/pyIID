@@ -1,8 +1,12 @@
-from __future__ import print_function
 from multiprocessing import Pool, cpu_count
 import psutil
-from pyiid.experiments.elasticscatter.atomics.cpu_atomics import *
 from pyiid.adp import has_adp
+import numpy as np
+from pyiid.experiments.elasticscatter.atomics.cpu_atomics import (
+    cpu_k_space_fq_allocation, cpu_k_space_fq_adp_allocation, atomic_fq,
+    get_normalization_array, k_space_dfq_dadp_allocation,
+    k_space_grad_adp_fq_allocation, k_space_grad_fq_allocation, atomic_grad_fq,
+    atomic_dfq_dadp)
 
 __author__ = 'christopher'
 

@@ -116,11 +116,6 @@ def atomic_fq(q, adps, scatter_array, qbin, k_cov, k_per_thread):
     from pyiid.experiments.elasticscatter.kernels.gpu_flat import \
         (get_d_array, get_r_array, get_normalization_array, get_omega,
          get_fq_inplace, d2_zero, d2_to_d1_cleanup_kernel, experimental_sum_fq)
-    if adps is not None:
-        from pyiid.experiments.elasticscatter.kernels.gpu_flat import (
-            get_sigma_from_adp,
-            get_tau,
-            get_adp_fq_inplace)
     # generate grids for the GPU
     elements_per_dim_1 = [k_per_thread]
     tpb_k = [32]
@@ -159,6 +154,10 @@ def atomic_fq(q, adps, scatter_array, qbin, k_cov, k_per_thread):
     if adps is None:
         get_fq_inplace[bpg_kq, tpb_kq, stream2](dnorm, domega)
     else:
+        from pyiid.experiments.elasticscatter.kernels.gpu_flat import (
+            get_sigma_from_adp,
+            get_tau,
+            get_adp_fq_inplace)
         dadps = cuda.to_device(adps.astype(np.float32), stream=stream)
         dsigma = cuda.device_array(k_per_thread, dtype=np.float32,
                                    stream=stream)

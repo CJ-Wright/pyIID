@@ -7,11 +7,14 @@ import math
 import numpy as np
 from accelerate.cuda import cuda
 
-from pyiid.experiments.elasticscatter.cpu_wrappers.nxn_cpu_wrap import \
-    wrap_fq_grad as cpu_wrap_fq_grad, wrap_fq as cpu_wrap_fq, \
-    wrap_fq_dadp as cpu_wrap_dadp
-from pyiid.experiments.elasticscatter.kernels.master_kernel import \
-    grad_pdf as cpu_grad_pdf, get_pdf_at_qmin, get_scatter_array
+from pyiid.experiments.elasticscatter.cpu_wrappers.nxn_cpu_wrap import (
+    wrap_fq_grad as cpu_wrap_fq_grad,
+    wrap_fq as cpu_wrap_fq,
+    wrap_fq_dadp as cpu_wrap_dadp)
+from pyiid.experiments.elasticscatter.kernels.master_kernel import (
+    grad_pdf as cpu_grad_pdf,
+    get_pdf_at_qmin,
+    get_scatter_array)
 
 from scipy.interpolate import griddata
 from pyiid.adp import has_adp
@@ -43,12 +46,11 @@ def check_gpu():
 
 def check_cudafft():
     try:
-        from accelerate.cuda import fft
+        import accelerate.cuda.fft
         tf = True
     except ImportError:
         tf = False
         print('no cudafft')
-        cufft = None
     return tf
 
 
@@ -61,13 +63,13 @@ class ElasticScatter(object):
     >>>from ase.atoms import Atoms
     >>>import matplotlib.pyplot as plt
     >>>atoms = Atoms('Au4', [[0, 0, 0], [3, 0, 0], [0, 3, 0], [3, 3, 0]])
-    >>>a = np.random.random(atoms.positions.shape) * .1
     >>>s = ElasticScatter({'rmax': 5., 'rmin': 2.})
-    >>>fq = s.get_pdf(atoms)
-    >>>fq2 = s.get_pdf(atoms)
-    >>>plt.plot(s.get_r(), fq)
+    >>>pdf = s.get_pdf(atoms)
+    >>>atoms.rattle(.1)
+    >>>pdf2 = s.get_pdf(atoms)
+    >>>plt.plot(s.get_r(), pdf)
+    >>>plt.plot(s.get_r(), pdf2)
     >>>plt.show()
-
     """
 
     def __init__(self, exp_dict=None, verbose=False):

@@ -4,16 +4,16 @@ Rigorously test the flattened CPU kernel against the NXN kernel, step by step.
 from __future__ import print_function
 from pyiid.tests import *
 from pyiid.experiments.elasticscatter import ElasticScatter
-from pyiid.experiments.elasticscatter.kernels import (antisymmetric_reshape,
-                                                      symmetric_reshape)
-from pyiid.experiments.elasticscatter.kernels.cpu_nxn import \
-    (get_d_array as nxn_d,
+from pyiid.experiments.elasticscatter.kernels.utils import (
+    antisymmetric_reshape, symmetric_reshape)
+from pyiid.experiments.elasticscatter.kernels.cpu_nxn import (
+    get_d_array as nxn_d,
      get_r_array as nxn_r,
      get_normalization_array as nxn_norm,
      get_omega as nxn_omega,
      get_fq_inplace as nxn_fq)
-from pyiid.experiments.elasticscatter.kernels.cpu_flat import \
-    (get_d_array as k_d,
+from pyiid.experiments.elasticscatter.kernels.cpu_flat import (
+    get_d_array as k_d,
      get_r_array as k_r,
      get_normalization_array as k_norm,
      get_omega as k_omega,

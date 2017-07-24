@@ -1,6 +1,7 @@
+
 import math
 from builtins import range
-from ase.data import *
+from ase.data import vdw_radii
 import numpy as np
 
 __doc__ = """

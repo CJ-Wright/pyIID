@@ -63,7 +63,7 @@ def check_scatter_consistancy(value):
     ans = scat.get_pdf(atoms)
     ans1 = scat.get_fq(atoms)
     anss = scat.get_scatter_vector()
-    print(ans1.shape, anss.shape, scat.exp['qmin'], scat.exp['qmax'], \
+    print(ans1.shape, anss.shape, scat.exp['qmin'], scat.exp['qmax'],
           scat.exp['qbin'])
     print(int(np.ceil(scat.exp['qmax'] / scat.exp['qbin'])) - int(
         np.ceil(scat.exp['qmin'] / scat.exp['qbin'])))
