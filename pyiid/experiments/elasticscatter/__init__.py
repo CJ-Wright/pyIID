@@ -2,6 +2,20 @@
 The main class in this module `ElasticScatter` holds the experimental details,
 and processor information needed to calculate the elastic powder scattering
 from a collection of atoms.
+
+Notes
+-----
+There are 4 layers of code from top to bottom.
+1. This code, the object layer. This layer is the main point of user
+interaction and keeps track of the experimental information and which
+algorithm/processor to use.
+2. The wrappers, these functions properly dispatch the data to processors
+and atomic functions
+3. The atomics, which operate on a chunk of data, they could operate on a
+single piece of data and can't be interrupted/subdivided without loosing
+functionality.
+4. The kernels, which are compiled function run inside the atomics and perform
+the actual number crunching.
 """
 import math
 import numpy as np
@@ -73,6 +87,7 @@ class ElasticScatter(object):
     """
 
     def __init__(self, exp_dict=None, verbose=False):
+        # TODO: splay out exp_dict
         self.verbose = verbose
         self.wrap_atoms_state = None
 

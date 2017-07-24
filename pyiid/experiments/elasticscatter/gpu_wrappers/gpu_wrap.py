@@ -258,7 +258,7 @@ def grad_pdf(grad_fq, rstep, qstep, rgrid, qmin):
                 # TODO: Note that the second division by a memory scale factor
                 # is not needed but I don't know the official memory
                 # allocation and this makes certain we don't crash the system
-                # on a memory allocation
+                # on a memory allocation, should put this in a config file
                 memory_scale_factor = 1.7
                 atoms_per_thread = int(
                     math.floor(.8 * mem / gpadcfft.shape[
@@ -267,9 +267,6 @@ def grad_pdf(grad_fq, rstep, qstep, rgrid, qmin):
                     atoms_per_thread = n - n_cov
                 if n_cov >= n:
                     break
-                # print(mem / 1e9, gpadcfft.shape[
-                #     -1] * 8 * 2 * atoms_per_thread / 1e9,
-                #       atoms_per_thread)
                 p = Thread(target=sub_grad_pdf,
                            args=(
                                gpu, gpadc, gpadcfft, atoms_per_thread,
