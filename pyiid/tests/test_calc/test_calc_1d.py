@@ -16,7 +16,7 @@ def check_nrg(value):
 
     Parameters
     ----------
-    value: list or tuple
+    value: tuple
         The values to use in the tests
     """
     rtol = 4e-6

@@ -1,10 +1,13 @@
 from __future__ import print_function
+
+from tempfile import NamedTemporaryFile
+
+from ase.io.trajectory import TrajectoryReader, Trajectory
+
 from pyiid.calc.calc_1d import Calc1D
 from pyiid.experiments.elasticscatter import ElasticScatter
 from pyiid.sim.nuts_hmc import NUTSCanonicalEnsemble
 from pyiid.tests import *
-from tempfile import NamedTemporaryFile, mkstemp
-from ase.io.trajectory import TrajectoryReader, Trajectory
 
 __author__ = 'christopher'
 
@@ -150,17 +153,3 @@ class TestASE:
         print(len(traj), len(read_traj))
         assert len(traj) == len(read_traj)
         del traj
-
-
-if __name__ == '__main__':
-    # import nose
-    import pytest
-
-    args = ['-v', '-rxs']
-    pytest.main(args)
-    # nose.runmodule(argv=['--with-doctest',
-    #                      '--nocapture',
-    # '-v',
-    # '-x'
-    # ],
-    # exit=False)

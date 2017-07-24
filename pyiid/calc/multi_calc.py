@@ -1,6 +1,5 @@
-from ase.calculators.calculator import Calculator
 import numpy as np
-from copy import deepcopy as dc
+from ase.calculators.calculator import Calculator
 
 __author__ = 'christopher'
 
@@ -53,12 +52,12 @@ class MultiCalc(Calculator):
 
             if 'forces' in properties:
                 self.calculate_forces(self.atoms)
-        for property in properties:
-            if property not in self.results:
-                if property is 'energy':
+        for calc_property in properties:
+            if calc_property not in self.results:
+                if calc_property is 'energy':
                     self.calculate_energy(self.atoms)
 
-                if property is 'forces':
+                if calc_property is 'forces':
                     self.calculate_forces(self.atoms)
 
     def calculate_energy(self, atoms):

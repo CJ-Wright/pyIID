@@ -22,7 +22,7 @@ def check_n_forces(value):
 
     Parameters
     ----------
-    value: list or tuple
+    value: tuple
         The values to use in the tests
     """
     rtol = 1e-6
@@ -57,14 +57,3 @@ def check_n_forces(value):
                 rtol=rtol,
                 atol=atol
                 )
-
-
-if __name__ == '__main__':
-    import nose
-
-    nose.runmodule(argv=['--with-doctest',
-                         # '--nocapture',
-                         '-v',
-                         # '-x'
-                         ],
-                   exit=False)

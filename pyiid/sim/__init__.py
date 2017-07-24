@@ -1,10 +1,12 @@
 from __future__ import print_function
+
 from copy import deepcopy as dc
-from ase.optimize.optimize import Optimizer
+
 import numpy as np
-from numpy.random import RandomState
-from builtins import range
 from ase.io.trajectory import Trajectory
+from ase.optimize.optimize import Optimizer
+from numpy.random import RandomState
+
 from pyiid.adp import has_adp
 
 __author__ = 'christopher'

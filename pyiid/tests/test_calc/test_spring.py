@@ -6,6 +6,7 @@ from ase import Atom
 from unittest import SkipTest
 from builtins import range
 import pytest
+
 __author__ = 'christopher'
 
 

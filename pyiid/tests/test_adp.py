@@ -1,6 +1,5 @@
 from pyiid.tests import *
-from pyiid.adp import ADP
-import pytest
+
 __author__ = 'christopher'
 
 rtol = 5e-4

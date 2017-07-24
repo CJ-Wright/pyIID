@@ -39,17 +39,3 @@ def test_consistency2():
     for j in range(len(test_atoms)):
         for a, b in permutations(outs[j], 2):
             stats_check(a, b)
-
-
-if __name__ == '__main__':
-    import nose
-
-    nose.runmodule(argv=[
-        # '-s',
-        '--with-doctest',
-        # '--nocapture',
-        '-v',
-        '-x',
-    ],
-        # env={"NOSE_PROCESSES": 1, "NOSE_PROCESS_TIMEOUT": 599},
-        exit=False)

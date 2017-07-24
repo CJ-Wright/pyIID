@@ -54,7 +54,7 @@ def cpu_k_space_fq_adp_allocation(n, sv, mem):
     ----------
     n: int
         Number of atoms
-    Q: int
+    sv: int
         Size of the scatter vector
     mem: int
         Size of the GPU memory
@@ -102,7 +102,7 @@ def k_space_grad_adp_fq_allocation(n, qmax_bin, mem):
     ----------
     n: int
         Number of atoms
-    Q: int
+    qmax_bin: int
         Size of the scatter vector
     mem: int
         Size of the GPU memory

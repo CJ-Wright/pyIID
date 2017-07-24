@@ -19,7 +19,7 @@ Solvent of Protein Atoms. Lysozyme and Insulin." J Mol Biol. 79
 
 
 def get_neighbor_list(cut, atoms):
-    r = atoms.get_all_distances()
+    r = atoms.get_all_distances()  # type: np.ndarray
     n_list = []
     for i in range(len(atoms)):
         sub = \

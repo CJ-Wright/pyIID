@@ -21,7 +21,7 @@ def check_dynamics(value):
 
     Parameters
     ----------
-    value: list or tuple
+    value: tuple
         The values to use in the tests
     """
     ideal_atoms, _ = value[0]

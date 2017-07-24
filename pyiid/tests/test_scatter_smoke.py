@@ -16,7 +16,7 @@ def check_method(value):
 
     Parameters
     ----------
-    value: list or tuple
+    value: tuple
         The values to use in the tests
     """
     method_string = value[0]

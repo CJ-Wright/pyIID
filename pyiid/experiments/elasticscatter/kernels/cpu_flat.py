@@ -211,7 +211,7 @@ def get_adp_grad_fq(grad, omega, tau, grad_omega, grad_tau, norm):
     Generate the gradient F(sv) for an atomic configuration
     Parameters
     ------------
-    grad_p: Nx3xQ numpy array
+    grad: Nx3xQ numpy array
         The array which will store the FQ gradient
     d: NxNx3 array
         The distance array for the configuration

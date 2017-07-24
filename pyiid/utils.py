@@ -118,7 +118,7 @@ def get_coord_list(atoms, cutoff, element=None, tag=None):
 
     Parameters
     ----------
-    atoms: ase.Atoms objecct
+    atoms: ase.Atoms object
         The atomic configuration
     cutoff: float
         Bond length cutoff

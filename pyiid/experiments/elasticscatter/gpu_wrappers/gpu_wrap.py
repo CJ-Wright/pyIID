@@ -212,7 +212,7 @@ def grad_pdf(grad_fq, rstep, qstep, rgrid, qmin):
         The r resolution in A
     qstep: float
         The Q resolution in A**-1
-    rgrid: 1darray
+    rgrid: np.ndarray
         The inter-atomic distance grid to map onto
     qmin: float
         The minimum Q in the experiment in A**-1
@@ -285,7 +285,7 @@ def grad_pdf(grad_fq, rstep, qstep, rgrid, qmin):
     g = np.zeros((n, 3, npad2), dtype=complex)
     g[:, :, :] = gpadcfft[:, :, :npad2 * 2:2] * npad2 * qstep
 
-    gpad = g.imag * 2.0 / math.pi
+    gpad = g.imag * 2.0 / math.pi  # type: np.ndarray
     drpad = math.pi / (gpad.shape[-1] * qstep)
     # re-bin the data onto the correct rgrid
     pdf0 = np.zeros((n, 3, len(rgrid)))

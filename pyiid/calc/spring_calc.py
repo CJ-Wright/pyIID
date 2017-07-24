@@ -69,12 +69,12 @@ class Spring(Calculator):
 
             if 'forces' in properties:
                 self.calculate_forces(self.atoms)
-        for property in properties:
-            if property not in self.results:
-                if property is 'energy':
+        for calc_property in properties:
+            if calc_property not in self.results:
+                if calc_property is 'energy':
                     self.calculate_energy(self.atoms)
 
-                if property is 'forces':
+                if calc_property is 'forces':
                     self.calculate_forces(self.atoms)
 
     def calculate_energy(self, atoms):
@@ -248,7 +248,7 @@ def atomwise_com_spring_nrg(atoms, k, rt):
     disp = q - com
     dist = np.sqrt(np.sum(disp ** 2, axis=1))
 
-    nrg = .5 * k * (dist - rt) ** 2
+    nrg = .5 * k * (dist - rt) ** 2  # type: np.ndarray
     nrg[np.where(dist < rt)] = 0.0
     return np.sum(nrg, axis=0) * 2
 

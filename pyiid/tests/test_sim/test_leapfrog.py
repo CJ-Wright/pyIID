@@ -21,7 +21,7 @@ def check_leapfrog_no_momentum(value):
 
     Parameters
     ----------
-    value: list or tuple
+    value: tuple
         The values to use in the tests
     """
     atoms = value[0]

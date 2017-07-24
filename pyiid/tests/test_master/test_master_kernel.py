@@ -1,5 +1,5 @@
 import numpy as np
-from .. import *
+from .. import stats_check
 from pyiid.experiments.elasticscatter.kernels.master_kernel import \
     get_scatter_array, get_rw, get_chi_sq
 __author__ = 'christopher'
@@ -46,9 +46,3 @@ def test_get_chi_sq2():
     b = np.sin(x)
     stats_check(0, get_chi_sq(a, b)[0], atol=1e-15)
     return
-
-
-if __name__ == '__main__':
-    import nose
-
-    nose.runmodule(argv=['-s', '--with-doctest'], exit=False)

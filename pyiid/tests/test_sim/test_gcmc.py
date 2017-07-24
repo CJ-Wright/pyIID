@@ -1,10 +1,7 @@
 from __future__ import print_function
-from pyiid.calc.calc_1d import Calc1D
-from pyiid.experiments.elasticscatter import ElasticScatter
+
 from pyiid.sim.gcmc import GrandCanonicalEnsemble
 from pyiid.tests import *
-from pyiid.calc.spring_calc import Spring
-import pytest
 
 __author__ = 'christopher'
 
@@ -23,7 +20,7 @@ def check_nuts(value):
 
     Parameters
     ----------
-    value: list or tuple
+    value: tuple
         The values to use in the tests
     """
     ideal_atoms, _ = value[0]
@@ -47,14 +44,3 @@ def check_nuts(value):
     print('n0', n0)
     del traj
     assert np.max(n) > n0
-
-
-if __name__ == '__main__':
-    import nose
-
-    nose.runmodule(argv=['--with-doctest',
-                         # '--nocapture',
-                         '-v',
-                         '-x'
-                         ],
-                   exit=False)

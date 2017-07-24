@@ -380,7 +380,7 @@ class ElasticScatter(object):
             The atomic configuration for which to calculate S(Q)
         Returns
         -------
-        1darray:
+        np.ndarray:
             The structure factor
         """
         fq = self.get_fq(atoms, noise, noise_distribution)
@@ -417,7 +417,7 @@ class ElasticScatter(object):
         ----------
         atoms: ase.Atoms
             The atomic configuration for which to calculate I(Q)
-        pixel_array: 2darray
+        pixel_array: np.ndarray
             A map from Q to the xy coordinates of the detector, each element
             has a Q value
         Returns

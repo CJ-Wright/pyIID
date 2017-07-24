@@ -64,7 +64,7 @@ class ADP:
         Set the ADP positions in a manner consistent with the constraints
         Parameters
         ----------
-        new_adps: 2darray
+        new_adps: np.ndarray
             The new adp values
 
         Returns

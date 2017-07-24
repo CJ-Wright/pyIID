@@ -6,6 +6,7 @@ from pyiid.experiments.elasticscatter import ElasticScatter
 from pyiid.adp import has_adp
 from unittest import SkipTest
 import pytest
+
 __author__ = 'christopher'
 
 # rtol = 4e-4
@@ -46,6 +47,7 @@ def check_method(value):
     assert ans[0] is not ans[1]
     # assert False
 
+
 test_data = list(product(
     elastic_scatter_methods,
     zip(test_atoms, test_adp_atoms),
@@ -53,6 +55,7 @@ test_data = list(product(
     proc_alg_pairs,
 
 ))
+
 
 @pytest.mark.parametrize("a", test_data)
 def test_meta(a):

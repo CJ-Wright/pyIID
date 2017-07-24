@@ -47,10 +47,9 @@ def buildtree(input_atoms, u, v, j, e, e0, rs, beta=1):
         try:
             exp1 = np.exp(neg_delta_energy)
             exp2 = np.exp(Emax + neg_delta_energy)
-        except:
+        except RuntimeError:
             exp1 = 0
             exp2 = 0
-        # print exp1, exp2
         # n_prime = int(u <= np.exp(-atoms_prime.get_total_energy()))
         # s_prime = int(u <= np.exp(Emax-atoms_prime.get_total_energy()))
         n_prime = int(u <= exp1)
@@ -171,50 +170,6 @@ class NUTSCanonicalEnsemble(Ensemble):
         print('optimal step size', step_size)
         return step_size
 
-    def _find_step_size(self, input_atoms, thermal_nrg=None, momentum=None):
-        """
-        Find a suitable starting step size for the simulation
-
-        Parameters
-        -----------
-        input_atoms: ase.Atoms object
-            The starting atoms for the simulation
-        thermal_nrg:
-            The thermal energy for the simulation
-
-        Returns
-        -------
-        float:
-            The step size
-        """
-        atoms = dc(input_atoms)
-        step_size = .5
-        if thermal_nrg:
-            MaxwellBoltzmannDistribution(atoms, temp=thermal_nrg,
-                                         force_temp=True)
-        elif momentum:
-            atoms.set_momenta(self.random_state.normal(0, 1, (
-                len(atoms), 3)) * self.momentum)
-        else:
-            print('Some thermal energy needed')
-
-        atoms_prime = leapfrog(atoms, step_size)
-
-        a = 2 * (np.exp(
-            -1 * atoms_prime.get_total_energy() + atoms.get_total_energy()
-        ) > 0.5) - 1
-
-        while (np.exp(-1 * atoms_prime.get_total_energy() +
-                          atoms.get_total_energy())) ** a > 2 ** -a:
-            step_size *= 2 ** a
-            print('trying step size', step_size)
-            atoms_prime = leapfrog(atoms, step_size)
-            if step_size < 1e-7 or step_size > 1e7:
-                step_size = 1.
-                break
-        print('optimal step size', step_size)
-        return step_size
-
     def step(self):
         atoms = dc(self.traj[-1])
         new_configurations = []
@@ -252,8 +207,8 @@ class NUTSCanonicalEnsemble(Ensemble):
                  na) = buildtree(pos_atoms, u, v, j, e, e0, self.random_state,
                                  1 / self.thermal_nrg)
 
-            if s_prime == 1 and self.random_state.uniform() < min(
-                    1, n_prime * 1. / n):
+            if s_prime == 1 and (self.random_state.uniform() <
+                                 min((1, n_prime * 1. / n))):
                 self.traj += [atoms_prime]
                 if self.trajectory is not None:
                     atoms_prime.get_forces()

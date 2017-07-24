@@ -153,7 +153,7 @@ def stats_check(ans1, ans2, rtol=1e-7, atol=0):
     try:
         assert_allclose(ans1, ans2, rtol=rtol, atol=atol)
         return True
-    except:
+    except AssertionError:
         old_err_settings = np.seterr(divide='ignore')
         print('bulk statistics:')
         print('max', np.max(np.abs(ans2 - ans1)))
