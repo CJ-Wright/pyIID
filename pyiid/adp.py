@@ -20,14 +20,14 @@ class ADP:
         ----------
         atoms: ASE.atoms
             The atomic configuration
-        adps: 2d array
+        adps: np.ndarray
             The array of ADP values for the atomic configuration
-        adp_momenta: 2d array
+        adp_momenta: np.ndarray
             The "momentum" for each ADP, note that this is not real momentum
             just a mathematical construct for the Hamiltonian dynamics
-        adp_equivalency: 2d array
+        adp_equivalency: np.ndarray
             An array which describes which ADPS are forced to be equivalent
-        fixed_adps: 2d array
+        fixed_adps: np.ndarray
             An array which describes which adps are fixed
 
         Returns
@@ -167,9 +167,9 @@ class ADP:
         atom.
         Parameters
         ----------
-        adp: 1darray
+        adp: np.ndarray
             The new adp values
-        adp_momentum: 1darray
+        adp_momentum: np.ndarray
             The momentum of the new adp
         adp_equivalency: int
             Which adps this adp is equivalent to

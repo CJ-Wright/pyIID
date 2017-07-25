@@ -160,7 +160,7 @@ class NUTSCanonicalEnsemble(Ensemble):
         ) > 0.5) - 1
 
         while (np.exp(-1 * atoms_prime.get_total_energy() +
-                          atoms.get_total_energy())) ** a > 2 ** -a:
+                      atoms.get_total_energy())) ** a > 2 ** -a:
             step_size *= 2 ** a
             print('trying step size', step_size)
             atoms_prime = leapfrog(atoms, step_size)
@@ -192,6 +192,8 @@ class NUTSCanonicalEnsemble(Ensemble):
         # preventing the need for multiple calls to the energy function
         e0 = atoms.get_total_energy()
 
+        a = 0
+        na = 0
         e = self.step_size
         n, s, j = 1, 1, 0
         neg_atoms = dc(atoms)
@@ -249,8 +251,8 @@ class NUTSCanonicalEnsemble(Ensemble):
                     print('\t \t \tjmax emergency escape at {}'.format(j))
                 s = 0
         w = 1. / (self.m + self.t0)
-        self.sim_hbar = (1 - w) * self.sim_hbar + w * \
-                                                  (self.accept_target - a / na)
+        self.sim_hbar = ((1 - w) * self.sim_hbar +
+                         w * (self.accept_target - a / na))
 
         self.step_size = np.exp(self.mu - (self.m ** .5 / self.gamma) *
                                 self.sim_hbar)

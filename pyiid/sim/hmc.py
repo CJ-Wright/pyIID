@@ -190,10 +190,10 @@ def run_hmc(atoms, iterations, stepsize, n_steps, avg_acceptance_slowness,
                 if wtraj is not None:
                     wtraj.write(atoms)
             accept_list.append(accept)
-            avg_acceptance_rate = avg_acceptance_slowness * \
-                                  avg_acceptance_rate + \
-                                  (1.0 - avg_acceptance_slowness) * \
-                                  np.average(np.array(accept_list))
+            avg_acceptance_rate = (avg_acceptance_slowness *
+                                   avg_acceptance_rate +
+                                   (1.0 - avg_acceptance_slowness) *
+                                   np.average(np.array(accept_list)))
 
             if avg_acceptance_rate > target_acceptance_rate:
                 stepsize *= stepsize_inc

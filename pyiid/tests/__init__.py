@@ -46,7 +46,8 @@ if srfit:
 
         Parameters
         -----------
-        atoms: ase.Atoms object
+        atoms: ase.Atoms instance
+
         Returns
         -------
             diffpy.Structure object:
@@ -92,6 +93,11 @@ def setup_atoms(n):
     ----------
     n: int
         Number of atoms in configuration
+
+    Returns
+    -------
+    atoms: ase.Atoms
+        The configuration
     """
     q = rs.random_sample((n, 3)) * 10
     atoms = Atoms('Au' + str(int(n)), q)
@@ -100,6 +106,17 @@ def setup_atoms(n):
 
 
 def setup_adps(atoms):
+    """
+    Setup Atomic Displacement Parameters
+
+    Parameters
+    ----------
+    atoms: ase.Atoms instance
+
+    Returns
+    -------
+    adps: pyiid.adp.ADP instance
+    """
     n = len(atoms)
     adp_tensor = rs.randint(10, 100, (n, 3)) * .001
     adps = ADP(atoms, adp_tensor)
@@ -149,6 +166,7 @@ def setup_atomic_square():
     return atoms1, atoms2
 
 
+# TODO: replace this and see what happens
 def stats_check(ans1, ans2, rtol=1e-7, atol=0):
     try:
         assert_allclose(ans1, ans2, rtol=rtol, atol=atol)

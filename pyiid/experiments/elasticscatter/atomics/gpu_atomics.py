@@ -107,7 +107,7 @@ def atomic_fq(q, adps, scatter_array, qbin, k_cov, k_per_thread):
 
     Returns
     -------
-    1darray:
+    np.ndarray:
         The calculated chunk of F(sv)
 
     """
@@ -227,7 +227,7 @@ def atomic_grad_fq(q, adps, scatter_array, qbin, k_cov, k_per_thread):
 
     Returns
     -------
-    1darray:
+    np.ndarray:
         The calculated chunk of grad F(sv)
 
     """

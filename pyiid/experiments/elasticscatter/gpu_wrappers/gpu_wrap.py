@@ -41,7 +41,7 @@ def subs_fq(fq, q, adps, scatter_array, qbin, gpu, k_cov, k_per_thread):
         Atomic positions
     scatter_array: NxQ array
         Atomic scatter factors
-    fq: 1darray
+    fq: np.ndarray
         The F(Q), note that we add to it which prevents a rather nasty
         memory leak
     qbin: float
@@ -139,7 +139,7 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
         factor array for the atoms
     Returns
     -------
-    1darray;
+    np.ndarray;
         The reduced structure factor
     """
     q, adps, n, qmax_bin, scatter_array, gpus, mem_list = setup_gpu_calc(
@@ -179,7 +179,7 @@ def wrap_fq_grad(atoms, qbin=.1, sum_type='fq'):
         factor array for the atoms
     Returns
     -------
-    1darray;
+    np.ndarray;
         The reduced structure factor
     """
     q, adps, n, qmax_bin, scatter_array, gpus, mem_list = setup_gpu_calc(

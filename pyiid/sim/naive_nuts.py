@@ -89,8 +89,9 @@ def buildtree(input_atoms, u, v, j, e):
             _, pos_atoms, cpp, spp = buildtree(pos_atoms, u, v, j - 1, e)
         datoms = pos_atoms.positions - neg_atoms.positions
         sp = sp * spp * (
-            np.dot(datoms.flatten(), neg_atoms.get_momenta().flatten()) >= 0) \
-             * (np.dot(datoms.flatten(),
-                       pos_atoms.get_momenta().flatten()) >= 0)
+            np.dot(datoms.flatten(),
+                   neg_atoms.get_momenta().flatten()) >= 0) * (
+            np.dot(datoms.flatten(),
+                   pos_atoms.get_momenta().flatten()) >= 0)
         cp += cpp
         return neg_atoms, pos_atoms, cp, sp

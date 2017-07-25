@@ -14,9 +14,9 @@ def wrap_rw(gcalc, gobs):
 
     Parameters
     -----------
-    gcalc: 1darray
+    gcalc: np.ndarray
         The calculated 1D data
-    gobs: 1darray
+    gobs: np.ndarray
         The observed 1D data
 
     Returns
@@ -37,9 +37,9 @@ def wrap_chi_sq(gcalc, gobs):
 
     Parameters
     -----------
-    gcalc: 1darray
+    gcalc: np.ndarray
         The calculated 1D data
-    gobs: 1darray
+    gobs: np.ndarray
         The observed 1D data
 
     Returns
@@ -62,9 +62,9 @@ def wrap_grad_rw(grad_gcalc, gcalc, gobs):
     -----------
     grad_gcalc: ndarray
         The gradient of the 1D data
-    gcalc: 1darray
+    gcalc: np.ndarray
         The calculated 1D data
-    gobs: 1darray
+    gobs: np.ndarray
         The observed 1D data
 
     Returns
@@ -88,9 +88,9 @@ def wrap_grad_chi_sq(grad_gcalc, gcalc, gobs):
     -----------
     grad_gcalc: ndarray
         The gradient of the 1D data
-    gcalc: 1darray
+    gcalc: np.ndarray
         The calculated 1D data
-    gobs: 1darray
+    gobs: np.ndarray
         The observed 1D data
 
     Returns

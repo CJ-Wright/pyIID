@@ -48,7 +48,7 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
 
     Returns
     -------
-    fq:1darray
+    fq: np.ndarray
         The reduced structure function
     """
     q, adps, n, qmax_bin, scatter_array = setup_cpu_calc(atoms, sum_type)

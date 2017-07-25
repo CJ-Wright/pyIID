@@ -35,7 +35,7 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
 
     Returns
     -------
-    fq:1darray
+    fq: np.ndarray
         The reduced structure function
     """
     q = atoms.get_positions().astype(np.float32)

@@ -38,6 +38,8 @@ def check_dynamics(value):
             exp_func = s.get_fq
             exp_grad = s.get_grad_fq
             adp_exp_grad = s.get_grad_adp_fq
+        else:
+            raise RuntimeError("Either PDF or FQ data needed")
         calc = Calc1D(target_data=target_data,
                       exp_function=exp_func, exp_grad_function=exp_grad,
                       potential='rw', conv=30)

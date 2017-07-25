@@ -326,7 +326,7 @@ class ElasticScatter(object):
 
         Returns
         -------
-        1darray:
+        np.ndarray:
             The reduced structure factor
         """
         self._check_wrap_atoms_state(atoms)
@@ -349,18 +349,18 @@ class ElasticScatter(object):
         ----------
         atoms: ase.Atoms
             The atomic configuration for which to calculate the PDF
-        noise: {None, float, ndarray}, optional
+        noise: {None, float, np.ndarray}, optional
             Add noise to the data, if `noise` is a float then assume flat
             gaussian noise with a standard deviation of noise, if an array
             then assume that each point has a gaussian distribution of noise
             with a standard deviation given by noise. Note that this noise is
             noise in I(Q) which is propagated to F(Q)
-        noise_distribution: distribution function
+        noise_distribution: callable
             The distribution function to take the scattering pattern
 
         Returns
         -------
-        1darray:
+        np.ndarray:
             The PDF
         """
         self._check_wrap_atoms_state(atoms)
@@ -393,6 +393,15 @@ class ElasticScatter(object):
         ----------
         atoms: ase.Atoms
             The atomic configuration for which to calculate S(Q)
+        noise: {None, float, np.ndarray}, optional
+            Add noise to the data, if `noise` is a float then assume flat
+            gaussian noise with a standard deviation of noise, if an array
+            then assume that each point has a gaussian distribution of noise
+            with a standard deviation given by noise. Note that this noise is
+            noise in I(Q) which is propagated to S(Q)
+        noise_distribution: callable
+            The distribution function to take the scattering pattern
+
         Returns
         -------
         np.ndarray:
@@ -414,9 +423,18 @@ class ElasticScatter(object):
         ----------
         atoms: ase.Atoms
             The atomic configuration for which to calculate I(Q)
+        noise: {None, float, np.ndarray}, optional
+            Add noise to the data, if `noise` is a float then assume flat
+            gaussian noise with a standard deviation of noise, if an array
+            then assume that each point has a gaussian distribution of noise
+            with a standard deviation given by noise. Note that this noise is
+            noise in I(Q) which is propagated to I(Q)
+        noise_distribution: callable
+            The distribution function to take the scattering pattern
+
         Returns
         -------
-        1darray:
+        np.ndarray:
             The scattering intensity
         """
         sq = self.get_sq(atoms, noise, noise_distribution)
@@ -437,7 +455,7 @@ class ElasticScatter(object):
             has a Q value
         Returns
         -------
-        2darray:
+        np.ndarray:
             The scattering intensity on the detector
         """
 
@@ -463,7 +481,7 @@ class ElasticScatter(object):
             The atomic configuration for which to calculate grad F(Q)
         Returns
         -------
-        3darray:
+        np.ndarray:
             The gradient of the reduced structure factor
         """
         self._check_wrap_atoms_state(atoms)
@@ -480,7 +498,7 @@ class ElasticScatter(object):
             The atomic configuration for which to calculate grad PDF
         Returns
         -------
-        3darray:
+        np.ndarray:
             The gradient of the PDF
         """
         self._check_wrap_atoms_state(atoms)
@@ -505,7 +523,7 @@ class ElasticScatter(object):
 
         Returns
         -------
-        1darray:
+        np.ndarray:
             The Q range for this experiment
         """
         if pdf:
@@ -523,7 +541,7 @@ class ElasticScatter(object):
 
         Returns
         -------
-        1darray:
+        np.ndarray:
             The r range for this experiment
         """
         return np.arange(self.exp['rmin'], self.exp['rmax'], self.exp['rstep'])
@@ -549,7 +567,7 @@ class ElasticScatter(object):
             The atomic configuration for which to calculate grad PDF
         Returns
         -------
-        3darray:
+        np.ndarray:
             The gradient of the PDF
         """
         self._check_wrap_atoms_state(atoms)

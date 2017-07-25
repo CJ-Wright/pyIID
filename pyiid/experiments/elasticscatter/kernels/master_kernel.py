@@ -56,7 +56,7 @@ def get_pdf_at_qmin(fpad, rstep, qstep, rgrid, qmin):
 
     Returns
     -------
-    1d array:
+    np.ndarray:
         The atomic pair distribution function
     """
     # Zero out F(Q) below qmin theshold
