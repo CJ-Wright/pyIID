@@ -5,6 +5,8 @@ python:
   - 3.6
 
 env:
+  - NUMBA_DISABLE_JIT=0 RUN_DOC=true
+  - NUMBA_DISABLE_JIT=1 RUN_DOC=false
     global:
       - secure: "JNaxD0NGQT/EjSZ7HS5hCIMTbk9Ie8OoURwkajPEH89rrTw7DaU8BT0NGDvrr94Zd4/IjxC1RUqpjNlKSq1HEMDwLhHM8sdkhMl37gQ/WTpoopEfmUTFf3hF1adQIXWyw0FsxJtXxfzkdOzL/35SBQA6y6b6p/LGfgt2w09QbgQos7nzSvm4N1ZkMjOBPnXTCe3I/myKxejvoSHMXunyqL+0KMBmaE+snzCUrSLfB3L5Asob+1flw1npzZISfjjb/l/0ELgo1BA4Zz7NuUDZnqW/B+yZlvUaNdQ77+2WOY89cREnLY4wsd5nAxNawr3np/iJCp5z0YE7kRBrWyHpoqzWmpUD/H+HGqbOSALuCJb6bKcWHu0h1w6Vzsz5OZJyqYmECq4YQRbFx06Ete4GX35buOh8lgnLY1OH2Y0palMYZ8uuGbg1EkKSNlbAKCyTujgetA70/LPRDVpNAYNY1BaG0hI3UaUtU6psO7hRK5ibGHs6dy4pFAc70sKJrjDJp97MEqvBFMwo1DaeO8izejCPXCKMvZ85gKB6EFNsnwhpNHq8/YMH0xZpnpNwrVY55JcyV3JX2Y+dIaMGt7H8uupIIegt/kudDkEszpfMJkdZZgk6ZNtlIz5g3UayIuHLXCMfVMFxCSS5cXF7UeLsYkoHORdVu0Tg4FtwZUESewQ="
 
@@ -13,9 +15,6 @@ before_install:
   - chmod +x miniconda.sh
   - ./miniconda.sh -b -p /home/travis/mc
   - export PATH=/home/travis/mc/bin:$PATH
-env:
-  - NUMBA_DISABLE_JIT=0
-  - NUMBA_DISABLE_JIT=1
 
 install:
   - export GIT_FULL_HASH=`git rev-parse HEAD`
@@ -30,12 +29,16 @@ script:
   - coverage run run_tests.py
   - coverage report -m
 #  - flake8 .
-  - conda install --yes sphinx sphinx_rtd_theme
-  - pip install git+git://github.com/drdoctr/doctr.git
-  - cd docs
-  - make html
-  - cd ..
-  - doctr deploy . --built-docs ./docs/_build/html;
+  - if [[ "${RUN-DOCS}" == true ]]; then
+    conda install --yes sphinx sphinx_rtd_theme
+    pip install git+git://github.com/drdoctr/doctr.git
+    cd docs
+    make html
+    cd ..
+    doctr deploy . --built-docs ./docs/_build/html;
+    else
+    fi
+
 
 after_success:
   - codecov
