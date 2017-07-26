@@ -1,8 +1,21 @@
 import numpy as np
-
-from pyiid.experiments.elasticscatter.kernels.cpu_flat import *
-from pyiid.experiments.elasticscatter.kernels.cpu_experimental import \
-    experimental_sum_grad_cpu
+import math
+from pyiid.experiments.elasticscatter. \
+    kernels.cpu_flat import (get_d_array,
+                             get_r_array,
+                             get_normalization_array,
+                             get_omega,
+                             get_fq,
+                             get_sigma_from_adp,
+                             get_tau,
+                             get_adp_fq,
+                             get_grad_omega,
+                             get_grad_fq,
+                             get_grad_tau,
+                             get_adp_grad_fq,
+                             get_dtau_dadp,
+                             get_dfq_dadp_inplace,
+                             experimental_sum_grad_cpu)
 
 __author__ = 'christopher'
 
@@ -41,7 +54,7 @@ def cpu_k_space_fq_adp_allocation(n, sv, mem):
     ----------
     n: int
         Number of atoms
-    Q: int
+    sv: int
         Size of the scatter vector
     mem: int
         Size of the GPU memory
@@ -89,7 +102,7 @@ def k_space_grad_adp_fq_allocation(n, qmax_bin, mem):
     ----------
     n: int
         Number of atoms
-    Q: int
+    qmax_bin: int
         Size of the scatter vector
     mem: int
         Size of the GPU memory
@@ -107,6 +120,7 @@ def k_space_dfq_dadp_allocation(n, qmax_bin, mem):
     return int(math.floor(
         float(.8 * mem - 16 * qmax_bin * n - 24 * n) / (
             4 * (6 * qmax_bin + 5))))
+
 
 def atomic_fq(task):
     q, adps, scatter_array, qbin, k_max, k_cov = task
@@ -200,7 +214,7 @@ def atomic_dfq_dadp(task):
     tau = np.zeros((k_max, qmax_bin), np.float32)
     get_tau(tau, sigma, qbin)
 
-    dtau_dadp= np.zeros((k_max, 3, qmax_bin), np.float32)
+    dtau_dadp = np.zeros((k_max, 3, qmax_bin), np.float32)
     get_dtau_dadp(dtau_dadp, tau, sigma, r, d, qbin)
 
     get_dfq_dadp_inplace(dtau_dadp, omega, norm)

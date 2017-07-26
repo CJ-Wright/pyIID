@@ -1,4 +1,3 @@
-
 """
 Smoke test all the major ElasticScatter methods
 """
@@ -9,6 +8,7 @@ import inspect
 
 __author__ = 'christopher'
 
+
 # ----------------------------------------------------------------------------
 def check_method(value):
     """
@@ -16,7 +16,7 @@ def check_method(value):
 
     Parameters
     ----------
-    value: list or tuple
+    value: tuple
         The values to use in the tests
     """
     method_string = value[0]
@@ -63,7 +63,7 @@ def check_scatter_consistancy(value):
     ans = scat.get_pdf(atoms)
     ans1 = scat.get_fq(atoms)
     anss = scat.get_scatter_vector()
-    print(ans1.shape, anss.shape, scat.exp['qmin'], scat.exp['qmax'], \
+    print(ans1.shape, anss.shape, scat.exp['qmin'], scat.exp['qmax'],
           scat.exp['qbin'])
     print(int(np.ceil(scat.exp['qmax'] / scat.exp['qbin'])) - int(
         np.ceil(scat.exp['qmin'] / scat.exp['qbin'])))
@@ -85,21 +85,6 @@ test_data = tuple(product(
 ))
 
 
-def test_meta():
-    for v in test_data:
-        yield check_method, v
-
-
-if __name__ == '__main__':
-    import nose
-
-    print('number of test cases', len(test_data))
-    nose.runmodule(argv=[
-        # '-s',
-        '--with-doctest',
-        # '--nocapture',
-        '-v',
-        '-x',
-    ],
-        # env={"NOSE_PROCESSES": 1, "NOSE_PROCESS_TIMEOUT": 599},
-        exit=False)
+@pytest.mark.parametrize("a", test_data)
+def test_meta(a):
+    check_method(a)

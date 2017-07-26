@@ -1,7 +1,10 @@
-from pyiid.experiments.elasticscatter.kernels import *
 import math
 import os
 from builtins import range
+
+from numba import f4, i4, jit, void
+
+from pyiid.experiments.elasticscatter.kernels.utils import k_to_ij
 
 __author__ = 'christopher'
 cache = True
@@ -208,7 +211,7 @@ def get_adp_grad_fq(grad, omega, tau, grad_omega, grad_tau, norm):
     Generate the gradient F(sv) for an atomic configuration
     Parameters
     ------------
-    grad_p: Nx3xQ numpy array
+    grad: Nx3xQ numpy array
         The array which will store the FQ gradient
     d: NxNx3 array
         The distance array for the configuration
@@ -289,3 +292,13 @@ def get_dfq_dadp_inplace(dtau_dadp, omega, norm):
         for k in range(kmax):
             for w in range(i4(3)):
                 dtau_dadp[k, w, qx] *= norm[k, qx] * omega[k, qx]
+
+
+@jit(target='cpu', nopython=True)
+def experimental_sum_grad_cpu(new_grad, grad, k_cov):
+    for k in range(grad.shape[0]):
+        i, j = k_to_ij(i4(k + k_cov))
+        for qx in range(grad.shape[2]):
+            for tz in range(3):
+                new_grad[i, tz, qx] -= grad[k, tz, qx]
+                new_grad[j, tz, qx] += grad[k, tz, qx]

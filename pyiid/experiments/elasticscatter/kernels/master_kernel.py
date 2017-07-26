@@ -1,5 +1,5 @@
 import math
-from numba import *
+from numba import jit
 import mkl
 import numpy as np
 import xraylib
@@ -42,13 +42,13 @@ def get_pdf_at_qmin(fpad, rstep, qstep, rgrid, qmin):
 
     Parameters
     -----------
-    fpad: 1d array
+    fpad: np.ndarray
         The reduced structure function, padded with zeros to qmin
     rstep: float
         The step size in real space
     qstep: float
         The step size in inverse space
-    rgrid: 1d array
+    rgrid: np.ndarray
         The real space r values
     qmin: float
         The minimum Q value
@@ -56,7 +56,7 @@ def get_pdf_at_qmin(fpad, rstep, qstep, rgrid, qmin):
 
     Returns
     -------
-    1d array:
+    np.ndarray:
         The atomic pair distribution function
     """
     # Zero out F(Q) below qmin theshold

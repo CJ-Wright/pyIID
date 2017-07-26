@@ -24,11 +24,11 @@ pixel_array /= np.max(pixel_array)
 pixel_array *= np.max(s)
 
 img = scat.get_2d_scatter(atoms, pixel_array)
-print img.shape
+print(img.shape)
 
 
 # plt.imshow(pixel_array)
-print np.max(img), np.min(img)
+print(np.max(img), np.min(img))
 plt.imshow(img, aspect='auto')
 plt.colorbar()
 plt.show()

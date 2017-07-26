@@ -5,6 +5,7 @@ atoms change.
 # TODO: We should also check that the state updates if whe transmute elements
 from pyiid.tests import *
 from pyiid.experiments.elasticscatter import ElasticScatter
+from ase import Atom
 
 __author__ = 'christopher'
 
@@ -20,18 +21,18 @@ def check_add_atom(value):
     scat = ElasticScatter(exp_dict=exp, verbose=True)
     scat.set_processor(proc, alg)
 
-    assert scat._check_wrap_atoms_state(atoms) == False
+    assert scat._check_wrap_atoms_state(atoms) is False
     # Test a set of different sized ensembles
     ans1 = scat.get_fq(atoms)
-    assert scat._check_wrap_atoms_state(atoms) == True
+    assert scat._check_wrap_atoms_state(atoms) is True
     # Check that Scatter gave back something
     assert ans1 is not None
     assert np.any(ans1)
 
     atoms2 = atoms + Atom('Au', [0, 0, 0])
-    assert scat._check_wrap_atoms_state(atoms2) == False
+    assert scat._check_wrap_atoms_state(atoms2) is False
     ans2 = scat.get_fq(atoms2)
-    assert scat._check_wrap_atoms_state(atoms2) == True
+    assert scat._check_wrap_atoms_state(atoms2) is True
     # Check that Scatter gave back something
     assert ans2 is not None
     assert np.any(ans2)
@@ -51,19 +52,19 @@ def check_del_atom(value):
     scat = ElasticScatter(exp_dict=exp, verbose=True)
     scat.set_processor(proc, alg)
 
-    assert scat._check_wrap_atoms_state(atoms) == False
+    assert scat._check_wrap_atoms_state(atoms) is False
     # Test a set of different sized ensembles
     ans1 = scat.get_fq(atoms)
-    assert scat._check_wrap_atoms_state(atoms) == True
+    assert scat._check_wrap_atoms_state(atoms) is True
     # Check that Scatter gave back something
     assert ans1 is not None
     assert np.any(ans1)
 
     atoms2 = dc(atoms)
     del atoms2[np.random.choice(len(atoms2))]
-    assert scat._check_wrap_atoms_state(atoms2) == False
+    assert scat._check_wrap_atoms_state(atoms2) is False
     ans2 = scat.get_fq(atoms2)
-    assert scat._check_wrap_atoms_state(atoms2) == True
+    assert scat._check_wrap_atoms_state(atoms2) is True
     # Check that Scatter gave back something
     assert ans2 is not None
     assert np.any(ans2)
@@ -96,20 +97,6 @@ for d in dels:
     del test_data[d]
 
 
-def test_meta():
-    for v in test_data:
-        yield check_meta, v
-
-
-if __name__ == '__main__':
-    import nose
-
-    nose.runmodule(argv=[
-        '-s',
-        '--with-doctest',
-        # '--nocapture',
-        '-v',
-        '-x',
-    ],
-        # env={"NOSE_PROCESSES": 1, "NOSE_PROCESS_TIMEOUT": 599},
-        exit=False)
+@pytest.mark.parametrize("a", test_data)
+def test_meta(a):
+    check_meta(a)

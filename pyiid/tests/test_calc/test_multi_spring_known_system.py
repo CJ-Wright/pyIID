@@ -2,20 +2,16 @@ from pyiid.tests import *
 import numpy as np
 from pyiid.calc.spring_calc import Spring
 from pyiid.calc.multi_calc import MultiCalc
-
+import pytest
 __author__ = 'christopher'
 
 test_data = tuple(product(test_atom_squares, test_spring_kwargs))
 
 
-def test_gen_spring():
-    for v in test_data:
-        yield check_spring, v
-
-
-def test_gen_grad_spring():
-    for v in test_data:
-        yield check_grad_spring, v
+@pytest.mark.parametrize("a", test_data)
+def test_meta(a):
+    check_spring(a)
+    check_grad_spring(a)
 
 
 def check_spring(value):
@@ -24,7 +20,7 @@ def check_spring(value):
 
     Parameters
     ----------
-    value: list or tuple
+    value: tuple
         The values to use in the tests
     """
     atoms1, atoms2 = value[0]
@@ -51,9 +47,3 @@ def check_grad_spring(value):
         dist = atoms2[i].position - com
         # print i, dist, forces[i], np.cross(dist, forces[i])
         stats_check(np.cross(dist, forces[i]), np.zeros(3))
-
-
-if __name__ == '__main__':
-    import nose
-
-    nose.runmodule(argv=['-s', '--with-doctest'], exit=False)

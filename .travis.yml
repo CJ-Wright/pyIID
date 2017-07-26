@@ -2,36 +2,43 @@ sudo: false
 language: python
 
 python:
-  - 2.7
-  - 3.4
-#  - 3.5
+  - 3.6
+
+env:
+  global:
+    - secure: "JNaxD0NGQT/EjSZ7HS5hCIMTbk9Ie8OoURwkajPEH89rrTw7DaU8BT0NGDvrr94Zd4/IjxC1RUqpjNlKSq1HEMDwLhHM8sdkhMl37gQ/WTpoopEfmUTFf3hF1adQIXWyw0FsxJtXxfzkdOzL/35SBQA6y6b6p/LGfgt2w09QbgQos7nzSvm4N1ZkMjOBPnXTCe3I/myKxejvoSHMXunyqL+0KMBmaE+snzCUrSLfB3L5Asob+1flw1npzZISfjjb/l/0ELgo1BA4Zz7NuUDZnqW/B+yZlvUaNdQ77+2WOY89cREnLY4wsd5nAxNawr3np/iJCp5z0YE7kRBrWyHpoqzWmpUD/H+HGqbOSALuCJb6bKcWHu0h1w6Vzsz5OZJyqYmECq4YQRbFx06Ete4GX35buOh8lgnLY1OH2Y0palMYZ8uuGbg1EkKSNlbAKCyTujgetA70/LPRDVpNAYNY1BaG0hI3UaUtU6psO7hRK5ibGHs6dy4pFAc70sKJrjDJp97MEqvBFMwo1DaeO8izejCPXCKMvZ85gKB6EFNsnwhpNHq8/YMH0xZpnpNwrVY55JcyV3JX2Y+dIaMGt7H8uupIIegt/kudDkEszpfMJkdZZgk6ZNtlIz5g3UayIuHLXCMfVMFxCSS5cXF7UeLsYkoHORdVu0Tg4FtwZUESewQ="
+  matrix:
+    - NUMBA_DISABLE_JIT=0 RUN_DOC=true
+    - NUMBA_DISABLE_JIT=1 RUN_DOC=false
 
 before_install:
-  - if [ ${TRAVIS_PYTHON_VERSION:0:1} == "2" ]; then wget http://repo.continuum.io/miniconda/Miniconda-3.5.5-Linux-x86_64.sh -O miniconda.sh; else wget http://repo.continuum.io/miniconda/Miniconda3-3.5.5-Linux-x86_64.sh -O miniconda.sh; fi
+  - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
   - chmod +x miniconda.sh
   - ./miniconda.sh -b -p /home/travis/mc
   - export PATH=/home/travis/mc/bin:$PATH
-  - wget https://gist.githubusercontent.com/tacaswell/128bb482f845feb024eb/raw/5cf21dc03a354fc87140d4a75e17cb5c076a0517/.condarc -O /home/travis/.condarc
-env:
-  - NUMBA_DISABLE_JIT=0
-  - NUMBA_DISABLE_JIT=1
 
 install:
   - export GIT_FULL_HASH=`git rev-parse HEAD`
   - conda update conda --yes
-  - conda create -n testenv --yes pip nose python=$TRAVIS_PYTHON_VERSION xraylib numpy scipy six numba mkl matplotlib accelerate mpi4py psutil future pytest
+  - conda create -n testenv --yes pip nose python=$TRAVIS_PYTHON_VERSION xraylib numpy scipy six numba mkl matplotlib accelerate mpi4py psutil future pytest codecov pympler ase accelerate flake8 -c conda-forge
   - source activate testenv
-  - pip install ase pympler
-  - pip install nose-exclude
   - python setup.py install
-  - pip install python-coveralls
-  - pip install codecov
   - git clean -xfd
 
 script:
-  - coverage run run_tests.py
+  - set -e
+  - coverage run run_short_tests.py
   - coverage report -m
+#  - flake8 .
+  - if [[ "${RUN-DOCS}" == 'true']]; then
+    conda install --yes sphinx sphinx_rtd_theme;
+    pip install git+git://github.com/drdoctr/doctr.git;
+    cd docs;
+    make html;
+    cd ..;
+    doctr deploy . --built-docs ./docs/_build/html;
+    fi
 
-after_script:
-  - coveralls
+
+after_success:
   - codecov

@@ -1,4 +1,3 @@
-import numpy as np
 from ase.calculators.calculator import Calculator
 
 from pyiid.calc import wrap_rw, wrap_chi_sq, wrap_grad_rw, wrap_grad_chi_sq
@@ -41,9 +40,8 @@ class Calc1D(Calculator):
         else:
             raise NotImplementedError('Potential not implemented')
 
-    def calculate(self, atoms=None, properties=['energy'],
-                  system_changes=['positions', 'numbers', 'cell',
-                                  'pbc', 'charges', 'magmoms']):
+    def calculate(self, atoms=None, properties=None,
+                  system_changes=None):
         """PDF Calculator
         Parameters
         ----------
@@ -58,6 +56,11 @@ class Calc1D(Calculator):
             'pbc', 'charges' and 'magmoms'.
         """
 
+        if system_changes is None:
+            system_changes = ['positions', 'numbers', 'cell',
+                              'pbc', 'charges', 'magmoms']
+        if properties is None:
+            properties = ['energy']
         Calculator.calculate(self, atoms, properties, system_changes)
 
         # we shouldn't really recalc if charges or magmos change
@@ -67,12 +70,12 @@ class Calc1D(Calculator):
 
             if 'forces' in properties:
                 self.calculate_forces(self.atoms)
-        for property in properties:
-            if property not in self.results:
-                if property is 'energy':
+        for calc_property in properties:
+            if calc_property not in self.results:
+                if calc_property is 'energy':
                     self.calculate_energy(self.atoms)
 
-                if property is 'forces':
+                if calc_property is 'forces':
                     self.calculate_forces(self.atoms)
 
     def calculate_energy(self, atoms):

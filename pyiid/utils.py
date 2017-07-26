@@ -1,10 +1,12 @@
-import numpy as np
-import math
-from itertools import combinations
 from copy import deepcopy as dc
-from ase.atoms import Atoms as AAtoms
+from itertools import combinations
+
 import ase.io as aseio
+import numpy as np
+from ase.atoms import Atoms as AAtoms
+
 from pyiid.asa import calculate_asa, get_neighbor_list, get_coordination
+
 __author__ = 'christopher'
 
 
@@ -116,7 +118,7 @@ def get_coord_list(atoms, cutoff, element=None, tag=None):
 
     Parameters
     ----------
-    atoms: ase.Atoms objecct
+    atoms: ase.Atoms object
         The atomic configuration
     cutoff: float
         Bond length cutoff

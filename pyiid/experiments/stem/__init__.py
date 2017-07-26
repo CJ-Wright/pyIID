@@ -52,7 +52,6 @@ if __name__ == '__main__':
     from ase import Atoms
     from ase.visualize import view
     from ase.cluster import FaceCenteredCubic
-    import ase.io as aseio
 
     # atoms = Atoms('Pt', [(0, 0, 0)])
     atoms = Atoms(

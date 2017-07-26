@@ -6,12 +6,12 @@ from pyiid.calc.calc_1d import Calc1D
 
 __author__ = 'christopher'
 
-test_dynamics_data = tuple(product(test_atom_squares, test_calcs, [1, -1]))
+test_data = tuple(product(test_atom_squares, test_calcs, [1, -1]))
 
 
-def test_gen_dynamics():
-    for v in test_dynamics_data:
-        yield check_dynamics, v
+@pytest.mark.parametrize("a", test_data)
+def test_meta(a):
+    check_dynamics(a)
 
 
 def check_dynamics(value):
@@ -21,7 +21,7 @@ def check_dynamics(value):
 
     Parameters
     ----------
-    value: list or tuple
+    value: tuple
         The values to use in the tests
     """
     ideal_atoms, _ = value[0]
@@ -38,6 +38,8 @@ def check_dynamics(value):
             exp_func = s.get_fq
             exp_grad = s.get_grad_fq
             adp_exp_grad = s.get_grad_adp_fq
+        else:
+            raise RuntimeError("Either PDF or FQ data needed")
         calc = Calc1D(target_data=target_data,
                       exp_function=exp_func, exp_grad_function=exp_grad,
                       potential='rw', conv=30)
@@ -65,14 +67,3 @@ def check_dynamics(value):
     print(pe_list)
     if start_pe != 0.0:
         assert min_pe < start_pe
-
-
-if __name__ == '__main__':
-    import nose
-
-    nose.runmodule(argv=['--with-doctest',
-                         # '--nocapture',
-                         '-v',
-                         '-x'
-                         ],
-                   exit=False)

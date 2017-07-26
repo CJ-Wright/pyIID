@@ -1,19 +1,17 @@
 from __future__ import print_function
-from pyiid.calc.calc_1d import Calc1D
-from pyiid.experiments.elasticscatter import ElasticScatter
+
 from pyiid.sim.gcmc import GrandCanonicalEnsemble
 from pyiid.tests import *
-from pyiid.calc.spring_calc import Spring
 
 __author__ = 'christopher'
 
-test_nuts_data = tuple(
+test_data = tuple(
     product(dc(test_atom_squares), [Spring(k=10, rt=2.5)], [None, .1]))
 
 
-def test_nuts_dynamics():
-    for v in test_nuts_data:
-        yield check_nuts, v
+@pytest.mark.parametrize("a", test_data)
+def test_nuts_dynamics(a):
+    check_nuts(a)
 
 
 def check_nuts(value):
@@ -22,7 +20,7 @@ def check_nuts(value):
 
     Parameters
     ----------
-    value: list or tuple
+    value: tuple
         The values to use in the tests
     """
     ideal_atoms, _ = value[0]
@@ -46,14 +44,3 @@ def check_nuts(value):
     print('n0', n0)
     del traj
     assert np.max(n) > n0
-
-
-if __name__ == '__main__':
-    import nose
-
-    nose.runmodule(argv=['--with-doctest',
-                         # '--nocapture',
-                         '-v',
-                         '-x'
-                         ],
-                   exit=False)

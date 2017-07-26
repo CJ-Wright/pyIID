@@ -5,7 +5,6 @@ from pyiid.experiments.elasticscatter.kernels.master_kernel import get_rw, \
     get_grad_chi_sq
 from ase.calculators.calculator import Calculator
 
-
 __author__ = 'christopher'
 
 
@@ -15,9 +14,9 @@ def wrap_rw(gcalc, gobs):
 
     Parameters
     -----------
-    gcalc: 1darray
+    gcalc: np.ndarray
         The calculated 1D data
-    gobs: 1darray
+    gobs: np.ndarray
         The observed 1D data
 
     Returns
@@ -38,9 +37,9 @@ def wrap_chi_sq(gcalc, gobs):
 
     Parameters
     -----------
-    gcalc: 1darray
+    gcalc: np.ndarray
         The calculated 1D data
-    gobs: 1darray
+    gobs: np.ndarray
         The observed 1D data
 
     Returns
@@ -63,9 +62,9 @@ def wrap_grad_rw(grad_gcalc, gcalc, gobs):
     -----------
     grad_gcalc: ndarray
         The gradient of the 1D data
-    gcalc: 1darray
+    gcalc: np.ndarray
         The calculated 1D data
-    gobs: 1darray
+    gobs: np.ndarray
         The observed 1D data
 
     Returns
@@ -89,9 +88,9 @@ def wrap_grad_chi_sq(grad_gcalc, gcalc, gobs):
     -----------
     grad_gcalc: ndarray
         The gradient of the 1D data
-    gcalc: 1darray
+    gcalc: np.ndarray
         The calculated 1D data
-    gobs: 1darray
+    gobs: np.ndarray
         The observed 1D data
 
     Returns
@@ -106,6 +105,7 @@ def wrap_grad_chi_sq(grad_gcalc, gcalc, gobs):
     get_grad_chi_sq(grad_chi_sq, grad_gcalc, gcalc, gobs, scale)
     return grad_chi_sq
 
+
 class Null(Calculator):
     """
     Returns zero forces or energy
@@ -118,9 +118,8 @@ class Null(Calculator):
         Calculator.__init__(self, restart, ignore_bad_restart_file,
                             label, atoms, **kwargs)
 
-    def calculate(self, atoms=None, properties=['energy'],
-                  system_changes=['positions', 'numbers', 'cell',
-                                  'pbc', 'charges', 'magmoms']):
+    def calculate(self, atoms=None, properties=None,
+                  system_changes=None):
         """PDF Calculator
         Parameters
         ----------
@@ -135,6 +134,11 @@ class Null(Calculator):
             'pbc', 'charges' and 'magmoms'.
         """
 
+        if system_changes is None:
+            system_changes = ['positions', 'numbers', 'cell',
+                              'pbc', 'charges', 'magmoms']
+        if properties is None:
+            properties = ['energy']
         Calculator.calculate(self, atoms, properties, system_changes)
 
         # we shouldn't really recalc if charges or magmos change
@@ -144,12 +148,12 @@ class Null(Calculator):
 
             if 'forces' in properties:
                 self.calculate_forces(self.atoms)
-        for property in properties:
-            if property not in self.results:
-                if property is 'energy':
+        for calc_property in properties:
+            if calc_property not in self.results:
+                if calc_property is 'energy':
                     self.calculate_energy(self.atoms)
 
-                if property is 'forces':
+                if calc_property is 'forces':
                     self.calculate_forces(self.atoms)
 
     def calculate_energy(self, atoms):

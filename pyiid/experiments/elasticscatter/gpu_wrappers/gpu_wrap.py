@@ -41,7 +41,7 @@ def subs_fq(fq, q, adps, scatter_array, qbin, gpu, k_cov, k_per_thread):
         Atomic positions
     scatter_array: NxQ array
         Atomic scatter factors
-    fq: 1darray
+    fq: np.ndarray
         The F(Q), note that we add to it which prevents a rather nasty
         memory leak
     qbin: float
@@ -102,7 +102,7 @@ def sub_grad_pdf(gpu, gpadc, gpadcfft, atoms_per_thread, n_cov):
     n_cov: int
         Number of atoms previously covered
     """
-    input_shape = [gpadcfft.shape[-1]]
+    input_shape = tuple([gpadcfft.shape[-1]])
     with gpu:
         batch_operations = atoms_per_thread
         plan = fft.FFTPlan(input_shape, np.complex64, np.complex64,
@@ -139,7 +139,7 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
         factor array for the atoms
     Returns
     -------
-    1darray;
+    np.ndarray;
         The reduced structure factor
     """
     q, adps, n, qmax_bin, scatter_array, gpus, mem_list = setup_gpu_calc(
@@ -179,7 +179,7 @@ def wrap_fq_grad(atoms, qbin=.1, sum_type='fq'):
         factor array for the atoms
     Returns
     -------
-    1darray;
+    np.ndarray;
         The reduced structure factor
     """
     q, adps, n, qmax_bin, scatter_array, gpus, mem_list = setup_gpu_calc(
@@ -212,7 +212,7 @@ def grad_pdf(grad_fq, rstep, qstep, rgrid, qmin):
         The r resolution in A
     qstep: float
         The Q resolution in A**-1
-    rgrid: 1darray
+    rgrid: np.ndarray
         The inter-atomic distance grid to map onto
     qmin: float
         The minimum Q in the experiment in A**-1
@@ -258,7 +258,7 @@ def grad_pdf(grad_fq, rstep, qstep, rgrid, qmin):
                 # TODO: Note that the second division by a memory scale factor
                 # is not needed but I don't know the official memory
                 # allocation and this makes certain we don't crash the system
-                # on a memory allocation
+                # on a memory allocation, should put this in a config file
                 memory_scale_factor = 1.7
                 atoms_per_thread = int(
                     math.floor(.8 * mem / gpadcfft.shape[
@@ -267,9 +267,6 @@ def grad_pdf(grad_fq, rstep, qstep, rgrid, qmin):
                     atoms_per_thread = n - n_cov
                 if n_cov >= n:
                     break
-                # print(mem / 1e9, gpadcfft.shape[
-                #     -1] * 8 * 2 * atoms_per_thread / 1e9,
-                #       atoms_per_thread)
                 p = Thread(target=sub_grad_pdf,
                            args=(
                                gpu, gpadc, gpadcfft, atoms_per_thread,
@@ -285,7 +282,7 @@ def grad_pdf(grad_fq, rstep, qstep, rgrid, qmin):
     g = np.zeros((n, 3, npad2), dtype=complex)
     g[:, :, :] = gpadcfft[:, :, :npad2 * 2:2] * npad2 * qstep
 
-    gpad = g.imag * 2.0 / math.pi
+    gpad = g.imag * 2.0 / math.pi  # type: np.ndarray
     drpad = math.pi / (gpad.shape[-1] * qstep)
     # re-bin the data onto the correct rgrid
     pdf0 = np.zeros((n, 3, len(rgrid)))

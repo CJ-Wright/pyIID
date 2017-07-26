@@ -1,6 +1,5 @@
-from ase.calculators.calculator import Calculator
 import numpy as np
-from copy import deepcopy as dc
+from ase.calculators.calculator import Calculator
 
 __author__ = 'christopher'
 
@@ -22,9 +21,8 @@ class MultiCalc(Calculator):
 
         self.calc_list = calc_list
 
-    def calculate(self, atoms=None, properties=['energy'],
-                  system_changes=['positions', 'numbers', 'cell',
-                                  'pbc', 'charges', 'magmoms']):
+    def calculate(self, atoms=None, properties=None,
+                  system_changes=None):
         """PDF Calculator
 
         Parameters
@@ -40,6 +38,11 @@ class MultiCalc(Calculator):
             'pbc', 'charges' and 'magmoms'.
         """
 
+        if system_changes is None:
+            system_changes = ['positions', 'numbers', 'cell',
+                              'pbc', 'charges', 'magmoms']
+        if properties is None:
+            properties = ['energy']
         Calculator.calculate(self, atoms, properties, system_changes)
 
         # we shouldn't really recalc if charges or magmos change
@@ -49,12 +52,12 @@ class MultiCalc(Calculator):
 
             if 'forces' in properties:
                 self.calculate_forces(self.atoms)
-        for property in properties:
-            if property not in self.results:
-                if property is 'energy':
+        for calc_property in properties:
+            if calc_property not in self.results:
+                if calc_property is 'energy':
                     self.calculate_energy(self.atoms)
 
-                if property is 'forces':
+                if calc_property is 'forces':
                     self.calculate_forces(self.atoms)
 
     def calculate_energy(self, atoms):

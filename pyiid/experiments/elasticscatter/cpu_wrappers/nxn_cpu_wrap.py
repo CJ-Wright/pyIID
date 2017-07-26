@@ -1,8 +1,9 @@
 import numpy as np
-from pyiid.experiments.elasticscatter.kernels.cpu_nxn import *
-from ..kernels.cpu_flat import get_normalization_array as flat_norm
-from pyiid.experiments.elasticscatter.atomics import pad_pdf
 from pyiid.adp import has_adp
+from pyiid.experiments.elasticscatter.kernels.cpu_nxn import *
+from pyiid.experiments.elasticscatter.kernels.cpu_flat import (
+    get_normalization_array as flat_norm)
+
 __author__ = 'christopher'
 
 
@@ -21,7 +22,7 @@ def wrap_fq(atoms, qbin=.1, sum_type='fq'):
 
     Returns
     -------
-    fq:1darray
+    fq: np.ndarray
         The reduced structure function
     """
     q = atoms.get_positions().astype(np.float32)

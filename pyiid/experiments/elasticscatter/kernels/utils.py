@@ -2,7 +2,6 @@ import math
 from numba import *
 from numba import cuda, f4, i4, int32
 import numpy as np
-from builtins import range
 
 __author__ = 'christopher'
 

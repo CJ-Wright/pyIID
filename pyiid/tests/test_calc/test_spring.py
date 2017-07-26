@@ -5,6 +5,7 @@ from pyiid.calc.spring_calc import Spring
 from ase import Atom
 from unittest import SkipTest
 from builtins import range
+import pytest
 
 __author__ = 'christopher'
 
@@ -76,21 +77,6 @@ test_data = tuple(
             test_spring_kwargs))
 
 
-def test_meta():
-    for v in test_data:
-        yield check_meta, v
-
-
-if __name__ == '__main__':
-    import nose
-
-    print(len(test_data))
-    nose.runmodule(argv=[
-        # '-s',
-        '--with-doctest',
-        # '--nocapture',
-        '-v',
-        # '-x',
-    ],
-        # env={"NOSE_PROCESSES": 1, "NOSE_PROCESS_TIMEOUT": 599},
-        exit=False)
+@pytest.mark.parametrize("a", test_data)
+def test_meta(a):
+    check_meta(a)

@@ -6,18 +6,20 @@ which is much faster.
 Then we run all nuts_benchmarks against the CPU flat kernels.
 Thus it is imperative that the flat CPU runs with no errors.
 """
-from __future__ import print_function
-import numpy as np
-from ase import Atoms, Atom
-from numpy.testing import assert_allclose
 from itertools import *
+
+import numpy as np
 import os
-from copy import deepcopy as dc
 import random
-from pyiid.testing.decorators import *
+from ase import Atoms
+from copy import deepcopy as dc
+from numpy.testing import assert_allclose
+
+from pyiid.adp import ADP
 from pyiid.calc.spring_calc import Spring
-from pyiid.adp import ADP, has_adp
-from nose.plugins.skip import SkipTest
+import pytest
+from unittest import SkipTest
+from pyiid.adp import has_adp
 
 srfit = False
 try:
@@ -44,7 +46,8 @@ if srfit:
 
         Parameters
         -----------
-        atoms: ase.Atoms object
+        atoms: ase.Atoms instance
+
         Returns
         -------
             diffpy.Structure object:
@@ -90,6 +93,11 @@ def setup_atoms(n):
     ----------
     n: int
         Number of atoms in configuration
+
+    Returns
+    -------
+    atoms: ase.Atoms
+        The configuration
     """
     q = rs.random_sample((n, 3)) * 10
     atoms = Atoms('Au' + str(int(n)), q)
@@ -98,6 +106,17 @@ def setup_atoms(n):
 
 
 def setup_adps(atoms):
+    """
+    Setup Atomic Displacement Parameters
+
+    Parameters
+    ----------
+    atoms: ase.Atoms instance
+
+    Returns
+    -------
+    adps: pyiid.adp.ADP instance
+    """
     n = len(atoms)
     adp_tensor = rs.randint(10, 100, (n, 3)) * .001
     adps = ADP(atoms, adp_tensor)
@@ -138,23 +157,21 @@ def generate_experiment():
 
 
 def setup_atomic_square():
-    """
-    Setup squares of 4 gold atoms with known positions
-    :return:
-    """
+    """ Setup squares of 4 gold atoms with known positions """
     atoms1 = Atoms('Au4', [[0, 0, 0], [3, 0, 0], [0, 3, 0], [3, 3, 0]])
-    atoms1.center()
+    atoms1.center(1)
     atoms2 = atoms1.copy()
     scale = .75
     atoms2.positions *= scale
     return atoms1, atoms2
 
 
+# TODO: replace this and see what happens
 def stats_check(ans1, ans2, rtol=1e-7, atol=0):
     try:
         assert_allclose(ans1, ans2, rtol=rtol, atol=atol)
         return True
-    except:
+    except AssertionError:
         old_err_settings = np.seterr(divide='ignore')
         print('bulk statistics:')
         print('max', np.max(np.abs(ans2 - ans1)))
@@ -250,12 +267,14 @@ if os.getenv('TRAVIS'):
         pass
     else:
         # Use a slightly bigger test set, since we are using the JIT
-        ns = [10, 100, 400]
+        ns = [10,
+              # 100, 400
+              ]
         num_exp = 3
 elif os.getenv('SHORT_TEST'):
     ns = [
         10,
-        100,
+        # 100,
         # 400,
         # 1000
     ]

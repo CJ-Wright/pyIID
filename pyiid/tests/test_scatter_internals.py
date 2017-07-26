@@ -2,22 +2,21 @@
 Rigorously test the flattened CPU kernel against the NXN kernel, step by step.
 """
 from __future__ import print_function
-from pyiid.tests import *
+
 from pyiid.experiments.elasticscatter import ElasticScatter
-from pyiid.experiments.elasticscatter.kernels import (antisymmetric_reshape,
-                                                      symmetric_reshape)
-from pyiid.experiments.elasticscatter.kernels.cpu_nxn import \
-    (get_d_array as nxn_d,
-     get_r_array as nxn_r,
-     get_normalization_array as nxn_norm,
-     get_omega as nxn_omega,
-     get_fq_inplace as nxn_fq)
-from pyiid.experiments.elasticscatter.kernels.cpu_flat import \
-    (get_d_array as k_d,
-     get_r_array as k_r,
-     get_normalization_array as k_norm,
-     get_omega as k_omega,
-     get_fq_inplace as k_fq)
+from pyiid.experiments.elasticscatter.kernels.cpu_flat import (
+    get_d_array as k_d,
+    get_r_array as k_r,
+    get_normalization_array as k_norm,
+    get_omega as k_omega)
+from pyiid.experiments.elasticscatter.kernels.cpu_nxn import (
+    get_d_array as nxn_d,
+    get_r_array as nxn_r,
+    get_normalization_array as nxn_norm,
+    get_omega as nxn_omega)
+from pyiid.experiments.elasticscatter.kernels.utils import (
+    antisymmetric_reshape, symmetric_reshape)
+from pyiid.tests import *
 
 
 def check_meta(value):
@@ -109,20 +108,6 @@ test_data = list(product(
     ['fq', 'pdf']))
 
 
-def test_meta():
-    for v in test_data:
-        yield check_meta, v
-
-
-if __name__ == '__main__':
-    import nose
-
-    nose.runmodule(argv=[
-        '-s',
-        '--with-doctest',
-        # '--nocapture',
-        '-v',
-        # '-x',
-    ],
-        # env={"NOSE_PROCESSES": 1, "NOSE_PROCESS_TIMEOUT": 599},
-        exit=False)
+@pytest.mark.parametrize("a", test_data)
+def test_meta(a):
+    check_meta(a)

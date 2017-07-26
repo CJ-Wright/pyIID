@@ -35,20 +35,3 @@ def test_fq_against_srfit():
     stats_check(ans1, ans2, rtol=1e-4, atol=5e-6)
     del srfit_calc
     stats_check(ans1, ans2, rtol=1e-4, atol=5e-6)
-
-
-if __name__ == '__main__':
-    # import pytest
-
-    pytest.main(['-x', __file__])
-
-    # import nose
-    #
-    # nose.runmodule(argv=[
-    #     '-s',
-        # '--with-doctest',
-        # '--nocapture',
-        # '-v'
-    # ],
-    #     env={"NOSE_PROCESSES": 1, "NOSE_PROCESS_TIMEOUT": 599},
-        # exit=False)

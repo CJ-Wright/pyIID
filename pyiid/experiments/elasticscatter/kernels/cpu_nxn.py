@@ -1,5 +1,5 @@
 import math
-from numba import *
+from numba import jit, void, f4, i4
 import mkl
 import os
 from builtins import range

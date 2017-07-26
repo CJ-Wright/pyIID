@@ -15,13 +15,14 @@ def test_gen_dynamics():
     for v in test_dynamics_data:
         yield check_n_forces, v
 
+
 def check_n_forces(value):
     """
     Test numerical vs analytical forces
 
     Parameters
     ----------
-    value: list or tuple
+    value: tuple
         The values to use in the tests
     """
     rtol = 1e-6
@@ -56,14 +57,3 @@ def check_n_forces(value):
                 rtol=rtol,
                 atol=atol
                 )
-
-
-if __name__ == '__main__':
-    import nose
-
-    nose.runmodule(argv=['--with-doctest',
-                         # '--nocapture',
-                         '-v',
-                         # '-x'
-                         ],
-                   exit=False)

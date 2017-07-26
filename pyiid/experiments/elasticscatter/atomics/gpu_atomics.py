@@ -1,6 +1,6 @@
 import math
 import numpy as np
-from numba import *
+from numba import cuda
 from pyiid.experiments import generate_grid
 
 __author__ = 'christopher'
@@ -107,7 +107,7 @@ def atomic_fq(q, adps, scatter_array, qbin, k_cov, k_per_thread):
 
     Returns
     -------
-    1darray:
+    np.ndarray:
         The calculated chunk of F(sv)
 
     """
@@ -116,11 +116,6 @@ def atomic_fq(q, adps, scatter_array, qbin, k_cov, k_per_thread):
     from pyiid.experiments.elasticscatter.kernels.gpu_flat import \
         (get_d_array, get_r_array, get_normalization_array, get_omega,
          get_fq_inplace, d2_zero, d2_to_d1_cleanup_kernel, experimental_sum_fq)
-    if adps is not None:
-        from pyiid.experiments.elasticscatter.kernels.gpu_flat import (
-            get_sigma_from_adp,
-            get_tau,
-            get_adp_fq_inplace)
     # generate grids for the GPU
     elements_per_dim_1 = [k_per_thread]
     tpb_k = [32]
@@ -159,6 +154,10 @@ def atomic_fq(q, adps, scatter_array, qbin, k_cov, k_per_thread):
     if adps is None:
         get_fq_inplace[bpg_kq, tpb_kq, stream2](dnorm, domega)
     else:
+        from pyiid.experiments.elasticscatter.kernels.gpu_flat import (
+            get_sigma_from_adp,
+            get_tau,
+            get_adp_fq_inplace)
         dadps = cuda.to_device(adps.astype(np.float32), stream=stream)
         dsigma = cuda.device_array(k_per_thread, dtype=np.float32,
                                    stream=stream)
@@ -203,7 +202,7 @@ def atomic_fq(q, adps, scatter_array, qbin, k_cov, k_per_thread):
     final = dfinal.copy_to_host(stream=stream2)
     # remove from memory
     del dq, dd, dscat, dr, dnorm, dfq, dfinal, dsum
-    cuda.current_context().trashing.clear()
+    cuda.current_context().deallocations.clear()
     return final
 
 
@@ -228,7 +227,7 @@ def atomic_grad_fq(q, adps, scatter_array, qbin, k_cov, k_per_thread):
 
     Returns
     -------
-    1darray:
+    np.ndarray:
         The calculated chunk of grad F(sv)
 
     """
@@ -326,5 +325,5 @@ def atomic_grad_fq(q, adps, scatter_array, qbin, k_cov, k_per_thread):
     experimental_sum_grad_fq1[bpg_kq, tpb_kq, stream2](dnew_grad, dgrad, k_cov)
     rtn = dnew_grad.copy_to_host(stream=stream2)
     del dgrad, dnew_grad
-    cuda.current_context().trashing.clear()
+    cuda.current_context().deallocations.clear()
     return rtn

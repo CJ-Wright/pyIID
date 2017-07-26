@@ -1,6 +1,7 @@
+
 import math
 from builtins import range
-from ase.data import *
+from ase.data import vdw_radii
 import numpy as np
 
 __doc__ = """
@@ -16,15 +17,18 @@ Reference: A. Shrake & J. A. Rupley. "Environment and Exposure to
 Solvent of Protein Atoms. Lysozyme and Insulin." J Mol Biol. 79
 (1973) 351- 371. """
 
+
 def get_neighbor_list(cut, atoms):
-    r = atoms.get_all_distances()
+    r = atoms.get_all_distances()  # type: np.ndarray
     n_list = []
     for i in range(len(atoms)):
         sub = \
-        np.where((0.0 < r[i, :]).astype(bool) & (r[i, :] < cut).astype(bool))[
-            0]
+            np.where(
+                (0.0 < r[i, :]).astype(bool) & (r[i, :] < cut).astype(bool))[
+                0]
         n_list.append(sub)
     return n_list
+
 
 def get_coordination(cut, atoms):
     nl = get_neighbor_list(cut, atoms)
