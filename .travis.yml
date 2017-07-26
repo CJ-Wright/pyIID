@@ -30,14 +30,13 @@ script:
   - coverage run run_short_tests.py
   - coverage report -m
 #  - flake8 .
-  - if [[ "${RUN-DOCS}" == true ]]; then
+  - if [[ "${RUN-DOCS}" == 'true']]; then
     conda install --yes sphinx sphinx_rtd_theme;
     pip install git+git://github.com/drdoctr/doctr.git;
     cd docs;
     make html;
     cd ..;
     doctr deploy . --built-docs ./docs/_build/html;
-    else
     fi
 
 
