@@ -267,7 +267,9 @@ if os.getenv('TRAVIS'):
         pass
     else:
         # Use a slightly bigger test set, since we are using the JIT
-        ns = [10, 100, 400]
+        ns = [10,
+              # 100, 400
+              ]
         num_exp = 3
 elif os.getenv('SHORT_TEST'):
     ns = [

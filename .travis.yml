@@ -26,7 +26,7 @@ install:
 
 script:
   - set -e
-  - coverage run run_tests.py
+  - coverage run run_short_tests.py
   - coverage report -m
 #  - flake8 .
   - if [[ "${RUN-DOCS}" == true ]]; then
